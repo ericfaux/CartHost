@@ -22,9 +22,5 @@ CartHost is a compliance and liability management tool for short-term rental hos
 * **AI:** OpenAI GPT-4o-mini (via Vercel AI SDK)
 * **Hosting:** Vercel
 
-## ⚙️ Local Development
 
-### 1. Clone the repo
-```bash
-git clone [https://github.com/yourusername/carthost.git](https://github.com/yourusername/carthost.git)
-cd carthost
+
