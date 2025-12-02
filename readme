@@ -1,1 +1,30 @@
+# CartHost 🛒⚡️
 
+**The "Digital Gate" for Airbnb Golf Cart Fleets.**
+
+CartHost is a compliance and liability management tool for short-term rental hosts who provide golf carts to their guests. It acts as an intermediary between the guest and the keys, forcing documentation and proper maintenance (charging) before and after use.
+
+## 🚀 The Problem
+* **Liability:** Hosts often lack proof of condition when a guest damages a cart.
+* **Dead Batteries:** Guests forget to plug in electric carts, leading to $2,000+ battery replacements.
+* **Unmanned Handoffs:** Paper waivers are ignored and keys are often left unsecured.
+
+## ✨ Core Features
+* **QR Code Gate:** Guests scan a physical sticker on the cart to access the web app (No app store download required).
+* **Pre-Ride Inspection:** Users must upload timestamped photos of the vehicle (Front, Side, Rear) to reveal the lockbox key code.
+* **The "Plug Police" (AI):** To end the rental, guests must snap a photo of the charger plugged into the wall. AI (GPT-4o Vision) verifies the plug is actually inserted before marking the session complete.
+* **Evidence Locker:** Automatically generates a timeline of "Before" and "After" photos for insurance/AirCover claims.
+
+## 🛠 Tech Stack
+* **Framework:** Next.js 15 (App Router)
+* **Styling:** Tailwind CSS + Lucide React (Shadcn-compatible)
+* **Backend:** Supabase (Postgres, Auth, Storage, Realtime)
+* **AI:** OpenAI GPT-4o-mini (via Vercel AI SDK)
+* **Hosting:** Vercel
+
+## ⚙️ Local Development
+
+### 1. Clone the repo
+```bash
+git clone [https://github.com/yourusername/carthost.git](https://github.com/yourusername/carthost.git)
+cd carthost
