@@ -4,7 +4,7 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT =
-  "You are an AI inspector. Look at this image. Does it clearly show a power cord plugged into an electrical wall outlet? Return strictly JSON: { is_plugged_in: boolean, reason: string }.";
+  "You are an AI inspector. Look at this image. Does it show a power cord plugged into an electrical wall outlet? Don't be too strict with your judgement, if its close then pass it. Return strictly JSON: { is_plugged_in: boolean, reason: string }.";
 
 export async function POST(req: NextRequest) {
   try {
