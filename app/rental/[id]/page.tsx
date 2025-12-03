@@ -72,7 +72,19 @@ export default function RentalInspectionPage() {
     setActiveRentalId(rentalId);
   };
 
-  const handleCheckoutSuccess = () => {
+  const handleCheckoutSuccess = async () => {
+    if (!activeRentalId) return;
+
+    const { error } = await supabase
+      .from('rentals')
+      .update({ status: 'completed', checkout_time: new Date().toISOString() })
+      .eq('id', activeRentalId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     setIsCheckingOut(false);
     setIsCompleted(true);
   };
