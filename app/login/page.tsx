@@ -14,7 +14,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const origin = "https://carthost.vercel.app";
 
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
