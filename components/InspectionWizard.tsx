@@ -158,9 +158,16 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         <button
           onClick={handleNext}
           disabled={uploading}
-          className="bg-black text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px] flex items-center justify-center gap-2"
         >
-          {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
+          {uploading ? (
+            <>
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Uploading...</span>
+            </>
+          ) : (
+            currentStep === steps.length - 1 ? 'Finish' : 'Next'
+          )}
         </button>
       </div>
     </div>
