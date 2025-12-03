@@ -18,6 +18,7 @@ export default function RentalInspectionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null); // New State for User ID
+  const [activeRentalId, setActiveRentalId] = useState<string | null>(null);
   
   // State Machine
   const [isInspecting, setIsInspecting] = useState(false);
@@ -26,24 +27,35 @@ export default function RentalInspectionPage() {
   const [isCompleted, setIsCompleted] = useState(false); // New State for Done
 
   useEffect(() => {
-    const fetchCart = async () => {
+    const initializePage = async () => {
       if (!resolvedId) return;
 
       setLoading(true);
       try {
-        // 1. Anonymous Auth & Capture User ID
         const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
         if (authError) throw authError;
         if (authData.user) setUserId(authData.user.id);
 
-        // 2. Fetch Cart Data
-        const { data, error: cartError } = await supabase
+        const { data: cartData, error: cartError } = await supabase
           .from('carts')
           .select('*')
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
-        setCart(data as Cart);
+        setCart(cartData as Cart);
+
+        const { data: rental, error: rentalError } = await supabase
+          .from('rentals')
+          .select('id, status, cart_id')
+          .eq('cart_id', resolvedId)
+          .eq('status', 'active')
+          .maybeSingle();
+        if (rentalError) throw rentalError;
+
+        if (rental) {
+          setIsUnlocked(true);
+          setActiveRentalId(rental.id);
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to load cart.');
       } finally {
@@ -51,7 +63,7 @@ export default function RentalInspectionPage() {
       }
     };
 
-    fetchCart();
+    initializePage();
   }, [resolvedId]);
 
   const handleUnlock = () => {
