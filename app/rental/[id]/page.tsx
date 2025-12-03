@@ -66,9 +66,10 @@ export default function RentalInspectionPage() {
     initializePage();
   }, [resolvedId]);
 
-  const handleUnlock = () => {
+  const handleUnlock = (rentalId: string) => {
     setIsInspecting(false);
     setIsUnlocked(true);
+    setActiveRentalId(rentalId);
   };
 
   const handleCheckoutSuccess = () => {

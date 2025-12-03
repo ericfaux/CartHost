@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 
 type InspectionWizardProps = {
   cartId: string;
-  onComplete: () => void;
+  onComplete: (rentalId: string) => void;
 };
 
 type Step = {
@@ -156,14 +156,18 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     const isLastStep = currentStep === steps.length - 1;
 
     if (isLastStep) {
-      const { error: rentalError } = await supabase.from('rentals').insert({
-        cart_id: cartId,
-        guest_id: userId,
-        guest_name: guestName,
-        guest_phone: guestPhone,
-        status: 'active',
-        photos: updatedPhotoUrls,
-      });
+      const { data, error: rentalError } = await supabase
+        .from('rentals')
+        .insert({
+          cart_id: cartId,
+          guest_id: userId,
+          guest_name: guestName,
+          guest_phone: guestPhone,
+          status: 'active',
+          photos: updatedPhotoUrls,
+        })
+        .select()
+        .single();
 
       setUploading(false);
 
@@ -173,7 +177,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         return;
       }
 
-      onComplete();
+      onComplete(data.id);
       return;
     }
 
