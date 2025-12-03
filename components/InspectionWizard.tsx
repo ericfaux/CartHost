@@ -34,13 +34,16 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     const fetchUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
+        console.error("Auth Error:", error);
         setError(`Auth Error: ${error.message}`);
         return;
       }
       if (!data.user) {
+        console.error("No user found in session");
         setError('User not authenticated (Invisible Login failed).');
         return;
       }
+      console.log("User authenticated:", data.user.id);
       setUserId(data.user.id);
     };
 
@@ -67,20 +70,26 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     setError(null);
   };
 
-  // 3. The Debugged Upload Function
+  // 3. The Debugged Upload Function (with Console Logs)
   const handleNext = async () => {
+    // ADD THIS LINE AT THE VERY TOP
+    console.log("-----> TEST: The 'Next' button was clicked!");
+
     if (!file) {
+      console.log("Error: No file selected.");
       setError('Please capture or upload a photo to continue.');
       return;
     }
 
     if (!userId) {
+      console.log("Error: No userId found.");
       alert("CRITICAL ERROR: No User ID found. Reload the page.");
       setError('Unable to upload without a user session.');
       return;
     }
 
-    // DEBUG 1: Confirm button click works
+    // DEBUG 1: Confirm process is starting
+    console.log(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
     alert(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
 
     setUploading(true);
@@ -92,29 +101,33 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
 
     // DEBUG 2: Confirm path
+    console.log(`2. Path generated: ${path}`);
     alert(`2. Path generated: ${path}`);
 
     try {
+      console.log("Attempting Supabase upload...");
       const { error: uploadError } = await supabase.storage
         .from('evidence')
         .upload(path, file, { upsert: true });
 
       if (uploadError) {
         // DEBUG 3: Catch Supabase Error
+        console.error('3. UPLOAD FAILED:', uploadError); // .error prints in red
         alert(`3. UPLOAD FAILED: ${uploadError.message}`);
-        console.error('Upload error:', uploadError);
         setError(`Upload failed: ${uploadError.message}`);
         setUploading(false);
         return;
       }
     } catch (err: any) {
       // DEBUG 4: Catch Network/Crash Error
+      console.error('4. APP CRASHED:', err);
       alert(`4. APP CRASHED: ${err.message || err}`);
       setUploading(false);
       return;
     }
 
     // DEBUG 5: Success
+    console.log("5. SUCCESS! File uploaded. Moving to next step.");
     alert("5. SUCCESS! Moving to next step.");
 
     const isLastStep = currentStep === steps.length - 1;
@@ -131,6 +144,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     setUploading(false);
   };
 
+  // --- THIS IS THE PART YOU WERE MISSING ---
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 space-y-6 border border-gray-100">
       <div className="space-y-2">
