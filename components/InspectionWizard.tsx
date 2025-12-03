@@ -29,15 +29,16 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // 1. Fetch Anonymous User ID
   useEffect(() => {
     const fetchUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
-        setError(error.message);
+        setError(`Auth Error: ${error.message}`);
         return;
       }
       if (!data.user) {
-        setError('User not authenticated.');
+        setError('User not authenticated (Invisible Login failed).');
         return;
       }
       setUserId(data.user.id);
@@ -46,6 +47,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     fetchUser();
   }, []);
 
+  // 2. Handle Image Preview
   useEffect(() => {
     if (!file) return;
     const objectUrl = URL.createObjectURL(file);
@@ -65,6 +67,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     setError(null);
   };
 
+  // 3. The Debugged Upload Function
   const handleNext = async () => {
     if (!file) {
       setError('Please capture or upload a photo to continue.');
@@ -72,25 +75,47 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     }
 
     if (!userId) {
+      alert("CRITICAL ERROR: No User ID found. Reload the page.");
       setError('Unable to upload without a user session.');
       return;
     }
+
+    // DEBUG 1: Confirm button click works
+    alert(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
 
     setUploading(true);
     setError(null);
 
     const stepNumber = currentStep + 1;
-    const path = `${cartId}/${userId}/step${stepNumber}.jpg`;
+    // Use a timestamp to prevent filename collisions if they retry
+    const timestamp = new Date().getTime();
+    const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('evidence')
-      .upload(path, file, { upsert: true });
+    // DEBUG 2: Confirm path
+    alert(`2. Path generated: ${path}`);
 
-    if (uploadError) {
-      setError(uploadError.message);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('evidence')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        // DEBUG 3: Catch Supabase Error
+        alert(`3. UPLOAD FAILED: ${uploadError.message}`);
+        console.error('Upload error:', uploadError);
+        setError(`Upload failed: ${uploadError.message}`);
+        setUploading(false);
+        return;
+      }
+    } catch (err: any) {
+      // DEBUG 4: Catch Network/Crash Error
+      alert(`4. APP CRASHED: ${err.message || err}`);
       setUploading(false);
       return;
     }
+
+    // DEBUG 5: Success
+    alert("5. SUCCESS! Moving to next step.");
 
     const isLastStep = currentStep === steps.length - 1;
 
@@ -155,6 +180,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-500">{`Step ${currentStep + 1} of ${steps.length}`}</div>
+        
         <button
           onClick={handleNext}
           disabled={uploading}
