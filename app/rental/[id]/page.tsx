@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, Unlock, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import InspectionWizard from '@/components/InspectionWizard'; // Import the new component
+import InspectionWizard from '../../../components/InspectionWizard';// Import the new component
 
 type Cart = { id: string; name?: string; key_code?: string } | null;
 
