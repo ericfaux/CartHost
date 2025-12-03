@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, Loader2, AlertCircle } from 'lucide-react';
-
 import { supabase } from '../../../lib/supabase';
 
 type Cart = { id: string; name?: string } | null;
@@ -49,6 +48,7 @@ export default function RentalInspectionPage() {
     fetchCart();
   }, [resolvedId]);
 
+  // Loading View
   if (loading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
@@ -62,6 +62,7 @@ export default function RentalInspectionPage() {
     );
   }
 
+  // Main View
   return (
     <main className="min-h-screen bg-white flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6 text-center space-y-6">
@@ -76,6 +77,7 @@ export default function RentalInspectionPage() {
           </p>
 
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+            {/* FIXED: Only one cart name here */}
             <h2 className="text-lg font-semibold text-gray-900">Cart: {cart?.name}</h2>
           </div>
 
@@ -87,6 +89,7 @@ export default function RentalInspectionPage() {
           )}
         </div>
 
+        {/* FIXED: Only one button tag here */}
         <button
           className="w-full bg-black text-white rounded-lg py-3 font-semibold hover:bg-gray-800 transition-colors"
           onClick={() => alert('Wizard coming soon')}
