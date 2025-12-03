@@ -15,6 +15,7 @@ type Step = {
 };
 
 const steps: Step[] = [
+  { title: 'Guest', description: 'Guest Information' },
   { title: 'Front', description: 'Front Bumper' },
   { title: 'Left', description: 'Left Side' },
   { title: 'Right', description: 'Right Side' },
@@ -28,6 +29,8 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
 
   // 1. Fetch Anonymous User ID
   useEffect(() => {
@@ -64,6 +67,8 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     return `Step ${stepNumber} of ${steps.length}: ${step.description}`;
   }, [currentStep]);
 
+  const isGuestStep = currentStep === 0;
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] ?? null;
     setFile(selectedFile);
@@ -72,7 +77,17 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
 
   // 3. The Debugged Upload Function (with Console Logs)
   const handleNext = async () => {
-    // ADD THIS LINE AT THE VERY TOP
+    setError(null);
+
+    if (isGuestStep) {
+      if (!guestName.trim() || !guestPhone.trim()) {
+        setError('Please enter your full name and phone number.');
+        return;
+      }
+      setCurrentStep((prev) => prev + 1);
+      return;
+    }
+
     console.log("-----> TEST: The 'Next' button was clicked!");
 
     if (!file) {
@@ -88,19 +103,15 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
       return;
     }
 
-    // DEBUG 1: Confirm process is starting
     console.log(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
     alert(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
 
     setUploading(true);
-    setError(null);
 
     const stepNumber = currentStep + 1;
-    // Use a timestamp to prevent filename collisions if they retry
     const timestamp = new Date().getTime();
     const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
 
-    // DEBUG 2: Confirm path
     console.log(`2. Path generated: ${path}`);
     alert(`2. Path generated: ${path}`);
 
@@ -111,29 +122,41 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         .upload(path, file, { upsert: true });
 
       if (uploadError) {
-        // DEBUG 3: Catch Supabase Error
-        console.error('3. UPLOAD FAILED:', uploadError); // .error prints in red
+        console.error('3. UPLOAD FAILED:', uploadError);
         alert(`3. UPLOAD FAILED: ${uploadError.message}`);
         setError(`Upload failed: ${uploadError.message}`);
         setUploading(false);
         return;
       }
     } catch (err: any) {
-      // DEBUG 4: Catch Network/Crash Error
       console.error('4. APP CRASHED:', err);
       alert(`4. APP CRASHED: ${err.message || err}`);
       setUploading(false);
       return;
     }
 
-    // DEBUG 5: Success
     console.log("5. SUCCESS! File uploaded. Moving to next step.");
     alert("5. SUCCESS! Moving to next step.");
 
     const isLastStep = currentStep === steps.length - 1;
 
     if (isLastStep) {
+      const { error: rentalError } = await supabase.from('rentals').insert({
+        cart_id: cartId,
+        guest_id: userId,
+        guest_name: guestName,
+        guest_phone: guestPhone,
+        status: 'active',
+      });
+
       setUploading(false);
+
+      if (rentalError) {
+        console.error('Failed to save rental:', rentalError);
+        setError(`Failed to save rental: ${rentalError.message}`);
+        return;
+      }
+
       onComplete();
       return;
     }
@@ -150,41 +173,76 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-500">{steps[currentStep].title} Inspection</p>
         <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
-        <p className="text-sm text-gray-600">
-          Please take a clear photo of the {steps[currentStep].description.toLowerCase()} of the cart.
-        </p>
+        {isGuestStep ? (
+          <p className="text-sm text-gray-600">Please provide the guest information before starting the inspection.</p>
+        ) : (
+          <p className="text-sm text-gray-600">
+            Please take a clear photo of the {steps[currentStep].description.toLowerCase()} of the cart.
+          </p>
+        )}
       </div>
 
-      <div className="space-y-4">
-        <label
-          className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition"
-          htmlFor="inspection-photo"
-        >
-          {previewUrl ? (
-            <div className="relative w-full h-full">
-              <Image
-                src={previewUrl}
-                alt={`${steps[currentStep].description} preview`}
-                fill
-                className="object-cover rounded-lg"
-              />
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 space-y-2">
-              <p className="text-lg font-medium">Upload photo</p>
-              <p className="text-xs">Tap to capture with your camera</p>
-            </div>
-          )}
-        </label>
-        <input
-          id="inspection-photo"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </div>
+      {isGuestStep ? (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700" htmlFor="guest-name">
+              Full Name
+            </label>
+            <input
+              id="guest-name"
+              type="text"
+              value={guestName}
+              onChange={(event) => setGuestName(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+              placeholder="Enter full name"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700" htmlFor="guest-phone">
+              Phone Number
+            </label>
+            <input
+              id="guest-phone"
+              type="tel"
+              value={guestPhone}
+              onChange={(event) => setGuestPhone(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+              placeholder="Enter phone number"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <label
+            className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition"
+            htmlFor="inspection-photo"
+          >
+            {previewUrl ? (
+              <div className="relative w-full h-full">
+                <Image
+                  src={previewUrl}
+                  alt={`${steps[currentStep].description} preview`}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 space-y-2">
+                <p className="text-lg font-medium">Upload photo</p>
+                <p className="text-xs">Tap to capture with your camera</p>
+              </div>
+            )}
+          </label>
+          <input
+            id="inspection-photo"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -197,7 +255,9 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         
         <button
           onClick={handleNext}
-          disabled={uploading}
+          disabled={
+            uploading || (isGuestStep && (!guestName.trim() || !guestPhone.trim()))
+          }
           className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px] flex items-center justify-center gap-2"
         >
           {uploading ? (
