@@ -4,22 +4,26 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, Unlock, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import InspectionWizard from '../../../components/InspectionWizard';// Import the new component
+import InspectionWizard from '../../../components/InspectionWizard';
+import PlugVerifier from '../../../components/PlugVerifier'; // New Import
 
 type Cart = { id: string; name?: string; key_code?: string } | null;
 
 export default function RentalInspectionPage() {
   const params = useParams();
-  const resolvedId =
-    params?.id && Array.isArray(params.id) ? params.id[0] : (params?.id as string);
+  // Handle potential array from params safely
+  const resolvedId = params?.id && Array.isArray(params.id) ? params.id[0] : params?.id as string;
 
   const [cart, setCart] = useState<Cart>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null); // New State for User ID
   
-  // New States for the Flow
+  // State Machine
   const [isInspecting, setIsInspecting] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false); // New State for Checkout
+  const [isCompleted, setIsCompleted] = useState(false); // New State for Done
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -27,9 +31,12 @@ export default function RentalInspectionPage() {
 
       setLoading(true);
       try {
-        const { error: authError } = await supabase.auth.signInAnonymously();
+        // 1. Anonymous Auth & Capture User ID
+        const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
         if (authError) throw authError;
+        if (authData.user) setUserId(authData.user.id);
 
+        // 2. Fetch Cart Data
         const { data, error: cartError } = await supabase
           .from('carts')
           .select('*')
@@ -52,6 +59,11 @@ export default function RentalInspectionPage() {
     setIsUnlocked(true);
   };
 
+  const handleCheckoutSuccess = () => {
+    setIsCheckingOut(false);
+    setIsCompleted(true);
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
@@ -64,8 +76,36 @@ export default function RentalInspectionPage() {
     <main className="min-h-screen bg-white flex items-center justify-center p-6">
       <div className="max-w-md w-full mx-auto text-center space-y-6">
         
-        {/* STATE 1: SUCCESS (UNLOCKED) */}
-        {isUnlocked ? (
+        {/* STATE 4: RENTAL COMPLETED (SUCCESS) */}
+        {isCompleted ? (
+           <div className="space-y-6 animate-in fade-in duration-500">
+           <div className="flex justify-center">
+             <div className="bg-green-100 p-4 rounded-full">
+               <CheckCircle className="h-16 w-16 text-green-600" />
+             </div>
+           </div>
+           <div className="space-y-2">
+             <h1 className="text-3xl font-bold text-green-700">All Set!</h1>
+             <p className="text-gray-600">
+               Thank you for plugging in. <br/> Your rental session is closed.
+             </p>
+           </div>
+           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-500">
+             You may now close this window.
+           </div>
+         </div>
+        ) : isCheckingOut ? (
+
+          /* STATE 3: CHECKOUT (PLUG VERIFIER) */
+          <PlugVerifier 
+            cartId={resolvedId} 
+            userId={userId!} 
+            onSuccess={handleCheckoutSuccess} 
+          />
+
+        ) : isUnlocked ? (
+
+          /* STATE 2: ACTIVE RENTAL (KEY REVEAL) */
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-center">
               <div className="bg-green-100 p-4 rounded-full">
@@ -84,16 +124,21 @@ export default function RentalInspectionPage() {
                 {cart?.key_code || '----'}
               </p>
             </div>
-            <button 
-              className="w-full bg-gray-100 text-gray-900 rounded-lg py-3 font-medium"
-              onClick={() => alert('Checkout flow coming in Phase 2!')}
-            >
-              End Rental / Checkout
-            </button>
+            
+            <div className="pt-8">
+              <p className="text-sm text-gray-400 mb-3">Done for the day?</p>
+              <button 
+                className="w-full bg-gray-900 text-white rounded-lg py-4 font-bold shadow-lg hover:bg-gray-800 active:scale-95 transition-all"
+                onClick={() => setIsCheckingOut(true)}
+              >
+                End Rental & Verify Plug
+              </button>
+            </div>
           </div>
+
         ) : isInspecting ? (
           
-          /* STATE 2: WIZARD MODE */
+          /* STATE 1.5: WIZARD MODE */
           <InspectionWizard 
             cartId={resolvedId!} 
             onComplete={handleUnlock} 
@@ -101,7 +146,7 @@ export default function RentalInspectionPage() {
 
         ) : (
           
-          /* STATE 3: LOCKED (START) */
+          /* STATE 1: LOCKED (START) */
           <div className="space-y-6">
             <div className="flex justify-center">
               <Lock className="h-16 w-16 text-red-500" />
