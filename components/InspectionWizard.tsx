@@ -31,6 +31,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
   const [userId, setUserId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   // 1. Fetch Anonymous User ID
   useEffect(() => {
@@ -138,6 +139,20 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     console.log("5. SUCCESS! File uploaded. Moving to next step.");
     alert("5. SUCCESS! Moving to next step.");
 
+    const { data: publicUrlData } = supabase.storage
+      .from('evidence')
+      .getPublicUrl(path);
+
+    if (!publicUrlData?.publicUrl) {
+      console.error('Failed to retrieve public URL');
+      setError('Failed to retrieve public URL for uploaded file.');
+      setUploading(false);
+      return;
+    }
+
+    const updatedPhotoUrls = [...photoUrls, publicUrlData.publicUrl];
+    setPhotoUrls(updatedPhotoUrls);
+
     const isLastStep = currentStep === steps.length - 1;
 
     if (isLastStep) {
@@ -147,6 +162,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         guest_name: guestName,
         guest_phone: guestPhone,
         status: 'active',
+        photos: updatedPhotoUrls,
       });
 
       setUploading(false);
