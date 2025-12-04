@@ -12,14 +12,16 @@ type InspectionWizardProps = {
 type Step = {
   title: string;
   description: string;
+  type: 'info' | 'waiver' | 'photo';
 };
 
 const steps: Step[] = [
-  { title: 'Guest', description: 'Guest Information' },
-  { title: 'Front', description: 'Front Bumper' },
-  { title: 'Left', description: 'Left Side' },
-  { title: 'Right', description: 'Right Side' },
-  { title: 'Back', description: 'Back Bumper' },
+  { title: 'Guest', description: 'Guest Information', type: 'info' },
+  { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
+  { title: 'Front', description: 'Front Bumper', type: 'photo' },
+  { title: 'Left', description: 'Left Side', type: 'photo' },
+  { title: 'Right', description: 'Right Side', type: 'photo' },
+  { title: 'Back', description: 'Back Bumper', type: 'photo' },
 ];
 
 export default function InspectionWizard({ cartId, onComplete }: InspectionWizardProps) {
@@ -31,6 +33,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
   const [userId, setUserId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   // 1. Fetch Anonymous User ID
@@ -68,7 +71,9 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     return `Step ${stepNumber} of ${steps.length}: ${step.description}`;
   }, [currentStep]);
 
-  const isGuestStep = currentStep === 0;
+  const currentStepData = steps[currentStep];
+  const isGuestStep = currentStepData.type === 'info';
+  const isWaiverStep = currentStepData.type === 'waiver';
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] ?? null;
@@ -83,6 +88,15 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     if (isGuestStep) {
       if (!guestName.trim() || !guestPhone.trim()) {
         setError('Please enter your full name and phone number.');
+        return;
+      }
+      setCurrentStep((prev) => prev + 1);
+      return;
+    }
+
+    if (isWaiverStep) {
+      if (!waiverAgreed) {
+        setError('Please confirm you have read and agree to the terms.');
         return;
       }
       setCurrentStep((prev) => prev + 1);
@@ -164,6 +178,8 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
           guest_name: guestName,
           guest_phone: guestPhone,
           status: 'active',
+          waiver_agreed: true,
+          waiver_agreed_at: new Date().toISOString(),
           photos: updatedPhotoUrls,
         })
         .select()
@@ -195,6 +211,8 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
         {isGuestStep ? (
           <p className="text-sm text-gray-600">Please provide the guest information before starting the inspection.</p>
+        ) : isWaiverStep ? (
+          <p className="text-sm text-gray-600">Please review and agree to the liability terms before continuing.</p>
         ) : (
           <p className="text-sm text-gray-600">
             Please take a clear photo of the {steps[currentStep].description.toLowerCase()} of the cart.
@@ -230,6 +248,24 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
               placeholder="Enter phone number"
             />
           </div>
+        </div>
+      ) : isWaiverStep ? (
+        <div className="space-y-4">
+          <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+            I agree to be responsible for all damages to the vehicle and to indemnify the rental provider from any claims
+            arising during the rental period. I acknowledge that I have inspected the vehicle and accept it in its current
+            condition. I agree to comply with all safety instructions and return the vehicle in the same condition, subject to
+            normal wear and tear.
+          </div>
+          <label className="flex items-center space-x-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+              checked={waiverAgreed}
+              onChange={(event) => setWaiverAgreed(event.target.checked)}
+            />
+            <span>I have read and agree to the terms.</span>
+          </label>
         </div>
       ) : (
         <div className="space-y-4">
@@ -276,7 +312,9 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         <button
           onClick={handleNext}
           disabled={
-            uploading || (isGuestStep && (!guestName.trim() || !guestPhone.trim()))
+            uploading ||
+            (isGuestStep && (!guestName.trim() || !guestPhone.trim())) ||
+            (isWaiverStep && !waiverAgreed)
           }
           className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px] flex items-center justify-center gap-2"
         >
