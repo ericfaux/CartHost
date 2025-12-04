@@ -16,11 +16,6 @@ type Step = {
 };
 
 const steps: Step[] = [
-  { title: 'Guest', description: 'Guest Information' },
-  { title: 'Front', description: 'Front Bumper' },
-  { title: 'Left', description: 'Left Side' },
-  { title: 'Right', description: 'Right Side' },
-  { title: 'Back', description: 'Back Bumper' },
   { title: 'Guest', description: 'Guest Information', type: 'info' },
   { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
   { title: 'Front', description: 'Front Bumper', type: 'photo' },
@@ -76,7 +71,6 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     return `Step ${stepNumber} of ${steps.length}: ${step.description}`;
   }, [currentStep]);
 
-  const isGuestStep = currentStep === 0;
   const currentStepData = steps[currentStep];
   const isGuestStep = currentStepData.type === 'info';
   const isWaiverStep = currentStepData.type === 'waiver';
@@ -134,7 +128,31 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
 
     console.log(`2. Path generated: ${path}`);
-@@ -142,154 +156,178 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
+    alert(`2. Path generated: ${path}`);
+
+    try {
+      console.log("Attempting Supabase upload...");
+      const { error: uploadError } = await supabase.storage
+        .from('evidence')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('3. UPLOAD FAILED:', uploadError);
+        alert(`3. UPLOAD FAILED: ${uploadError.message}`);
+        setError(`Upload failed: ${uploadError.message}`);
+        setUploading(false);
+        return;
+      }
+    } catch (err: any) {
+      console.error('4. APP CRASHED:', err);
+      alert(`4. APP CRASHED: ${err.message || err}`);
+      setUploading(false);
+      return;
+    }
+
+    console.log("5. SUCCESS! File uploaded. Moving to next step.");
+    alert("5. SUCCESS! Moving to next step.");
+
     const { data: publicUrlData } = supabase.storage
       .from('evidence')
       .getPublicUrl(path);
@@ -185,7 +203,6 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     setUploading(false);
   };
 
-  // --- THIS IS THE PART YOU WERE MISSING ---
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 space-y-6 border border-gray-100">
       <div className="space-y-2">
@@ -233,20 +250,65 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         </div>
       ) : isWaiverStep ? (
         <div className="space-y-4">
-          <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-            I agree to be responsible for all damages to the vehicle and to indemnify the rental provider from any claims
-            arising during the rental period. I acknowledge that I have inspected the vehicle and accept it in its current
-            condition. I agree to comply with all safety instructions and return the vehicle in the same condition, subject to
-            normal wear and tear.
+          <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 space-y-4">
+            <h3 className="font-bold text-center">GOLF CART RENTAL AGREEMENT AND WAIVER OF LIABILITY</h3>
+            <p>This Golf Cart Rental Agreement and Waiver of Liability (“Agreement”) is between the undersigned guest (“Renter”) and the property owner/host (“Host”). CartHost is a technology provider facilitating this process on behalf of the Host.</p>
+            
+            <div>
+                <p className="font-bold">1. ELIGIBILITY AND DRIVER RESPONSIBILITY</p>
+                <p>I represent that I am at least 18 years old (or the minimum legal age to operate a motor vehicle in this jurisdiction, if higher) and hold a current, valid driver’s license. I agree that only licensed drivers who have been authorized by the Host and who have agreed to this Agreement will operate the golf cart.</p>
+            </div>
+
+            <div>
+                <p className="font-bold">2. ASSUMPTION OF RISK</p>
+                <p className="uppercase font-semibold">I UNDERSTAND THAT OPERATING A GOLF CART INVOLVES INHERENT RISKS, INCLUDING BUT NOT LIMITED TO COLLISIONS, ROLLOVERS, LOSS OF CONTROL, SERIOUS INJURY, DEATH, AND PROPERTY DAMAGE. I VOLUNTARILY ASSUME ALL SUCH RISKS FOR MYSELF AND ANY MINOR OR GUEST I ALLOW TO RIDE IN OR OPERATE THE CART.</p>
+            </div>
+
+            <div>
+                <p className="font-bold">3. RELEASE OF LIABILITY</p>
+                <p>To the fullest extent permitted by law, I hereby release, waive, and discharge the Host, the property owner, their officers, employees, agents, and the technology provider CartHost from any and all liability, claims, demands, or causes of action arising out of or related to my use or operation of the golf cart, including those arising from ordinary negligence. This release does not apply to any liability that cannot be waived under applicable law, including gross negligence, willful misconduct, or intentional harm.</p>
+            </div>
+
+            <div>
+                <p className="font-bold">4. INDEMNIFICATION</p>
+                <p>I agree to indemnify, defend, and hold harmless the Host and the property owner from any and all claims, damages, losses, costs, and expenses (including reasonable attorneys’ fees) arising out of or related to: (a) my use or operation of the golf cart; (b) any use or operation by a person I allow to drive the cart; or (c) injury to third parties or damage to third-party property in connection with the cart.</p>
+            </div>
+
+             <div>
+                <p className="font-bold">5. RESPONSIBILITY FOR DAMAGE AND CHARGES</p>
+                <p>I agree that I am responsible for any loss of or damage to the golf cart occurring during my rental period, normal wear and tear excepted. I understand that the Host may seek recovery for such damage through any applicable security deposit, damage waiver, or platform resolution process, and, where applicable for direct bookings, I authorize the Host to charge the payment method on file for repair or replacement costs resulting from my use, negligence, or accident.</p>
+            </div>
+
+             <div>
+                <p className="font-bold">6. RULES OF OPERATION</p>
+                <p>I agree to operate the golf cart in a safe and lawful manner and specifically agree that:</p>
+                <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li>I will obey all local traffic laws, posted signs, and speed limits.</li>
+                    <li>I will NOT operate the cart while under the influence of alcohol, drugs, or any substance that may impair my ability to drive safely.</li>
+                    <li>I will NOT allow any underage or unlicensed person to operate the cart.</li>
+                    <li>I will ensure all passengers are seated properly while the cart is moving.</li>
+                    <li>I will ensure the cart is plugged in and charging when not in use and at the end of my stay, in accordance with the Host’s instructions.</li>
+                </ul>
+            </div>
+
+             <div>
+                <p className="font-bold">7. CONDITION OF VEHICLE</p>
+                <p>I acknowledge that I have inspected the golf cart (including by reviewing and/or providing photos through the CartHost app) and accept it in its current condition. I agree to promptly report to the Host any damage or mechanical issues that arise during my rental period.</p>
+            </div>
+
+             <div>
+                <p className="font-bold">8. ACKNOWLEDGMENT AND CONSENT</p>
+                <p>By clicking “I Agree” or otherwise electronically signing below, I acknowledge that I have read this Agreement in full, understand its terms, and voluntarily agree to be bound by it. I understand that by signing this Agreement, I may be waiving certain legal rights, including the right to sue the Host for ordinary negligence, to the fullest extent permitted by law.</p>
+            </div>
           </div>
-          <label className="flex items-center space-x-2 text-sm text-gray-700">
+          <label className="flex items-center space-x-3 text-sm font-medium text-gray-900 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+              className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black"
               checked={waiverAgreed}
               onChange={(event) => setWaiverAgreed(event.target.checked)}
             />
-            <span>I have read and agree to the terms.</span>
+            <span>I have read and agree to the Waiver of Liability.</span>
           </label>
         </div>
       ) : (
@@ -294,7 +356,6 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         <button
           onClick={handleNext}
           disabled={
-            uploading || (isGuestStep && (!guestName.trim() || !guestPhone.trim()))
             uploading ||
             (isGuestStep && (!guestName.trim() || !guestPhone.trim())) ||
             (isWaiverStep && !waiverAgreed)
