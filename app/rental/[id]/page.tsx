@@ -36,7 +36,6 @@ export default function RentalInspectionPage() {
         if (authError) throw authError;
         if (authData.user) setUserId(authData.user.id);
 
-        const { data, error: cartError } = await supabase
         const { data: cartData, error: cartError } = await supabase
           .from('carts')
           .select('*')
