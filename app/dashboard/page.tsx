@@ -7,7 +7,6 @@ type Cart = {
   id: string;
   name: string;
   key_code?: string | null;
-  status?: string | null;
 };
 
 export default async function DashboardPage() {
@@ -45,8 +44,8 @@ export default async function DashboardPage() {
 
   const { data: carts = [] } = await supabase
     .from("carts")
-    .select("id, name, key_code, status")
-    .eq("user_id", user.id)
+    .select("id, name, key_code")
+    .eq("host_id", user.id)
     .order("name");
 
   return <FleetList carts={carts as Cart[]} />;

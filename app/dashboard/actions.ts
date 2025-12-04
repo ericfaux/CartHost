@@ -46,7 +46,7 @@ export async function createCart(formData: FormData) {
   const { error } = await supabase.from("carts").insert({
     name,
     key_code: keyCode,
-    user_id: user.id,
+    host_id: user.id,
   });
 
   if (error) {

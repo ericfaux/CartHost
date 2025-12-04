@@ -6,7 +6,6 @@ type Cart = {
   id: string;
   name: string;
   key_code?: string | null;
-  status?: string | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
@@ -27,8 +26,6 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {carts.map((cart) => {
-            const status = (cart.status || "Idle").toString();
-            const isActive = status.toLowerCase() === "active";
             return (
               <div
                 key={cart.id}
@@ -39,16 +36,6 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     <p className="text-xs uppercase tracking-wide text-gray-400">Cart</p>
                     <h3 className="text-lg font-semibold text-gray-900">{cart.name}</h3>
                   </div>
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                      isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${isActive ? "bg-green-500" : "bg-gray-400"}`} />
-                    {isActive ? "Active" : "Idle"}
-                  </span>
                 </div>
 
                 <div className="mt-4 space-y-2">
