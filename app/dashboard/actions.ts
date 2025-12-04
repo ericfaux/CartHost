@@ -1,16 +1,16 @@
+'use server';
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import FleetList from "../../components/FleetList";
 
-type Cart = {
-  id: string;
-  name: string;
-  key_code?: string | null;
-  status?: string | null;
-};
+export async function createCart(formData: FormData) {
+  const name = formData.get("name")?.toString().trim();
+  const keyCode = formData.get("keyCode")?.toString().trim();
 
-export default async function DashboardPage() {
+  if (!name || !keyCode) {
+    throw new Error("Cart name and key code are required.");
+  }
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -39,15 +39,17 @@ export default async function DashboardPage() {
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    redirect("/login");
+  if (userError || !user) {
+    throw userError ?? new Error("User not authenticated");
   }
 
-  const { data: carts = [] } = await supabase
-    .from("carts")
-    .select("id, name, key_code, status")
-    .eq("user_id", user.id)
-    .order("name");
+  const { error } = await supabase.from("carts").insert({
+    name,
+    key_code: keyCode,
+    user_id: user.id,
+  });
 
-  return <FleetList carts={carts as Cart[]} />;
+  if (error) {
+    throw error;
+  }
 }
