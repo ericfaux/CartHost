@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache"; // Import this!
 
 export async function createCart(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
@@ -13,6 +14,7 @@ export async function createCart(formData: FormData) {
 
   const cookieStore = await cookies();
 
+  // Initialize Supabase Client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,22 +29,25 @@ export async function createCart(formData: FormData) {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Ignore set errors during server rendering when cookies cannot be set
+            // Ignore
           }
         },
       },
     }
   );
 
+  // 1. Verify Auth
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    throw userError ?? new Error("User not authenticated");
+    console.error("Auth Error in createCart:", userError);
+    throw new Error("You must be logged in to add a cart.");
   }
 
+  // 2. Insert Data
   const { error } = await supabase.from("carts").insert({
     name,
     key_code: keyCode,
@@ -50,6 +55,10 @@ export async function createCart(formData: FormData) {
   });
 
   if (error) {
-    throw error;
+    console.error("Database Insert Error:", error);
+    throw new Error("Failed to save cart: " + error.message);
   }
+
+  // 3. Refresh the Dashboard
+  revalidatePath("/dashboard");
 }
