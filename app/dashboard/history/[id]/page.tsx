@@ -14,11 +14,14 @@ type Rental = {
   } | null;
 };
 
+// FIX: params is now a Promise in Next.js 15
 export default async function RentalPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params; // <--- AWAIT THE PARAMS HERE
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -54,8 +57,8 @@ export default async function RentalPage({
   const { data: rental, error } = await supabase
     .from("rentals")
     .select("*, carts(name)")
-    .eq("id", params.id)
-    .eq("host_id", user.id)
+    .eq("id", id) // Use the awaited 'id'
+    .eq("host_id", user.id) // Ensure security (host can only see their own rentals)
     .single();
 
   if (!rental || error) {
