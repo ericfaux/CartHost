@@ -12,15 +12,16 @@ export default function AddCartModal() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
     setIsSubmitting(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
 
     try {
       await createCart(formData);
-      event.currentTarget.reset();
-      setIsOpen(false);
+      form.reset(); // <--- Use the captured reference, not event.currentTarget
+      setIsOpen(false)
       router.refresh();
     } catch (err: any) {
       console.error("Full Error Object:", err); 
