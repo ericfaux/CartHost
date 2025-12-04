@@ -17,8 +17,10 @@ type Rental = {
 export default async function RentalPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -51,14 +53,19 @@ export default async function RentalPage({
     redirect("/login");
   }
 
+  // --- THE FIX IS HERE ---
   const { data: rental, error } = await supabase
     .from("rentals")
+    // 1. Use !inner to ensure the cart relation exists and matches filters
     .select("*, carts!inner(name, host_id)")
-    .eq("id", params.id)
+    .eq("id", id)
+    // 2. Filter against the joined cart's host_id
     .eq("carts.host_id", user.id)
     .single();
+  // -----------------------
 
   if (!rental || error) {
+    // This handles cases where the rental doesn't exist OR belongs to another host
     notFound();
   }
 
