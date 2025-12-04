@@ -23,6 +23,7 @@ export default function AddCartModal() {
       setIsOpen(false);
       router.refresh();
     } catch (err: any) {
+      console.error("Full Error Object:", err); 
       setError(err.message || "Failed to add cart");
     } finally {
       setIsSubmitting(false);
