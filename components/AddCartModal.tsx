@@ -1,31 +1,74 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { createCart } from "../app/dashboard/actions";
+import { createCart, updateCart } from "../app/dashboard/actions";
 
-export default function AddCartModal() {
-  const [isOpen, setIsOpen] = useState(false);
+type Cart = {
+  id: string;
+  name: string;
+  key_code?: string | null;
+};
+
+type AddCartModalProps = {
+  cart?: Cart | null;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: (open: () => void) => ReactNode;
+  showTrigger?: boolean;
+};
+
+export default function AddCartModal({
+  cart,
+  isOpen: controlledOpen,
+  onOpenChange,
+  trigger,
+  showTrigger = true,
+}: AddCartModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen ?? internalOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [keyCode, setKeyCode] = useState("");
   const router = useRouter();
+
+  const isEditing = useMemo(() => Boolean(cart), [cart]);
+
+  useEffect(() => {
+    setName(cart?.name ?? "");
+    setKeyCode(cart?.key_code ?? "");
+  }, [cart, isOpen]);
+
+  const setOpen = (open: boolean) => {
+    onOpenChange?.(open);
+    if (controlledOpen === undefined) {
+      setInternalOpen(open);
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
     setIsSubmitting(true);
     setError(null);
 
-    const formData = new FormData(form);
+    const formData = new FormData();
+    formData.set("name", name.trim());
+    formData.set("keyCode", keyCode.trim());
 
     try {
-      await createCart(formData);
-      form.reset(); // <--- Use the captured reference, not event.currentTarget
-      setIsOpen(false)
+      if (isEditing && cart) {
+        await updateCart(cart.id, formData);
+      } else {
+        await createCart(formData);
+      }
+      setName(cart?.name ?? "");
+      setKeyCode(cart?.key_code ?? "");
+      setOpen(false);
       router.refresh();
     } catch (err: any) {
-      console.error("Full Error Object:", err); 
-      setError(err.message || "Failed to add cart");
+      console.error("Full Error Object:", err);
+      setError(err.message || "Failed to save cart");
     } finally {
       setIsSubmitting(false);
     }
@@ -33,24 +76,36 @@ export default function AddCartModal() {
 
   return (
     <div>
-      <button
-        className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800"
-        onClick={() => setIsOpen(true)}
-      >
-        Add Cart
-      </button>
+      {showTrigger && (
+        trigger ? (
+          trigger(() => setOpen(true))
+        ) : (
+          <button
+            className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800"
+            onClick={() => setOpen(true)}
+          >
+            Add Cart
+          </button>
+        )
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Add Cart</h2>
-                <p className="text-sm text-gray-500">Create a new cart for your fleet.</p>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {isEditing ? "Edit Cart" : "Add Cart"}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {isEditing
+                    ? "Update cart details for your fleet."
+                    : "Create a new cart for your fleet."}
+                </p>
               </div>
               <button
                 className="text-gray-400 transition hover:text-gray-600"
-                onClick={() => setIsOpen(false)}
+                onClick={() => setOpen(false)}
                 aria-label="Close"
               >
                 ×
@@ -64,6 +119,8 @@ export default function AddCartModal() {
                   type="text"
                   name="name"
                   required
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="Eg. Sunrise Beach Cart"
                 />
@@ -75,6 +132,8 @@ export default function AddCartModal() {
                   type="text"
                   name="keyCode"
                   required
+                  value={keyCode}
+                  onChange={(event) => setKeyCode(event.target.value)}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="1234"
                 />
@@ -90,7 +149,7 @@ export default function AddCartModal() {
                 <button
                   type="button"
                   className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setOpen(false)}
                 >
                   Cancel
                 </button>
@@ -99,7 +158,13 @@ export default function AddCartModal() {
                   disabled={isSubmitting}
                   className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Adding..." : "Save Cart"}
+                  {isSubmitting
+                    ? isEditing
+                      ? "Saving..."
+                      : "Adding..."
+                    : isEditing
+                    ? "Save Changes"
+                    : "Save Cart"}
                 </button>
               </div>
             </form>

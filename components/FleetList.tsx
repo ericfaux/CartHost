@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import AddCartModal from "./AddCartModal";
+import { deleteCart } from "../app/dashboard/actions";
 
 type Cart = {
   id: string;
@@ -9,6 +11,30 @@ type Cart = {
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
+  const [selectedCart, setSelectedCart] = useState<Cart | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleEdit = (cart: Cart) => {
+    setSelectedCart(cart);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = async (cartId: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this cart?");
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(cartId);
+      await deleteCart(cartId);
+    } catch (error) {
+      console.error("Failed to delete cart", error);
+      alert("Failed to delete cart. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -36,6 +62,51 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     <p className="text-xs uppercase tracking-wide text-gray-400">Cart</p>
                     <h3 className="text-lg font-semibold text-gray-900">{cart.name}</h3>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(cart)}
+                      className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
+                      aria-label={`Edit ${cart.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.862 4.487l1.687 1.687c.55.55.55 1.44 0 1.99l-8.25 8.25-3.181.707.707-3.181 8.25-8.25c.55-.55 1.44-.55 1.99 0z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(cart.id)}
+                      disabled={deletingId === cart.id}
+                      className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`Delete ${cart.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6.75 7.5h10.5M9.75 7.5v9a.75.75 0 001.5 0v-9m3 0v9a.75.75 0 001.5 0v-9m-7.5 0h10.5m-9-1.5h7.5l-.75-1.5h-6l-.75 1.5z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-4 space-y-2">
@@ -49,6 +120,18 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
           })}
         </div>
       )}
+
+      <AddCartModal
+        cart={selectedCart}
+        isOpen={isEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) {
+            setSelectedCart(null);
+          }
+        }}
+        showTrigger={false}
+      />
     </div>
   );
 }
