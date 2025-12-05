@@ -50,7 +50,7 @@ export async function sendWelcomeSms(rentalId: string) {
   const keyCode = rental.carts?.key_code || '----';
 //Welcome to ${cartName}! Your key code is: ${keyCode}. Please drive safely and remember to plug in the cart when you return!
   if (rental.guest_phone) {
-    const message = `Hi, How are you?`;
+    const message = `Welcome to ${cartName}! Your key code is: ${keyCode}. Please drive safely and remember to plug in the cart when you return!`;
     await sendSms(rental.guest_phone, message);
   }
 }
