@@ -1,26 +1,73 @@
-# CartHost 🛒⚡️
+CartHost 🛒⚡️
 
-**The "Digital Gate" for Airbnb Golf Cart Fleets.**
+The "Digital Gate" for Airbnb Golf Cart Fleets.
 
 CartHost is a compliance and liability management tool for short-term rental hosts who provide golf carts to their guests. It acts as an intermediary between the guest and the keys, forcing documentation and proper maintenance (charging) before and after use.
 
-## 🚀 The Problem
-* **Liability:** Hosts often lack proof of condition when a guest damages a cart.
-* **Dead Batteries:** Guests forget to plug in electric carts, leading to $2,000+ battery replacements.
-* **Unmanned Handoffs:** Paper waivers are ignored and keys are often left unsecured.
+🚀 The Problem
 
-## ✨ Core Features
-* **QR Code Gate:** Guests scan a physical sticker on the cart to access the web app (No app store download required).
-* **Pre-Ride Inspection:** Users must upload timestamped photos of the vehicle (Front, Side, Rear) to reveal the lockbox key code.
-* **The "Plug Police" (AI):** To end the rental, guests must snap a photo of the charger plugged into the wall. AI (GPT-4o Vision) verifies the plug is actually inserted before marking the session complete.
-* **Evidence Locker:** Automatically generates a timeline of "Before" and "After" photos for insurance/AirCover claims.
+Liability: Hosts often lack proof of condition when a guest damages a cart.
 
-## 🛠 Tech Stack
-* **Framework:** Next.js 15 (App Router)
-* **Styling:** Tailwind CSS + Lucide React (Shadcn-compatible)
-* **Backend:** Supabase (Postgres, Auth, Storage, Realtime)
-* **AI:** OpenAI GPT-4o-mini (via Vercel AI SDK)
-* **Hosting:** Vercel
+Dead Batteries: Guests forget to plug in electric carts, leading to $2,000+ battery replacements.
 
+Unmanned Handoffs: Paper waivers are ignored and keys are often left unsecured.
 
+✨ Core Features
 
+QR Code Gate: Guests scan a physical sticker on the cart to access the web app (No app store download required).
+
+Pre-Ride Inspection: Users must upload timestamped photos and sign a digital waiver to reveal the lockbox key code.
+
+The "Plug Police" (AI): To end the rental, guests must snap a photo of the charger plugged into the wall. AI (GPT-4o Vision) verifies the plug is inserted before marking the session complete.
+
+Smart Notifications: Automated SMS/WhatsApp texts sent to guests for "Welcome" (Key Code) and "Return Confirmation".
+
+The "Nag Bot": An automated Cron Job checks daily at 10:15 AM for guests checking out who haven't plugged in yet, sending them a friendly reminder to avoid fees.
+
+Evidence Locker: Automatically generates a timeline of "Before" and "After" photos for insurance/AirCover claims.
+
+🛠 Tech Stack
+
+Framework: Next.js 15 (App Router)
+
+Styling: Tailwind CSS + Lucide React
+
+Backend: Supabase (Postgres, Auth, Storage, RLS)
+
+AI: OpenAI GPT-4o-mini (via Vercel AI SDK)
+
+Notifications: Twilio (SMS/WhatsApp)
+
+Automation: Vercel Cron Jobs
+
+Hosting: Vercel
+
+⚙️ Configuration & Environment Variables
+
+To run this project, you need the following environment variables in .env.local and your Vercel Project Settings:
+
+Supabase (Database & Auth)
+
+NEXT_PUBLIC_SUPABASE_URL: Your project URL.
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY: Your public API key.
+
+SUPABASE_SERVICE_ROLE_KEY: (Secret) Admin key used by the Nag Bot to bypass RLS.
+
+OpenAI (Vision Analysis)
+
+OPENAI_API_KEY: Key with access to gpt-4o-mini.
+
+Twilio (SMS Notifications)
+
+TWILIO_ACCOUNT_SID: Your account SID.
+
+TWILIO_AUTH_TOKEN: Your auth token.
+
+TWILIO_PHONE_NUMBER: Your active phone number (or Sandbox number).
+
+Note: For production SMS, you must register your Brand for A2P 10DLC on Twilio. For testing, use the WhatsApp Sandbox.
+
+Automation (Cron Jobs)
+
+CRON_SECRET: A secure random string used to protect the /api/cron/nag endpoint.
