@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr"; // <--- CHANGED: Use SSR client
+import { cookies } from "next/headers";             // <--- CHANGED: Import cookies
 import { sendSms } from "../../lib/sms";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -46,7 +46,9 @@ export async function POST(req: NextRequest) {
 
     // 2. If Plugged In, Send SMS
     if (result.is_plugged_in && rentalId) {
+      // --- AUTH FIX STARTS HERE ---
       const cookieStore = await cookies();
+      
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
           },
         }
       );
+      // --- AUTH FIX ENDS HERE ---
 
       const { data: rental } = await supabase
         .from('rentals')
