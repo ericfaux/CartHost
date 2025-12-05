@@ -34,6 +34,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
   const [userId, setUserId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [departureDate, setDepartureDate] = useState('');
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
@@ -87,8 +88,8 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
     setError(null);
 
     if (isGuestStep) {
-      if (!guestName.trim() || !guestPhone.trim()) {
-        setError('Please enter your full name and phone number.');
+      if (!guestName.trim() || !guestPhone.trim() || !departureDate.trim()) {
+        setError('Please enter your full name, phone number, and checkout date.');
         return;
       }
       setCurrentStep((prev) => prev + 1);
@@ -178,6 +179,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
           guest_id: userId,
           guest_name: guestName,
           guest_phone: guestPhone,
+          departure_date: departureDate,
           status: 'active',
           waiver_agreed: true,
           waiver_agreed_at: new Date().toISOString(),
@@ -252,6 +254,19 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
               onChange={(event) => setGuestPhone(event.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
               placeholder="Enter phone number"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700" htmlFor="departure-date">
+              Checkout Date
+            </label>
+            <input
+              id="departure-date"
+              type="date"
+              value={departureDate}
+              onChange={(event) => setDepartureDate(event.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
             />
           </div>
         </div>
@@ -364,7 +379,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
           onClick={handleNext}
           disabled={
             uploading ||
-            (isGuestStep && (!guestName.trim() || !guestPhone.trim())) ||
+            (isGuestStep && (!guestName.trim() || !guestPhone.trim() || !departureDate.trim())) ||
             (isWaiverStep && !waiverAgreed)
           }
           className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px] flex items-center justify-center gap-2"
