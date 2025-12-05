@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, History, LogOut, Zap, CarFront } from "lucide-react";
+import {
+  LayoutGrid,
+  History,
+  LogOut,
+  Zap,
+  LayoutDashboard,
+  Wrench,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const navLinks = [
-  { label: "Fleet", href: "/dashboard", icon: LayoutGrid },
+  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
   { label: "History", href: "/dashboard/history", icon: History },
+  { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
 ];
 
 export default function Sidebar() {
