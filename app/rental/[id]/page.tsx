@@ -122,10 +122,11 @@ export default function RentalInspectionPage() {
         ) : isCheckingOut ? (
 
           /* STATE 3: CHECKOUT (PLUG VERIFIER) */
-          <PlugVerifier 
-            cartId={resolvedId} 
-            userId={userId!} 
-            onSuccess={handleCheckoutSuccess} 
+          <PlugVerifier
+            cartId={resolvedId}
+            userId={userId!}
+            rentalId={activeRentalId!}
+            onSuccess={handleCheckoutSuccess}
           />
 
         ) : isUnlocked ? (

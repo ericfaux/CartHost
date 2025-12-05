@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { sendSms } from "../../lib/sms";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -9,7 +12,7 @@ const SYSTEM_PROMPT =
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const imageUrl = body?.imageUrl;
+    const { imageUrl, rentalId } = body ?? {};
 
     if (!imageUrl || typeof imageUrl !== "string") {
       return NextResponse.json(
@@ -18,6 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1. OpenAI Vision Check
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
@@ -34,19 +38,47 @@ export async function POST(req: NextRequest) {
     });
 
     const content = completion.choices[0]?.message?.content;
-
     if (!content) {
-      return NextResponse.json(
-        { error: "No response returned from the AI model." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "No AI response." }, { status: 500 });
     }
 
-    return NextResponse.json(JSON.parse(content));
-  } catch (error) {
-    console.error("Failed to verify plug:", error);
+    const result = JSON.parse(content);
+
+    // 2. If Plugged In, Send SMS
+    if (result.is_plugged_in && rentalId) {
+      const cookieStore = await cookies();
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() { return cookieStore.getAll() },
+            setAll(cookiesToSet) {
+                 try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {}
+            },
+          },
+        }
+      );
+
+      const { data: rental } = await supabase
+        .from('rentals')
+        .select('guest_phone')
+        .eq('id', rentalId)
+        .single();
+      
+      if (rental?.guest_phone) {
+        await sendSms(
+          rental.guest_phone, 
+          "Thanks for plugging in! 🔌 Your rental session is now closed. Safe travels!"
+        );
+      }
+    }
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("Verify plug error:", error);
     return NextResponse.json(
-      { error: "Failed to verify plug. Please try again." },
+      { error: error.message || "Failed to verify plug." },
       { status: 500 }
     );
   }
