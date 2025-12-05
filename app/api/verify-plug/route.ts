@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-// FIX: Go up 3 levels to find the root lib folder
+// FIX: Correct depth for import
 import { sendSms } from "../../../lib/sms";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
