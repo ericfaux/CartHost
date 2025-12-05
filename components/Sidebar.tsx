@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutGrid, History, LogOut, Zap, CarFront } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const navLinks = [
-  { label: "Fleet", href: "/dashboard" },
-  { label: "History", href: "/dashboard/history" },
+  { label: "Fleet", href: "/dashboard", icon: LayoutGrid },
+  { label: "History", href: "/dashboard/history", icon: History },
 ];
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -18,22 +20,51 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 border-r border-gray-200 p-6">
-      <h1 className="mb-8 text-2xl font-semibold">CartHost</h1>
-      <nav className="mb-8 space-y-4">
-        {navLinks.map((link) => (
-          <Link key={link.href} href={link.href} className="block text-lg text-blue-600">
-            {link.label}
-          </Link>
-        ))}
+    <aside className="hidden w-64 flex-col bg-slate-900 text-white md:flex">
+      {/* Brand Header */}
+      <div className="flex h-20 items-center gap-3 border-b border-slate-800 px-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-lg shadow-blue-900/20">
+          <Zap className="h-5 w-5 text-white" fill="currentColor" />
+        </div>
+        <h1 className="text-lg font-bold tracking-tight">CartHost</h1>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 px-4 py-6">
+        {navLinks.map((link) => {
+          const Icon = link.icon;
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Icon
+                className={`h-5 w-5 ${
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+                }`}
+              />
+              {link.label}
+            </Link>
+          );
+        })}
       </nav>
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="rounded bg-red-500 px-4 py-2 text-white transition hover:bg-red-600"
-      >
-        Logout
-      </button>
+
+      {/* Footer / User */}
+      <div className="border-t border-slate-800 p-4">
+        <button
+          onClick={handleLogout}
+          className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-red-950/30 hover:text-red-400"
+        >
+          <LogOut className="h-5 w-5 transition-colors group-hover:text-red-400" />
+          Sign Out
+        </button>
+      </div>
     </aside>
   );
 }
