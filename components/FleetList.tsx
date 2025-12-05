@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MoreHorizontal, Key, CarFront, Plus, Trash2, Edit2 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
 
@@ -36,83 +37,87 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Fleet</h1>
-          <p className="text-sm text-gray-500">Manage your carts and monitor their status.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Fleet</h1>
+          <p className="text-sm text-gray-500">Manage your vehicles and access codes.</p>
         </div>
-        <AddCartModal />
+        
+        {/* We pass a custom trigger button to the modal to make it look nice */}
+        <AddCartModal 
+          trigger={(open) => (
+            <button
+              onClick={open}
+              className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              Add Vehicle
+            </button>
+          )}
+        />
       </div>
 
       {carts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
-          No carts yet. Add your first cart to get started.
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
+            <CarFront className="h-6 w-6 text-gray-400" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold text-gray-900">No vehicles yet</h3>
+          <p className="mt-1 text-sm text-gray-500">Get started by adding your first golf cart.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {carts.map((cart) => {
             return (
               <div
                 key={cart.id}
-                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-400">Cart</p>
-                    <h3 className="text-lg font-semibold text-gray-900">{cart.name}</h3>
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                        <CarFront className="h-6 w-6" />
+                    </div>
+                    <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(cart)}
+                          className="rounded-md p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                        >
+                           <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cart.id)}
+                          disabled={deletingId === cart.id}
+                          className="rounded-md p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                        >
+                           <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(cart)}
-                      className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
-                      aria-label={`Edit ${cart.name}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.862 4.487l1.687 1.687c.55.55.55 1.44 0 1.99l-8.25 8.25-3.181.707.707-3.181 8.25-8.25c.55-.55 1.44-.55 1.99 0z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(cart.id)}
-                      disabled={deletingId === cart.id}
-                      className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-                      aria-label={`Delete ${cart.name}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6.75 7.5h10.5M9.75 7.5v9a.75.75 0 001.5 0v-9m3 0v9a.75.75 0 001.5 0v-9m-7.5 0h10.5m-9-1.5h7.5l-.75-1.5h-6l-.75 1.5z"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+
+                  <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
+                    {cart.name}
+                  </h3>
+                  <p className="text-xs font-medium text-green-600 mt-1 flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    Active in Fleet
+                  </p>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Key Code</span>
-                    <span className="font-mono text-sm font-bold text-gray-900">{cart.key_code || "----"}</span>
+                <div className="mt-6">
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
+                    <div className="flex items-center gap-2 text-gray-500">
+                        <Key className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
+                    </div>
+                    <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
+                        {cart.key_code || "----"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -121,14 +126,13 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
         </div>
       )}
 
+      {/* Edit Modal (Hidden Logic) */}
       <AddCartModal
         cart={selectedCart}
         isOpen={isEditOpen}
         onOpenChange={(open) => {
           setIsEditOpen(open);
-          if (!open) {
-            setSelectedCart(null);
-          }
+          if (!open) setSelectedCart(null);
         }}
         showTrigger={false}
       />
