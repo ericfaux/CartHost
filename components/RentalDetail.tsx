@@ -22,7 +22,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
 
   const formattedDate = useMemo(() => {
     const date = new Date(rental.created_at);
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString(en-US, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -35,7 +35,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
     if (!rental.waiver_agreed_at) return null;
 
     const date = new Date(rental.waiver_agreed_at);
-    return date.toLocaleString(undefined, {
+    return date.toLocaleString(en-US, {
       year: "numeric",
       month: "long",
       day: "numeric",
