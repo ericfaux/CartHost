@@ -3,6 +3,7 @@
 import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { supabase } from '../lib/supabase';
+import { sendWelcomeSms } from '../app/actions/notifications';
 
 type InspectionWizardProps = {
   cartId: string;
@@ -191,6 +192,12 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
         console.error('Failed to save rental:', rentalError);
         setError(`Failed to save rental: ${rentalError.message}`);
         return;
+      }
+
+      try {
+        await sendWelcomeSms(data.id);
+      } catch (err) {
+        console.error('Failed to send welcome SMS:', err);
       }
 
       onComplete(data.id);

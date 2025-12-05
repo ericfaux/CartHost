@@ -8,10 +8,11 @@ import { supabase } from '../lib/supabase';
 type PlugVerifierProps = {
   cartId: string;
   userId: string;
+  rentalId: string;
   onSuccess: () => void;
 };
 
-export default function PlugVerifier({ cartId, userId, onSuccess }: PlugVerifierProps) {
+export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: PlugVerifierProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export default function PlugVerifier({ cartId, userId, onSuccess }: PlugVerifier
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify({ imageUrl, rentalId }),
       });
 
       if (!response.ok) {
