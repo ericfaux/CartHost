@@ -13,34 +13,30 @@ export async function sendSms(to: string, body: string) {
     return null;
   }
 
-  // --- NEW: FORMATTING LOGIC ---
-  // Remove all non-numeric characters (parentheses, dashes, spaces)
+  // 1. Clean the number
   let cleanTo = to.replace(/\D/g, '');
 
-  // If it's a standard 10-digit US number, add +1
+  // 2. Add US Country Code if missing
   if (cleanTo.length === 10) {
     cleanTo = `+1${cleanTo}`;
-  } 
-  // If it has 11 digits and starts with 1, add +
-  else if (cleanTo.length === 11 && cleanTo.startsWith('1')) {
+  } else if (!cleanTo.startsWith('+')) {
     cleanTo = `+${cleanTo}`;
   }
-  // Otherwise, fallback to adding + if missing
-  else if (!to.startsWith('+')) {
-    cleanTo = `+${cleanTo}`;
-  }
-  // -----------------------------
+
+  // 3. Add WhatsApp prefixes for Sandbox
+  const whatsappTo = `whatsapp:${cleanTo}`;
+  const whatsappFrom = `whatsapp:${phoneNumber}`; 
 
   try {
     const message = await client.messages.create({
       body,
-      from: phoneNumber,
-      to: cleanTo, // Use the formatted number
+      from: whatsappFrom,
+      to: whatsappTo,
     });
-    console.log(`✅ SMS sent to ${cleanTo}: ${message.sid}`);
+    console.log(`✅ WhatsApp sent to ${whatsappTo}: ${message.sid}`);
     return message;
   } catch (error) {
-    console.error("❌ Failed to send SMS:", error);
+    console.error("❌ Failed to send WhatsApp:", error);
     return null;
   }
 }
