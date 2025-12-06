@@ -7,10 +7,13 @@ import { revalidatePath } from "next/cache"; // Import this!
 export async function createCart(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
+  const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
 
   if (!name || !keyCode) {
     throw new Error("Cart name and key code are required.");
   }
+
+  const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
 
   const cookieStore = await cookies();
 
@@ -51,6 +54,7 @@ export async function createCart(formData: FormData) {
   const { error } = await supabase.from("carts").insert({
     name,
     key_code: keyCode,
+    last_serviced_at: sanitizedLastServicedAt,
     host_id: user.id,
   });
 
@@ -66,10 +70,13 @@ export async function createCart(formData: FormData) {
 export async function updateCart(id: string, formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
+  const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
 
   if (!name || !keyCode) {
     throw new Error("Cart name and key code are required.");
   }
+
+  const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
 
   const cookieStore = await cookies();
 
@@ -106,7 +113,11 @@ export async function updateCart(id: string, formData: FormData) {
 
   const { error } = await supabase
     .from("carts")
-    .update({ name, key_code: keyCode })
+    .update({
+      name,
+      key_code: keyCode,
+      last_serviced_at: sanitizedLastServicedAt,
+    })
     .eq("id", id)
     .eq("host_id", user.id)
     .select("id")
