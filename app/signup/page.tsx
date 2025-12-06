@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { signUp } from "../auth/actions";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { signUp } from "../auth/actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -18,6 +19,8 @@ function SubmitButton() {
 }
 
 export default function SignupPage() {
+  const [state, formAction] = useActionState(signUp, null);
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-white">
       <div className="mx-auto flex min-h-[80vh] max-w-lg items-center">
@@ -34,7 +37,7 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <form action={signUp} className="space-y-5">
+          <form action={formAction} className="space-y-5">
             <div className="space-y-2">
               <label
                 className="block text-sm font-medium text-slate-200"
@@ -126,6 +129,12 @@ export default function SignupPage() {
             </div>
 
             <SubmitButton />
+
+            {state?.error && (
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200" role="alert">
+                {state.error}
+              </div>
+            )}
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-400">

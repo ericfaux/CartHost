@@ -45,41 +45,46 @@ async function createSupabaseActionClient() {
   });
 }
 
-export async function signUp(formData: FormData) {
-  const email = formData.get("email")?.toString().trim();
-  const password = formData.get("password")?.toString();
-  const fullName = formData.get("fullName")?.toString().trim() || null;
-  const phone = formData.get("phone")?.toString().trim() || null;
-  const companyName = formData.get("companyName")?.toString().trim() || null;
+export async function signUp(prevState: any, formData: FormData) {
+  try {
+    const email = formData.get("email")?.toString().trim();
+    const password = formData.get("password")?.toString();
+    const fullName = formData.get("fullName")?.toString().trim() || null;
+    const phone = formData.get("phone")?.toString().trim() || null;
+    const companyName = formData.get("companyName")?.toString().trim() || null;
 
-  if (!email || !password) {
-    throw new Error("Email and password are required");
+    if (!email || !password) {
+      return { error: "Email and password are required." };
+    }
+
+    const supabase = await createSupabaseActionClient();
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error || !data.user) {
+      console.error("Sign up failed:", error);
+      return { error: error?.message ?? "Unable to sign up." };
+    }
+
+    const { error: hostUpdateError } = await supabase
+      .from("hosts")
+      .update({
+        full_name: fullName,
+        phone_number: phone,
+        company_name: companyName,
+      })
+      .eq("id", data.user.id);
+
+    if (hostUpdateError) {
+      console.error("Failed to update host profile:", hostUpdateError);
+      return { error: "Account created, but profile update failed." };
+    }
+
+    redirect("/dashboard");
+  } catch (error) {
+    console.error("Unexpected sign up error:", error);
+    return { error: "Something went wrong. Please try again." };
   }
-
-  const supabase = await createSupabaseActionClient();
-
-  const { data, error } = await supabase.auth.signUp({ email, password });
-
-  if (error || !data.user) {
-    console.error("Sign up failed:", error);
-    throw new Error(error?.message ?? "Unable to sign up");
-  }
-
-  const { error: hostUpdateError } = await supabase
-    .from("hosts")
-    .update({
-      full_name: fullName,
-      phone_number: phone,
-      company_name: companyName,
-    })
-    .eq("id", data.user.id);
-
-  if (hostUpdateError) {
-    console.error("Failed to update host profile:", hostUpdateError);
-    throw new Error("Account created, but profile update failed");
-  }
-
-  redirect("/dashboard");
 }
 
 export async function signIn(formData: FormData) {
