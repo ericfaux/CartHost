@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { CarFront, History } from "lucide-react";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -130,10 +131,54 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-900">Quick Access</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                <CarFront className="h-5 w-5 text-gray-700" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-gray-900">My Fleet</p>
+                <p className="text-sm text-gray-500">
+                  Manage vehicles, update key codes, and track service.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/fleet"
+              className="inline-flex w-fit items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50"
+            >
+              Go to Fleet
+            </Link>
+          </div>
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                <History className="h-5 w-5 text-gray-700" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-gray-900">Rental History</p>
+                <p className="text-sm text-gray-500">
+                  View past rentals, evidence photos, and waiver compliance.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/history"
+              className="inline-flex w-fit items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50"
+            >
+              View History
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Fleet Health</h1>
         <p className="text-sm text-gray-500">
-          Monitor service intervals and keep every vehicle guest-ready.
+          Automated tracking based on usage. Carts are flagged as Due Soon after 20 trips (or 11 months) and Overdue after 30 trips (or 1 year).
         </p>
       </div>
 
