@@ -8,12 +8,17 @@ export async function createCart(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
+  const accessInstructions = formData.get("accessInstructions")?.toString().trim();
 
   if (!name || !keyCode) {
     throw new Error("Cart name and key code are required.");
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
+  const sanitizedAccessInstructions =
+    accessInstructions === "" || accessInstructions === undefined
+      ? null
+      : accessInstructions;
 
   const cookieStore = await cookies();
 
@@ -55,6 +60,7 @@ export async function createCart(formData: FormData) {
     name,
     key_code: keyCode,
     last_serviced_at: sanitizedLastServicedAt,
+    access_instructions: sanitizedAccessInstructions,
     host_id: user.id,
   });
 
@@ -71,12 +77,17 @@ export async function updateCart(id: string, formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
+  const accessInstructions = formData.get("accessInstructions")?.toString().trim();
 
   if (!name || !keyCode) {
     throw new Error("Cart name and key code are required.");
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
+  const sanitizedAccessInstructions =
+    accessInstructions === "" || accessInstructions === undefined
+      ? null
+      : accessInstructions;
 
   const cookieStore = await cookies();
 
@@ -117,6 +128,7 @@ export async function updateCart(id: string, formData: FormData) {
       name,
       key_code: keyCode,
       last_serviced_at: sanitizedLastServicedAt,
+      access_instructions: sanitizedAccessInstructions,
     })
     .eq("id", id)
     .eq("host_id", user.id)
