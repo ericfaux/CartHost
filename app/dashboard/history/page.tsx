@@ -50,7 +50,9 @@ export default async function HistoryPage() {
 
   const { data: rentals = [] } = await supabase
     .from("rentals")
-    .select("*, revenue, carts!inner(name, host_id)") // Use !inner to force the filter
+    .select(
+      "id, created_at, guest_name, status, revenue, photos, carts!inner(name, host_id)"
+    ) // Use !inner to force the filter
     .eq("carts.host_id", user.id) // Filter by the joined cart's host_id
     .order("created_at", { ascending: false });
 

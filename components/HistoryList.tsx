@@ -2,6 +2,12 @@
 
 import { useRouter } from "next/navigation";
 
+const revenueFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+});
+
 type Rental = {
   id: string;
   created_at: string;
@@ -45,16 +51,10 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   };
 
   const renderRevenue = (revenue?: number | null) => {
-    if (revenue && revenue > 0) {
-      const formatter = new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-      });
-
+    if (typeof revenue === "number" && revenue > 0) {
       return (
         <span className="text-emerald-600 font-medium">
-          +{formatter.format(revenue)}
+          +{revenueFormatter.format(revenue)}
         </span>
       );
     }
