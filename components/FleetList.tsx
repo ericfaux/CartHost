@@ -9,6 +9,7 @@ type Cart = {
   id: string;
   name: string;
   key_code?: string | null;
+  last_serviced_at?: string | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
@@ -111,14 +112,20 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
 
                 <div className="mt-6">
                   <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-                    <div className="flex items-center gap-2 text-gray-500">
-                        <Key className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
-                    </div>
-                    <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
-                        {cart.key_code || "----"}
-                    </span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                      <Key className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
                   </div>
+                  <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
+                      {cart.key_code || "----"}
+                  </span>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Last Service:{" "}
+                    {cart.last_serviced_at
+                      ? new Date(cart.last_serviced_at).toLocaleDateString()
+                      : "Not recorded"}
+                  </p>
                 </div>
               </div>
             );
