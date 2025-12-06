@@ -10,6 +10,7 @@ type Cart = {
   key_code?: string | null;
   last_serviced_at?: string | null;
   access_instructions?: string | null;
+  status?: string | null;
 };
 
 type AddCartModalProps = {
@@ -35,6 +36,7 @@ export default function AddCartModal({
   const [keyCode, setKeyCode] = useState("");
   const [lastServicedAt, setLastServicedAt] = useState("");
   const [accessInstructions, setAccessInstructions] = useState("");
+  const [status, setStatus] = useState("active");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -43,6 +45,7 @@ export default function AddCartModal({
     setName(cart?.name ?? "");
     setKeyCode(cart?.key_code ?? "");
     setAccessInstructions(cart?.access_instructions ?? "");
+    setStatus((cart?.status ?? "active").toLowerCase());
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -67,6 +70,7 @@ export default function AddCartModal({
     formData.set("keyCode", keyCode.trim());
     formData.set("lastServicedAt", lastServicedAt.trim());
     formData.set("accessInstructions", accessInstructions.trim());
+    formData.set("status", status);
 
     try {
       if (isEditing && cart) {
@@ -78,6 +82,7 @@ export default function AddCartModal({
       setKeyCode(cart?.key_code ?? "");
       setLastServicedAt(cart?.last_serviced_at ?? "");
       setAccessInstructions(cart?.access_instructions ?? "");
+      setStatus((cart?.status ?? "active").toLowerCase());
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -141,16 +146,30 @@ export default function AddCartModal({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Key Code</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Key Code (Optional)
+                </label>
                 <input
                   type="text"
                   name="keyCode"
-                  required
                   value={keyCode}
                   onChange={(event) => setKeyCode(event.target.value)}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="1234"
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  name="status"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
 
               <div>

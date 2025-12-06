@@ -9,6 +9,8 @@ type Cart = {
   key_code?: string | null;
   last_serviced_at?: string | null;
   access_instructions?: string | null;
+  status: string;
+  is_currently_rented: boolean;
 };
 
 export default async function DashboardPage() {
@@ -46,9 +48,26 @@ export default async function DashboardPage() {
 
   const { data: carts = [] } = await supabase
     .from("carts")
-    .select("id, name, key_code, last_serviced_at, access_instructions")
+    .select(
+      "id, name, key_code, last_serviced_at, access_instructions, status"
+    )
     .eq("host_id", user.id)
     .order("name");
 
-  return <FleetList carts={carts as Cart[]} />;
+  const { data: activeRentals = [] } = await supabase
+    .from("rentals")
+    .select("cart_id, carts!inner(host_id)")
+    .eq("status", "active")
+    .eq("carts.host_id", user.id);
+
+  const activeRentalIds = new Set(
+    (activeRentals ?? []).map((rental) => rental.cart_id)
+  );
+
+  const cartsWithRentalStatus = (carts ?? []).map((cart) => ({
+    ...cart,
+    is_currently_rented: activeRentalIds.has(cart.id),
+  }));
+
+  return <FleetList carts={cartsWithRentalStatus as Cart[]} />;
 }

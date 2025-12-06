@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Key, CarFront, Plus, Trash2, Edit2 } from "lucide-react";
+import { Key, CarFront, Plus, Trash2, Edit2 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
 
@@ -11,6 +11,8 @@ type Cart = {
   key_code?: string | null;
   last_serviced_at?: string | null;
   access_instructions?: string | null;
+  status: string;
+  is_currently_rented: boolean;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
@@ -102,31 +104,70 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                   <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
                     {cart.name}
                   </h3>
-                  <p className="text-xs font-medium text-green-600 mt-1 flex items-center gap-1">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    Active in Fleet
-                  </p>
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+                    style={{
+                      borderColor:
+                        cart.status === "inactive"
+                          ? "#e5e7eb"
+                          : cart.is_currently_rented
+                          ? "#bfdbfe"
+                          : "#bbf7d0",
+                      backgroundColor:
+                        cart.status === "inactive"
+                          ? "#f9fafb"
+                          : cart.is_currently_rented
+                          ? "#eff6ff"
+                          : "#f0fdf4",
+                      color:
+                        cart.status === "inactive"
+                          ? "#4b5563"
+                          : cart.is_currently_rented
+                          ? "#1d4ed8"
+                          : "#15803d",
+                    }}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{
+                        backgroundColor:
+                          cart.status === "inactive"
+                            ? "#9ca3af"
+                            : cart.is_currently_rented
+                            ? "#3b82f6"
+                            : "#22c55e",
+                      }}
+                    />
+                    {cart.status === "inactive"
+                      ? "Inactive"
+                      : cart.is_currently_rented
+                      ? "Active: In Use"
+                      : "Active: Not in Use"}
+                  </div>
                 </div>
 
                 <div className="mt-6">
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-gray-500">
-                      <Key className="h-4 w-4" />
-                      <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
-                  </div>
-                  <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
-                      {cart.key_code || "----"}
-                  </span>
-                  </div>
+                  {cart.key_code && (
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Key className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
+                      </div>
+                      <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
+                        {cart.key_code}
+                      </span>
+                    </div>
+                  )}
                   <p className="mt-2 text-xs text-gray-500">
                     Last Service:{" "}
                     {cart.last_serviced_at
                       ? new Date(cart.last_serviced_at).toLocaleDateString()
                       : "Not recorded"}
                   </p>
+                  {cart.access_instructions && (
+                    <div className="mt-3 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700 border border-gray-100">
+                      {cart.access_instructions}
+                    </div>
+                  )}
                 </div>
               </div>
             );
