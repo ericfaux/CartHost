@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BatteryWarning,
   CheckCircle,
+  ClipboardList,
   Mail,
   Shield,
   Zap,
@@ -22,6 +23,11 @@ const problems = [
     icon: CheckCircle,
     title: "Unmanned Handoffs",
     description: "Keys left unsecured and waivers ignored.",
+  },
+  {
+    icon: ClipboardList,
+    title: "Untracked Maintenance",
+    description: "No central record of repairs, costs, or service history.",
   },
 ];
 
