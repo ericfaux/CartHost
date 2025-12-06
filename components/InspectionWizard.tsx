@@ -8,6 +8,7 @@ import { sendWelcomeSms } from '../app/actions/notifications';
 type InspectionWizardProps = {
   cartId: string;
   onComplete: (rentalId: string) => void;
+  revenue?: number | null;
 };
 
 type Step = {
@@ -25,7 +26,7 @@ const steps: Step[] = [
   { title: 'Back', description: 'Back Bumper', type: 'photo' },
 ];
 
-export default function InspectionWizard({ cartId, onComplete }: InspectionWizardProps) {
+export default function InspectionWizard({ cartId, onComplete, revenue }: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -184,6 +185,7 @@ export default function InspectionWizard({ cartId, onComplete }: InspectionWizar
           waiver_agreed: true,
           waiver_agreed_at: new Date().toISOString(),
           photos: updatedPhotoUrls,
+          revenue: revenue ?? null,
         })
         .select()
         .single();
