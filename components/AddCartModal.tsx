@@ -9,6 +9,7 @@ type Cart = {
   name: string;
   key_code?: string | null;
   last_serviced_at?: string | null;
+  access_instructions?: string | null;
 };
 
 type AddCartModalProps = {
@@ -33,6 +34,7 @@ export default function AddCartModal({
   const [name, setName] = useState("");
   const [keyCode, setKeyCode] = useState("");
   const [lastServicedAt, setLastServicedAt] = useState("");
+  const [accessInstructions, setAccessInstructions] = useState("");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -40,6 +42,7 @@ export default function AddCartModal({
   useEffect(() => {
     setName(cart?.name ?? "");
     setKeyCode(cart?.key_code ?? "");
+    setAccessInstructions(cart?.access_instructions ?? "");
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -63,6 +66,7 @@ export default function AddCartModal({
     formData.set("name", name.trim());
     formData.set("keyCode", keyCode.trim());
     formData.set("lastServicedAt", lastServicedAt.trim());
+    formData.set("accessInstructions", accessInstructions.trim());
 
     try {
       if (isEditing && cart) {
@@ -73,6 +77,7 @@ export default function AddCartModal({
       setName(cart?.name ?? "");
       setKeyCode(cart?.key_code ?? "");
       setLastServicedAt(cart?.last_serviced_at ?? "");
+      setAccessInstructions(cart?.access_instructions ?? "");
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -145,6 +150,20 @@ export default function AddCartModal({
                   onChange={(event) => setKeyCode(event.target.value)}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="1234"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Access Instructions (Optional)
+                </label>
+                <textarea
+                  name="accessInstructions"
+                  value={accessInstructions}
+                  onChange={(event) => setAccessInstructions(event.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                  placeholder="e.g. Key is in the glove box under the manual."
+                  rows={3}
                 />
               </div>
 

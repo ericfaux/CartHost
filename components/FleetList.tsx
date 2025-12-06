@@ -10,6 +10,7 @@ type Cart = {
   name: string;
   key_code?: string | null;
   last_serviced_at?: string | null;
+  access_instructions?: string | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {

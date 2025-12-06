@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, Unlock, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import InspectionWizard from '../../../components/InspectionWizard';
 import PlugVerifier from '../../../components/PlugVerifier'; // New Import
 
-type Cart = { id: string; name?: string; key_code?: string } | null;
+type Cart = {
+  id: string;
+  name?: string;
+  key_code?: string;
+  access_instructions?: string | null;
+} | null;
 
 export default function RentalInspectionPage() {
   const params = useParams();
@@ -150,6 +155,13 @@ export default function RentalInspectionPage() {
                 {cart?.key_code || '----'}
               </p>
             </div>
+
+            {cart?.access_instructions && (
+              <div className="flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2 text-left text-sm text-blue-800">
+                <Info className="mt-0.5 h-4 w-4" />
+                <p>{cart.access_instructions}</p>
+              </div>
+            )}
             
             <div className="pt-8">
               <p className="text-sm text-gray-400 mb-3">Done for the day?</p>
