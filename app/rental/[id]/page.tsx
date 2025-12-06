@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import { Banknote, Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import InspectionWizard from '../../../components/InspectionWizard';
-import PlugVerifier from '../../../components/PlugVerifier'; // New Import
+import PlugVerifier from '../../../components/PlugVerifier';
 import GasCheckout from '../../../components/GasCheckout';
+import LockCheckout from '../../../components/LockCheckout';
 
 type Cart = {
   id: string;
@@ -14,6 +15,7 @@ type Cart = {
   key_code?: string;
   access_instructions?: string | null;
   type?: string | null;
+  requires_lock_photo?: boolean | null;
   access_type?: string | null;
   upsell_price?: number | null;
   upsell_unit?: string | null;
@@ -159,13 +161,13 @@ export default function RentalInspectionPage() {
          </div>
         ) : isCheckingOut ? (
 
-          /* STATE 3: CHECKOUT (PLUG VERIFIER) */
+        /* STATE 3: CHECKOUT */
           cart?.type === 'gas' ? (
-            <GasCheckout
-              cartId={resolvedId}
-              userId={userId!}
-              onSuccess={handleCheckoutSuccess}
-            />
+            <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+          ) : cart?.type === 'bike' && (cart?.requires_lock_photo ?? true) ? (
+            <LockCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+          ) : cart?.type === 'bike' ? (
+            <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
           ) : (
             <PlugVerifier
               cartId={resolvedId}

@@ -18,6 +18,7 @@ export async function createCart(formData: FormData) {
   const upsellPriceRaw = formData.get("upsellPrice")?.toString().trim();
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
+  const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
 
   if (!name) {
     throw new Error("Cart name is required.");
@@ -102,6 +103,7 @@ export async function createCart(formData: FormData) {
     upsell_price: sanitizedUpsellPrice,
     upsell_unit: sanitizedUpsellUnit,
     access_code: sanitizedAccessCode,
+    requires_lock_photo: requiresLockPhoto,
   });
 
   if (error) {
@@ -127,6 +129,7 @@ export async function updateCart(id: string, formData: FormData) {
   const upsellPriceRaw = formData.get("upsellPrice")?.toString().trim();
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
+  const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
 
   if (!name) {
     throw new Error("Cart name is required.");
@@ -209,6 +212,7 @@ export async function updateCart(id: string, formData: FormData) {
       upsell_price: sanitizedUpsellPrice,
       upsell_unit: sanitizedUpsellUnit,
       access_code: sanitizedAccessCode,
+      requires_lock_photo: requiresLockPhoto,
     })
     .eq("id", id)
     .eq("host_id", user.id)
