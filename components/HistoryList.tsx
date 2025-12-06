@@ -7,6 +7,7 @@ type Rental = {
   created_at: string;
   guest_name?: string | null;
   status?: string | null;
+  revenue?: number | null;
   carts?: {
     name?: string | null;
   } | null;
@@ -43,6 +44,24 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     );
   };
 
+  const renderRevenue = (revenue?: number | null) => {
+    if (revenue && revenue > 0) {
+      const formatter = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+      });
+
+      return (
+        <span className="text-emerald-600 font-medium">
+          +{formatter.format(revenue)}
+        </span>
+      );
+    }
+
+    return <span className="text-gray-400">-</span>;
+  };
+
   if (rentals.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
@@ -72,6 +91,9 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                 Guest Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Revenue
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Status
               </th>
               <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -90,6 +112,9 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                   {rental.guest_name || "Unknown"}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                  {renderRevenue(rental.revenue)}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm">
                   {renderStatus(rental.status)}
