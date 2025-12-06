@@ -12,6 +12,7 @@ type Cart = {
   access_instructions?: string | null;
   status?: string | null;
   type?: string | null;
+  requires_lock_photo?: boolean | null;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
   upsell_unit?: string | null;
@@ -47,6 +48,7 @@ export default function AddCartModal({
   const [upsellPrice, setUpsellPrice] = useState("");
   const [upsellUnit, setUpsellUnit] = useState("day");
   const [accessCode, setAccessCode] = useState("");
+  const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -61,6 +63,9 @@ export default function AddCartModal({
     setUpsellPrice(cart?.upsell_price?.toString() ?? "");
     setUpsellUnit(cart?.upsell_unit ?? "day");
     setAccessCode(cart?.access_code ?? "");
+    setRequiresLockPhoto(
+      cart?.requires_lock_photo ?? true
+    );
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -91,6 +96,7 @@ export default function AddCartModal({
     formData.set("upsellPrice", upsellPrice.trim());
     formData.set("upsellUnit", upsellUnit);
     formData.set("accessCode", accessCode.trim());
+    formData.set("requiresLockPhoto", requiresLockPhoto ? "on" : "off");
 
     try {
       if (isEditing && cart) {
@@ -108,6 +114,7 @@ export default function AddCartModal({
       setUpsellPrice(cart?.upsell_price?.toString() ?? "");
       setUpsellUnit(cart?.upsell_unit ?? "day");
       setAccessCode(cart?.access_code ?? "");
+      setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -180,8 +187,27 @@ export default function AddCartModal({
                 >
                   <option value="electric">Electric</option>
                   <option value="gas">Gas</option>
+                  <option value="bike">Bike</option>
                 </select>
               </div>
+
+              {type === "bike" && (
+                <div className="flex items-center gap-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2">
+                  <label className="flex flex-1 flex-col text-sm text-gray-700">
+                    Require Photo of Lock?
+                    <span className="text-xs text-gray-500">
+                      Enforces proof of the lock before return.
+                    </span>
+                  </label>
+                  <input
+                    type="checkbox"
+                    name="requiresLockPhoto"
+                    checked={requiresLockPhoto}
+                    onChange={(event) => setRequiresLockPhoto(event.target.checked)}
+                    className="h-5 w-5 accent-purple-600"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">

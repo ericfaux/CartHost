@@ -8,6 +8,7 @@ import {
   Edit2,
   Zap,
   Fuel,
+  Bike,
   CarFront,
   Banknote,
   Lock,
@@ -22,6 +23,7 @@ type Cart = {
   last_serviced_at?: string | null;
   access_instructions?: string | null;
   type?: string | null;
+  requires_lock_photo?: boolean | null;
   status: string;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
@@ -89,6 +91,22 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {carts.map((cart) => {
+            const iconWrapperClass =
+              cart.type === "gas"
+                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
+                : cart.type === "bike"
+                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600"
+                : "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600";
+
+            const cartIcon =
+              cart.type === "gas" ? (
+                <Fuel className="h-6 w-6" />
+              ) : cart.type === "bike" ? (
+                <Bike className="h-6 w-6" />
+              ) : (
+                <Zap className="h-6 w-6" />
+              );
+
             return (
               <div
                 key={cart.id}
@@ -96,19 +114,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
               >
                 <div>
                   <div className="flex items-start justify-between">
-                    <div
-                      className={
-                        cart.type === "gas"
-                          ? "flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
-                          : "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
-                      }
-                    >
-                      {cart.type === "gas" ? (
-                        <Fuel className="h-6 w-6" />
-                      ) : (
-                        <Zap className="h-6 w-6" />
-                      )}
-                    </div>
+                    <div className={iconWrapperClass}>{cartIcon}</div>
                     <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(cart)}
