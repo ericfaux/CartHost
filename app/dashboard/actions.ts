@@ -9,9 +9,11 @@ export async function createCart(formData: FormData) {
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
   const accessInstructions = formData.get("accessInstructions")?.toString().trim();
+  const status =
+    formData.get("status")?.toString().trim().toLowerCase() || "active";
 
-  if (!name || !keyCode) {
-    throw new Error("Cart name and key code are required.");
+  if (!name) {
+    throw new Error("Cart name is required.");
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
@@ -62,6 +64,7 @@ export async function createCart(formData: FormData) {
     last_serviced_at: sanitizedLastServicedAt,
     access_instructions: sanitizedAccessInstructions,
     host_id: user.id,
+    status,
   });
 
   if (error) {
@@ -78,9 +81,11 @@ export async function updateCart(id: string, formData: FormData) {
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
   const accessInstructions = formData.get("accessInstructions")?.toString().trim();
+  const status =
+    formData.get("status")?.toString().trim().toLowerCase() || "active";
 
-  if (!name || !keyCode) {
-    throw new Error("Cart name and key code are required.");
+  if (!name) {
+    throw new Error("Cart name is required.");
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
@@ -129,6 +134,7 @@ export async function updateCart(id: string, formData: FormData) {
       key_code: keyCode,
       last_serviced_at: sanitizedLastServicedAt,
       access_instructions: sanitizedAccessInstructions,
+      status,
     })
     .eq("id", id)
     .eq("host_id", user.id)
