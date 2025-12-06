@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Banknote, Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import InspectionWizard from '../../../components/InspectionWizard';
 import PlugVerifier from '../../../components/PlugVerifier'; // New Import
@@ -14,6 +14,10 @@ type Cart = {
   key_code?: string;
   access_instructions?: string | null;
   type?: string | null;
+  access_type?: string | null;
+  upsell_price?: number | null;
+  upsell_unit?: string | null;
+  access_code?: string | null;
 } | null;
 
 export default function RentalInspectionPage() {
@@ -26,6 +30,9 @@ export default function RentalInspectionPage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null); // New State for User ID
   const [activeRentalId, setActiveRentalId] = useState<string | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [unlockCode, setUnlockCode] = useState('');
+  const [unlockError, setUnlockError] = useState('');
   
   // State Machine
   const [isInspecting, setIsInspecting] = useState(false);
@@ -49,7 +56,17 @@ export default function RentalInspectionPage() {
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
-        setCart(cartData as Cart);
+        const fetchedCart = cartData as Cart;
+        setCart(fetchedCart);
+
+        if (fetchedCart?.access_type === 'upsell') {
+          const unlockedFlag =
+            typeof window !== 'undefined' &&
+            localStorage.getItem(`cart_unlocked_${fetchedCart.id}`) === 'true';
+          setIsLocked(!unlockedFlag);
+        } else {
+          setIsLocked(false);
+        }
 
         const { data: rental, error: rentalError } = await supabase
           .from('rentals')
@@ -62,6 +79,7 @@ export default function RentalInspectionPage() {
         if (rental) {
           setIsUnlocked(true);
           setActiveRentalId(rental.id);
+          setIsLocked(false);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to load cart.');
@@ -94,6 +112,19 @@ export default function RentalInspectionPage() {
 
     setIsCheckingOut(false);
     setIsCompleted(true);
+  };
+
+  const handlePaywallUnlock = () => {
+    if (!cart) return;
+
+    if (unlockCode === cart.access_code) {
+      setIsLocked(false);
+      localStorage.setItem(`cart_unlocked_${cart.id}`, 'true');
+      setUnlockError('');
+      return;
+    }
+
+    setUnlockError('Invalid code');
   };
 
   if (loading) {
@@ -182,6 +213,57 @@ export default function RentalInspectionPage() {
                 End Rental & Verify Plug
               </button>
             </div>
+          </div>
+
+        ) : isLocked ? (
+
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex justify-center">
+              <div className="bg-amber-100 p-4 rounded-full">
+                <Banknote className="h-16 w-16 text-amber-600" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-amber-700">Premium Rental Vehicle</h1>
+              <p className="text-gray-600">This cart is available for extra rental.</p>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="rounded-full bg-amber-50 border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700">
+                {`$${cart?.upsell_price ?? 0} / ${cart?.upsell_unit || 'unit'}`}
+              </div>
+            </div>
+
+            <div className="space-y-3 text-left">
+              <label className="text-sm font-semibold text-gray-700" htmlFor="unlock-code">
+                Enter Access Code
+              </label>
+              <input
+                id="unlock-code"
+                type="password"
+                value={unlockCode}
+                onChange={(e) => {
+                  setUnlockCode(e.target.value);
+                  setUnlockError('');
+                }}
+                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none"
+                placeholder="Enter Access Code"
+              />
+              {unlockError && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {unlockError}
+                </p>
+              )}
+            </div>
+
+            <button
+              className="w-full bg-amber-600 text-white rounded-lg py-3 font-semibold shadow-lg hover:bg-amber-500 transition-all active:scale-95"
+              onClick={handlePaywallUnlock}
+            >
+              Unlock
+            </button>
+
+            <p className="text-sm text-gray-500 text-center">Contact your host to book this vehicle.</p>
           </div>
 
         ) : isInspecting ? (
