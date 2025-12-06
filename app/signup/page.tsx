@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { signUp } from "../auth/actions";
 import { useFormStatus } from "react-dom";
