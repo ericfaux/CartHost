@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CarFront, History } from "lucide-react";
+import { CarFront, History, Wrench } from "lucide-react";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -132,12 +132,12 @@ export default async function DashboardHome() {
   return (
     <div className="space-y-8">
       <div className="space-y-3">
-        <p className="text-sm font-semibold text-gray-900">Quick Access</p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-                <CarFront className="h-5 w-5 text-gray-700" />
+                <CarFront className="h-5 w-5 text-blue-600" />
               </div>
               <div className="space-y-1">
                 <p className="text-base font-semibold text-gray-900">My Fleet</p>
@@ -148,7 +148,7 @@ export default async function DashboardHome() {
             </div>
             <Link
               href="/dashboard/fleet"
-              className="inline-flex w-fit items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50"
+              className="inline-flex w-fit items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               Go to Fleet
             </Link>
@@ -156,7 +156,7 @@ export default async function DashboardHome() {
           <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-                <History className="h-5 w-5 text-gray-700" />
+                <History className="h-5 w-5 text-blue-600" />
               </div>
               <div className="space-y-1">
                 <p className="text-base font-semibold text-gray-900">Rental History</p>
@@ -167,9 +167,28 @@ export default async function DashboardHome() {
             </div>
             <Link
               href="/dashboard/history"
-              className="inline-flex w-fit items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50"
+              className="inline-flex w-fit items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               View History
+            </Link>
+          </div>
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                <Wrench className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-gray-900">Maintenance Logs</p>
+                <p className="text-sm text-gray-500">
+                  Log repairs, track service costs, and monitor fleet health.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/maintenance"
+              className="inline-flex w-fit items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Log Maintenance
             </Link>
           </div>
         </div>
