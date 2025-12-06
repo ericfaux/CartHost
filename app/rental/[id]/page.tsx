@@ -269,9 +269,10 @@ export default function RentalInspectionPage() {
         ) : isInspecting ? (
           
           /* STATE 1.5: WIZARD MODE */
-          <InspectionWizard 
-            cartId={resolvedId!} 
-            onComplete={handleUnlock} 
+          <InspectionWizard
+            cartId={resolvedId!}
+            onComplete={handleUnlock}
+            revenue={cart?.upsell_price}
           />
 
         ) : (
