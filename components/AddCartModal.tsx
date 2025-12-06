@@ -8,6 +8,7 @@ type Cart = {
   id: string;
   name: string;
   key_code?: string | null;
+  last_serviced_at?: string | null;
 };
 
 type AddCartModalProps = {
@@ -31,6 +32,7 @@ export default function AddCartModal({
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [keyCode, setKeyCode] = useState("");
+  const [lastServicedAt, setLastServicedAt] = useState("");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -38,6 +40,11 @@ export default function AddCartModal({
   useEffect(() => {
     setName(cart?.name ?? "");
     setKeyCode(cart?.key_code ?? "");
+    if (cart?.last_serviced_at) {
+      setLastServicedAt(cart.last_serviced_at);
+    } else {
+      setLastServicedAt("");
+    }
   }, [cart, isOpen]);
 
   const setOpen = (open: boolean) => {
@@ -55,6 +62,7 @@ export default function AddCartModal({
     const formData = new FormData();
     formData.set("name", name.trim());
     formData.set("keyCode", keyCode.trim());
+    formData.set("lastServicedAt", lastServicedAt.trim());
 
     try {
       if (isEditing && cart) {
@@ -64,6 +72,7 @@ export default function AddCartModal({
       }
       setName(cart?.name ?? "");
       setKeyCode(cart?.key_code ?? "");
+      setLastServicedAt(cart?.last_serviced_at ?? "");
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -137,6 +146,20 @@ export default function AddCartModal({
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="1234"
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Last Service Date
+                </label>
+                <input
+                  type="date"
+                  name="lastServicedAt"
+                  value={lastServicedAt}
+                  onChange={(event) => setLastServicedAt(event.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                />
+                <p className="mt-1 text-xs text-gray-500">Leave blank if unknown.</p>
               </div>
 
               {error && (
