@@ -45,36 +45,36 @@ const steps = [
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <header className="border-b border-slate-200">
+    <main className="min-h-screen bg-slate-950 text-slate-200">
+      <header className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+          <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600/10 text-blue-500 ring-1 ring-blue-500/30">
               <Zap className="h-5 w-5" aria-hidden />
             </span>
             CartHost
           </Link>
           <Link
             href="/login"
-            className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-900 transition hover:border-blue-200 hover:text-blue-700"
+            className="rounded-md border border-slate-800 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-blue-500/60 hover:text-white"
           >
             Log In
           </Link>
         </div>
       </header>
 
-      <section className="border-b border-slate-100">
+      <section className="border-b border-slate-900 bg-slate-950">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 lg:grid-cols-2 lg:py-24">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-3 py-1 text-sm font-medium text-blue-400 ring-1 ring-blue-500/30">
               <Shield className="h-4 w-4" aria-hidden />
               Fleet safety, automated
             </div>
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+              <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
                 The Digital Gate for Your Golf Cart Fleet.
               </h1>
-              <p className="text-lg text-slate-600">
+              <p className="text-lg text-slate-300">
                 Stop eating $2,000 battery costs. Protect your liability. Automate
                 the handoff.
               </p>
@@ -82,35 +82,36 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
               >
                 Host Login
               </Link>
               <Link
                 href="mailto:support@carthost.app"
-                className="inline-flex items-center justify-center rounded-md border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:border-blue-200 hover:text-blue-700"
+                className="inline-flex items-center justify-center rounded-md border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-blue-500/60 hover:text-white"
               >
                 Contact Sales
               </Link>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-6 shadow-sm">
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl shadow-blue-900/30">
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900">The Problem</h2>
+              <h2 className="text-lg font-semibold text-white">The Problem</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {problems.map((problem) => (
                   <div
                     key={problem.title}
-                    className="flex h-full items-start gap-3 rounded-lg bg-white p-4 shadow-sm"
+                    className="flex h-full items-start gap-3 rounded-lg bg-slate-800/80 p-4 shadow-lg shadow-black/30"
                   >
-                    <span className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <span className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/10 text-blue-400 ring-1 ring-blue-500/30">
                       <problem.icon className="h-5 w-5" aria-hidden />
                     </span>
                     <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-slate-900">
+                      <h3 className="text-base font-semibold text-white">
                         {problem.title}
                       </h3>
-                      <p className="text-sm text-slate-600">{problem.description}</p>
+                      <p className="text-sm text-slate-300">{problem.description}</p>
                     </div>
                   </div>
                 ))}
@@ -120,50 +121,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100">
+      <section className="border-b border-slate-900 bg-slate-950">
         <div className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
           <div className="mb-10 space-y-3 text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-400">
               How it works
             </p>
-            <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
+            <h2 className="text-3xl font-semibold text-white sm:text-4xl">
               The solution from arrival to plug-in
             </h2>
-            <p className="text-base text-slate-600">
+            <p className="text-base text-slate-300">
               Every guest interaction is verified, logged, and tied to your rental.
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map((step) => (
-              <div
-                key={step.title}
-                className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
-              >
-                <div className="flex items-center gap-3 text-sm font-semibold text-blue-700">
-                  <CheckCircle className="h-4 w-4" aria-hidden />
-                  {step.label}
+
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl shadow-blue-900/30">
+            <div className="grid gap-6 md:grid-cols-3">
+              {steps.map((step) => (
+                <div
+                  key={step.title}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-800/80 p-6 shadow-lg shadow-black/30"
+                >
+                  <div className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-600/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-300 ring-1 ring-blue-500/30">
+                    <CheckCircle className="h-4 w-4" aria-hidden />
+                    {step.label}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white">{step.title}</h3>
+                  <p className="text-sm text-slate-300">{step.description}</p>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
-                <p className="text-sm text-slate-600">{step.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-50">
+      <section className="border-t border-slate-800 bg-slate-950">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <h3 className="text-xl font-semibold text-slate-900">
+            <h3 className="text-xl font-semibold text-white">
               Have questions? Need help setting up?
             </h3>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-300">
               We&apos;re here to get your fleet live without the headaches.
             </p>
           </div>
           <Link
             href="mailto:support@carthost.app"
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
           >
             <Mail className="h-4 w-4" aria-hidden />
             support@carthost.app
