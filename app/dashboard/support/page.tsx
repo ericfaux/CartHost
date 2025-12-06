@@ -22,9 +22,9 @@ const cards = [
     title: "Documentation",
     description: "Guides and best practices for managing your fleet.",
     icon: FileText,
-    actionLabel: "Coming Soon",
-    href: "#",
-    disabled: true,
+    actionLabel: "Read Guide",
+    href: "/dashboard/documentation",
+    disabled: false,
   },
 ];
 
