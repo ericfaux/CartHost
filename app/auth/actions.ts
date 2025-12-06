@@ -79,12 +79,12 @@ export async function signUp(prevState: any, formData: FormData) {
       console.error("Failed to update host profile:", hostUpdateError);
       return { error: "Account created, but profile update failed." };
     }
-
-    redirect("/dashboard");
   } catch (error) {
     console.error("Unexpected sign up error:", error);
     return { error: "Something went wrong. Please try again." };
   }
+
+  redirect("/dashboard");
 }
 
 export async function signIn(formData: FormData) {
