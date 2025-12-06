@@ -11,9 +11,9 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Missing Supabase environment variables");
 }
 
-function createSupabaseActionClient() {
-  const cookieStore = cookies();
-  const headerList = headers();
+async function createSupabaseActionClient() {
+  const cookieStore = await cookies();
+  const headerList = await headers();
 
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
@@ -56,7 +56,7 @@ export async function signUp(formData: FormData) {
     throw new Error("Email and password are required");
   }
 
-  const supabase = createSupabaseActionClient();
+  const supabase = await createSupabaseActionClient();
 
   const { data, error } = await supabase.auth.signUp({ email, password });
 
@@ -90,7 +90,7 @@ export async function signIn(formData: FormData) {
     throw new Error("Email and password are required");
   }
 
-  const supabase = createSupabaseActionClient();
+  const supabase = await createSupabaseActionClient();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -103,7 +103,7 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = createSupabaseActionClient();
+  const supabase = await createSupabaseActionClient();
 
   const { error } = await supabase.auth.signOut();
 
