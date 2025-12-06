@@ -18,7 +18,7 @@ const navLinks = [
   { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
   { label: "History", href: "/dashboard/history", icon: History },
   { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
-  { label: "Support", href: "mailto:support@carthost.app", icon: LifeBuoy },
+  { label: "Support", href: "/dashboard/support", icon: LifeBuoy },
 ];
 
 export default function Sidebar() {
@@ -44,44 +44,24 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1 px-4 py-6">
         {navLinks.map((link) => {
           const Icon = link.icon;
-          const isExternal = link.href.startsWith("mailto:");
           const isActive = pathname === link.href;
           return (
-            isExternal ? (
-              <a
-                key={link.href}
-                href={link.href}
-                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Icon
+                className={`h-5 w-5 ${
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-white"
                 }`}
-              >
-                <Icon
-                  className={`h-5 w-5 ${
-                    isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-                  }`}
-                />
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <Icon
-                  className={`h-5 w-5 ${
-                    isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-                  }`}
-                />
-                {link.label}
-              </Link>
-            )
+              />
+              {link.label}
+            </Link>
           );
         })}
       </nav>
