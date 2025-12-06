@@ -12,6 +12,10 @@ type Cart = {
   access_instructions?: string | null;
   status?: string | null;
   type?: string | null;
+  access_type: "included" | "upsell";
+  upsell_price?: number | null;
+  upsell_unit?: string | null;
+  access_code?: string | null;
 };
 
 type AddCartModalProps = {
@@ -39,6 +43,10 @@ export default function AddCartModal({
   const [accessInstructions, setAccessInstructions] = useState("");
   const [status, setStatus] = useState("active");
   const [type, setType] = useState("electric");
+  const [accessType, setAccessType] = useState<"included" | "upsell">("included");
+  const [upsellPrice, setUpsellPrice] = useState("");
+  const [upsellUnit, setUpsellUnit] = useState("day");
+  const [accessCode, setAccessCode] = useState("");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -49,6 +57,10 @@ export default function AddCartModal({
     setAccessInstructions(cart?.access_instructions ?? "");
     setStatus((cart?.status ?? "active").toLowerCase());
     setType((cart?.type ?? "electric").toLowerCase());
+    setAccessType(cart?.access_type ?? "included");
+    setUpsellPrice(cart?.upsell_price?.toString() ?? "");
+    setUpsellUnit(cart?.upsell_unit ?? "day");
+    setAccessCode(cart?.access_code ?? "");
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -75,6 +87,10 @@ export default function AddCartModal({
     formData.set("accessInstructions", accessInstructions.trim());
     formData.set("status", status);
     formData.set("type", type);
+    formData.set("accessType", accessType);
+    formData.set("upsellPrice", upsellPrice.trim());
+    formData.set("upsellUnit", upsellUnit);
+    formData.set("accessCode", accessCode.trim());
 
     try {
       if (isEditing && cart) {
@@ -88,6 +104,10 @@ export default function AddCartModal({
       setAccessInstructions(cart?.access_instructions ?? "");
       setStatus((cart?.status ?? "active").toLowerCase());
       setType((cart?.type ?? "electric").toLowerCase());
+      setAccessType(cart?.access_type ?? "included");
+      setUpsellPrice(cart?.upsell_price?.toString() ?? "");
+      setUpsellUnit(cart?.upsell_unit ?? "day");
+      setAccessCode(cart?.access_code ?? "");
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -188,6 +208,100 @@ export default function AddCartModal({
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-semibold text-gray-800">Access & Pricing</p>
+
+                <div className="flex flex-col gap-2 text-sm text-gray-700">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="accessType"
+                      value="included"
+                      checked={accessType === "included"}
+                      onChange={() => setAccessType("included")}
+                      className="h-4 w-4"
+                    />
+                    <span>
+                      Included in Stay
+                      <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-700">
+                        Standard
+                      </span>
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="accessType"
+                      value="upsell"
+                      checked={accessType === "upsell"}
+                      onChange={() => setAccessType("upsell")}
+                      className="h-4 w-4"
+                    />
+                    <span>
+                      Upsell / Rental
+                      <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
+                        Premium
+                      </span>
+                    </span>
+                  </label>
+                </div>
+
+                {accessType === "upsell" && (
+                  <div className="space-y-3 rounded-md bg-gray-100 p-3 text-sm text-gray-700">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                          Price ($)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          name="upsellPrice"
+                          value={upsellPrice}
+                          onChange={(event) => setUpsellPrice(event.target.value)}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                          placeholder="50"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                          Unit
+                        </label>
+                        <select
+                          name="upsellUnit"
+                          value={upsellUnit}
+                          onChange={(event) => setUpsellUnit(event.target.value)}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                        >
+                          <option value="day">Day</option>
+                          <option value="week">Week</option>
+                          <option value="stay">Stay</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Unlock Code
+                      </label>
+                      <input
+                        type="text"
+                        name="accessCode"
+                        value={accessCode}
+                        onChange={(event) => setAccessCode(event.target.value)}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                        placeholder="PIN for guests"
+                      />
+                      <p className="mt-1 text-[11px] text-gray-500">
+                        The PIN guests enter to unlock this cart.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
