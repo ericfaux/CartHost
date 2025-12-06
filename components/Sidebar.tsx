@@ -14,7 +14,7 @@ import {
 import { supabase } from "../lib/supabase";
 
 const navLinks = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
   { label: "History", href: "/dashboard/history", icon: History },
   { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
