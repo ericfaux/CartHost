@@ -6,12 +6,14 @@ import { Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 'lucide-re
 import { supabase } from '../../../lib/supabase';
 import InspectionWizard from '../../../components/InspectionWizard';
 import PlugVerifier from '../../../components/PlugVerifier'; // New Import
+import GasCheckout from '../../../components/GasCheckout';
 
 type Cart = {
   id: string;
   name?: string;
   key_code?: string;
   access_instructions?: string | null;
+  type?: string | null;
 } | null;
 
 export default function RentalInspectionPage() {
@@ -127,12 +129,20 @@ export default function RentalInspectionPage() {
         ) : isCheckingOut ? (
 
           /* STATE 3: CHECKOUT (PLUG VERIFIER) */
-          <PlugVerifier
-            cartId={resolvedId}
-            userId={userId!}
-            rentalId={activeRentalId!}
-            onSuccess={handleCheckoutSuccess}
-          />
+          {cart?.type === 'gas' ? (
+            <GasCheckout
+              cartId={resolvedId}
+              userId={userId!}
+              onSuccess={handleCheckoutSuccess}
+            />
+          ) : (
+            <PlugVerifier
+              cartId={resolvedId}
+              userId={userId!}
+              rentalId={activeRentalId!}
+              onSuccess={handleCheckoutSuccess}
+            />
+          )}
 
         ) : isUnlocked ? (
 

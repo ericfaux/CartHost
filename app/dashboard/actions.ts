@@ -11,6 +11,8 @@ export async function createCart(formData: FormData) {
   const accessInstructions = formData.get("accessInstructions")?.toString().trim();
   const status =
     formData.get("status")?.toString().trim().toLowerCase() || "active";
+  const type =
+    formData.get("type")?.toString().trim().toLowerCase() || "electric";
 
   if (!name) {
     throw new Error("Cart name is required.");
@@ -65,6 +67,7 @@ export async function createCart(formData: FormData) {
     access_instructions: sanitizedAccessInstructions,
     host_id: user.id,
     status,
+    type,
   });
 
   if (error) {
@@ -83,6 +86,8 @@ export async function updateCart(id: string, formData: FormData) {
   const accessInstructions = formData.get("accessInstructions")?.toString().trim();
   const status =
     formData.get("status")?.toString().trim().toLowerCase() || "active";
+  const type =
+    formData.get("type")?.toString().trim().toLowerCase() || "electric";
 
   if (!name) {
     throw new Error("Cart name is required.");
@@ -135,6 +140,7 @@ export async function updateCart(id: string, formData: FormData) {
       last_serviced_at: sanitizedLastServicedAt,
       access_instructions: sanitizedAccessInstructions,
       status,
+      type,
     })
     .eq("id", id)
     .eq("host_id", user.id)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Key, CarFront, Plus, Trash2, Edit2 } from "lucide-react";
+import { Key, Plus, Trash2, Edit2, Zap, Fuel, CarFront } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
 
@@ -11,6 +11,7 @@ type Cart = {
   key_code?: string | null;
   last_serviced_at?: string | null;
   access_instructions?: string | null;
+  type?: string | null;
   status: string;
   is_currently_rented: boolean;
 };
@@ -81,8 +82,18 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
               >
                 <div>
                   <div className="flex items-start justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                        <CarFront className="h-6 w-6" />
+                    <div
+                      className={
+                        cart.type === "gas"
+                          ? "flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
+                          : "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+                      }
+                    >
+                      {cart.type === "gas" ? (
+                        <Fuel className="h-6 w-6" />
+                      ) : (
+                        <Zap className="h-6 w-6" />
+                      )}
                     </div>
                     <div className="flex gap-1">
                         <button
