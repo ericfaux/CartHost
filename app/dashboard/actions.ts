@@ -13,9 +13,39 @@ export async function createCart(formData: FormData) {
     formData.get("status")?.toString().trim().toLowerCase() || "active";
   const type =
     formData.get("type")?.toString().trim().toLowerCase() || "electric";
+  const accessType =
+    formData.get("accessType")?.toString().trim().toLowerCase() || "included";
+  const upsellPriceRaw = formData.get("upsellPrice")?.toString().trim();
+  const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
+  const accessCode = formData.get("accessCode")?.toString().trim();
 
   if (!name) {
     throw new Error("Cart name is required.");
+  }
+
+  const sanitizedAccessType = accessType === "upsell" ? "upsell" : "included";
+  let sanitizedUpsellPrice: number | null = null;
+  let sanitizedUpsellUnit: string | null = null;
+  let sanitizedAccessCode: string | null = null;
+
+  if (sanitizedAccessType === "upsell") {
+    if (!upsellPriceRaw) {
+      throw new Error("Upsell price is required for upsell carts.");
+    }
+
+    const parsedPrice = parseFloat(upsellPriceRaw);
+
+    if (Number.isNaN(parsedPrice)) {
+      throw new Error("Upsell price must be a valid number.");
+    }
+
+    if (!accessCode) {
+      throw new Error("Access code is required for upsell carts.");
+    }
+
+    sanitizedUpsellPrice = parsedPrice;
+    sanitizedUpsellUnit = upsellUnit || "day";
+    sanitizedAccessCode = accessCode;
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
@@ -68,6 +98,10 @@ export async function createCart(formData: FormData) {
     host_id: user.id,
     status,
     type,
+    access_type: sanitizedAccessType,
+    upsell_price: sanitizedUpsellPrice,
+    upsell_unit: sanitizedUpsellUnit,
+    access_code: sanitizedAccessCode,
   });
 
   if (error) {
@@ -88,9 +122,39 @@ export async function updateCart(id: string, formData: FormData) {
     formData.get("status")?.toString().trim().toLowerCase() || "active";
   const type =
     formData.get("type")?.toString().trim().toLowerCase() || "electric";
+  const accessType =
+    formData.get("accessType")?.toString().trim().toLowerCase() || "included";
+  const upsellPriceRaw = formData.get("upsellPrice")?.toString().trim();
+  const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
+  const accessCode = formData.get("accessCode")?.toString().trim();
 
   if (!name) {
     throw new Error("Cart name is required.");
+  }
+
+  const sanitizedAccessType = accessType === "upsell" ? "upsell" : "included";
+  let sanitizedUpsellPrice: number | null = null;
+  let sanitizedUpsellUnit: string | null = null;
+  let sanitizedAccessCode: string | null = null;
+
+  if (sanitizedAccessType === "upsell") {
+    if (!upsellPriceRaw) {
+      throw new Error("Upsell price is required for upsell carts.");
+    }
+
+    const parsedPrice = parseFloat(upsellPriceRaw);
+
+    if (Number.isNaN(parsedPrice)) {
+      throw new Error("Upsell price must be a valid number.");
+    }
+
+    if (!accessCode) {
+      throw new Error("Access code is required for upsell carts.");
+    }
+
+    sanitizedUpsellPrice = parsedPrice;
+    sanitizedUpsellUnit = upsellUnit || "day";
+    sanitizedAccessCode = accessCode;
   }
 
   const sanitizedLastServicedAt = lastServicedAt === "" ? null : lastServicedAt;
@@ -141,6 +205,10 @@ export async function updateCart(id: string, formData: FormData) {
       access_instructions: sanitizedAccessInstructions,
       status,
       type,
+      access_type: sanitizedAccessType,
+      upsell_price: sanitizedUpsellPrice,
+      upsell_unit: sanitizedUpsellUnit,
+      access_code: sanitizedAccessCode,
     })
     .eq("id", id)
     .eq("host_id", user.id)

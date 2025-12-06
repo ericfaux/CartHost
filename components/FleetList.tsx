@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Key, Plus, Trash2, Edit2, Zap, Fuel, CarFront } from "lucide-react";
+import {
+  Key,
+  Plus,
+  Trash2,
+  Edit2,
+  Zap,
+  Fuel,
+  CarFront,
+  Banknote,
+  Lock,
+} from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
 
@@ -13,6 +23,10 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   status: string;
+  access_type: "included" | "upsell";
+  upsell_price?: number | null;
+  upsell_unit?: string | null;
+  access_code?: string | null;
   is_currently_rented: boolean;
 };
 
@@ -115,6 +129,15 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                   <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
                     {cart.name}
                   </h3>
+                  {cart.access_type === "upsell" && cart.upsell_price !== null && (
+                    <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                      <Banknote className="h-3.5 w-3.5" />
+                      <span>
+                        ${cart.upsell_price}
+                        {cart.upsell_unit ? ` / ${cart.upsell_unit}` : ""}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-2 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
                     style={{
                       borderColor:
@@ -157,15 +180,28 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 </div>
 
                 <div className="mt-6">
-                  {cart.key_code && (
+                  {(cart.key_code || cart.access_code) && (
                     <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Key className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wider">Key Code</span>
+                      <div className="flex flex-col gap-2 text-gray-500 sm:flex-row sm:items-center sm:gap-4">
+                        {cart.key_code && (
+                          <div className="flex items-center gap-2">
+                            <Key className="h-4 w-4" />
+                            <div className="flex flex-col text-xs font-semibold uppercase tracking-wider text-gray-600">
+                              <span>Key Code</span>
+                              <span className="font-mono text-base normal-case text-gray-900">{cart.key_code}</span>
+                            </div>
+                          </div>
+                        )}
+                        {cart.access_code && (
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4" />
+                            <div className="flex flex-col text-xs font-semibold uppercase tracking-wider text-gray-600">
+                              <span>Access Code</span>
+                              <span className="font-mono text-base normal-case text-gray-900">{cart.access_code}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <span className="font-mono text-lg font-bold text-gray-900 tracking-widest">
-                        {cart.key_code}
-                      </span>
                     </div>
                   )}
                   <p className="mt-2 text-xs text-gray-500">
