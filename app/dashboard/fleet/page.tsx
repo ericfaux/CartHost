@@ -9,6 +9,7 @@ type Cart = {
   key_code?: string | null;
   last_serviced_at?: string | null;
   access_instructions?: string | null;
+  type?: string | null;
   status: string;
   is_currently_rented: boolean;
 };
@@ -49,7 +50,7 @@ export default async function DashboardPage() {
   const { data: carts = [] } = await supabase
     .from("carts")
     .select(
-      "id, name, key_code, last_serviced_at, access_instructions, status"
+      "id, name, key_code, last_serviced_at, access_instructions, status, type"
     )
     .eq("host_id", user.id)
     .order("name");

@@ -11,6 +11,7 @@ type Cart = {
   last_serviced_at?: string | null;
   access_instructions?: string | null;
   status?: string | null;
+  type?: string | null;
 };
 
 type AddCartModalProps = {
@@ -37,6 +38,7 @@ export default function AddCartModal({
   const [lastServicedAt, setLastServicedAt] = useState("");
   const [accessInstructions, setAccessInstructions] = useState("");
   const [status, setStatus] = useState("active");
+  const [type, setType] = useState("electric");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -46,6 +48,7 @@ export default function AddCartModal({
     setKeyCode(cart?.key_code ?? "");
     setAccessInstructions(cart?.access_instructions ?? "");
     setStatus((cart?.status ?? "active").toLowerCase());
+    setType((cart?.type ?? "electric").toLowerCase());
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -71,6 +74,7 @@ export default function AddCartModal({
     formData.set("lastServicedAt", lastServicedAt.trim());
     formData.set("accessInstructions", accessInstructions.trim());
     formData.set("status", status);
+    formData.set("type", type);
 
     try {
       if (isEditing && cart) {
@@ -83,6 +87,7 @@ export default function AddCartModal({
       setLastServicedAt(cart?.last_serviced_at ?? "");
       setAccessInstructions(cart?.access_instructions ?? "");
       setStatus((cart?.status ?? "active").toLowerCase());
+      setType((cart?.type ?? "electric").toLowerCase());
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -143,6 +148,19 @@ export default function AddCartModal({
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
                   placeholder="Eg. Sunrise Beach Cart"
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+                <select
+                  name="type"
+                  value={type}
+                  onChange={(event) => setType(event.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                >
+                  <option value="electric">Electric</option>
+                  <option value="gas">Gas</option>
+                </select>
               </div>
 
               <div>
