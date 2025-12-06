@@ -2,11 +2,21 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CarFront, History, Wrench } from "lucide-react";
+import {
+  Banknote,
+  CarFront,
+  History,
+  TrendingUp,
+  Wrench,
+} from "lucide-react";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
 const RED = "overdue" as const;
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
 
 type Cart = {
   id: string;
@@ -17,6 +27,11 @@ type Cart = {
 type Rental = {
   cart_id: string;
   created_at: string;
+  revenue: number | null;
+};
+
+type ServiceLog = {
+  cost: number | null;
 };
 
 type CartHealth = {
@@ -115,11 +130,30 @@ export default async function DashboardHome() {
 
   const { data: rentals = [] } = await supabase
     .from("rentals")
-    .select("cart_id, created_at, carts!inner(host_id)")
+    .select("cart_id, created_at, revenue, carts!inner(host_id)")
     .eq("carts.host_id", user.id);
 
+  const { data: serviceLogs = [] } = await supabase
+    .from("service_logs")
+    .select("cost")
+    .eq("host_id", user.id);
+
+  const typedRentals = rentals as Rental[];
+  const typedServiceLogs = serviceLogs as ServiceLog[];
+
+  const totalRevenue = typedRentals.reduce(
+    (sum, rental) => sum + Number(rental.revenue ?? 0),
+    0
+  );
+  const totalExpenses = typedServiceLogs.reduce(
+    (sum, log) => sum + Number(log.cost ?? 0),
+    0
+  );
+  const netProfit = totalRevenue - totalExpenses;
+  const formatCurrency = (value: number) => currencyFormatter.format(value);
+
   const today = new Date();
-  const health = calculateHealth(carts as Cart[], rentals as Rental[], today);
+  const health = calculateHealth(carts as Cart[], typedRentals, today);
 
   const healthyCount = health.filter((item) => item.status === GREEN).length;
   const dueSoonCount = health.filter((item) => item.status === YELLOW).length;
@@ -190,6 +224,58 @@ export default async function DashboardHome() {
             >
               Log Maintenance
             </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-2xl font-bold tracking-tight text-gray-900">
+            Financial Performance
+          </p>
+          <p className="text-sm text-gray-500">
+            Revenue, expenses, and net profit across your fleet.
+          </p>
+        </div>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(totalRevenue)}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                <Banknote className="h-5 w-5 text-green-600" />
+              </div>
+            </div>
+          </div>
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Maintenance Costs</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
+                <Wrench className="h-5 w-5 text-amber-600" />
+              </div>
+            </div>
+          </div>
+          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Net Profit</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(netProfit)}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
