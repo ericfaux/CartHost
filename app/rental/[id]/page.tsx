@@ -129,7 +129,7 @@ export default function RentalInspectionPage() {
         ) : isCheckingOut ? (
 
           /* STATE 3: CHECKOUT (PLUG VERIFIER) */
-          {cart?.type === 'gas' ? (
+          cart?.type === 'gas' ? (
             <GasCheckout
               cartId={resolvedId}
               userId={userId!}
@@ -142,7 +142,7 @@ export default function RentalInspectionPage() {
               rentalId={activeRentalId!}
               onSuccess={handleCheckoutSuccess}
             />
-          )}
+          )
 
         ) : isUnlocked ? (
 
