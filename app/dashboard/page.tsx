@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Wrench,
 } from "lucide-react";
-import RevenueChart from "../../components/RevenueChart";
+import DashboardCharts from "../../components/DashboardCharts";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -91,34 +91,6 @@ function calculateHealth(
   });
 }
 
-function calculateChartData(
-  rentals: Rental[],
-  today: Date
-): { month: string; revenue: number }[] {
-  const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "short" });
-  const result: { month: string; revenue: number }[] = [];
-
-  // Generate last 6 months
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const monthName = monthFormatter.format(date);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-
-    // Sum revenue for rentals in this month
-    const monthRevenue = rentals
-      .filter((rental) => {
-        const rentalDate = new Date(rental.created_at);
-        return rentalDate.getFullYear() === year && rentalDate.getMonth() === month;
-      })
-      .reduce((sum, rental) => sum + Number(rental.revenue ?? 0), 0);
-
-    result.push({ month: monthName, revenue: monthRevenue });
-  }
-
-  return result;
-}
-
 export default async function DashboardHome() {
   const cookieStore = await cookies();
 
@@ -184,8 +156,6 @@ export default async function DashboardHome() {
 
   const today = new Date();
 
-  // Calculate chart data and stats for Revenue & Trends
-  const chartData = calculateChartData(typedRentals, today);
   const totalRides = typedRentals.length;
   const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
   const health = calculateHealth(carts as Cart[], typedRentals, today);
@@ -313,10 +283,7 @@ export default async function DashboardHome() {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="mb-4 text-lg font-semibold text-gray-900">Revenue Trend</p>
-          <RevenueChart data={chartData} />
-        </div>
+        <DashboardCharts rentals={typedRentals} />
       </div>
 
       <div>
