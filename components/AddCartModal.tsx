@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, FormEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState, useActionState, ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createCart, updateCart } from "../app/dashboard/actions";
 
@@ -27,6 +28,25 @@ type AddCartModalProps = {
   showTrigger?: boolean;
 };
 
+function SubmitButton({ isEditing }: { isEditing: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending
+        ? isEditing
+          ? "Saving..."
+          : "Adding..."
+        : isEditing
+        ? "Save Changes"
+        : "Save Cart"}
+    </button>
+  );
+}
+
 export default function AddCartModal({
   cart,
   isOpen: controlledOpen,
@@ -36,8 +56,6 @@ export default function AddCartModal({
 }: AddCartModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen ?? internalOpen;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [keyCode, setKeyCode] = useState("");
   const [lastServicedAt, setLastServicedAt] = useState("");
@@ -52,6 +70,17 @@ export default function AddCartModal({
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
+
+  // Wrapper function that routes to the correct action
+  const handleSave = async (prevState: any, formData: FormData) => {
+    if (isEditing && cart) {
+      formData.set("id", cart.id);
+      return updateCart(prevState, formData);
+    }
+    return createCart(prevState, formData);
+  };
+
+  const [state, formAction] = useActionState(handleSave, null);
 
   useEffect(() => {
     setName(cart?.name ?? "");
@@ -80,30 +109,9 @@ export default function AddCartModal({
     }
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const formData = new FormData();
-    formData.set("name", name.trim());
-    formData.set("keyCode", keyCode.trim());
-    formData.set("lastServicedAt", lastServicedAt.trim());
-    formData.set("accessInstructions", accessInstructions.trim());
-    formData.set("status", status);
-    formData.set("type", type);
-    formData.set("accessType", accessType);
-    formData.set("upsellPrice", upsellPrice.trim());
-    formData.set("upsellUnit", upsellUnit);
-    formData.set("accessCode", accessCode.trim());
-    formData.set("requiresLockPhoto", requiresLockPhoto ? "on" : "off");
-
-    try {
-      if (isEditing && cart) {
-        await updateCart(cart.id, formData);
-      } else {
-        await createCart(formData);
-      }
+  // Close modal on success and reset form
+  useEffect(() => {
+    if (state?.success) {
       setName(cart?.name ?? "");
       setKeyCode(cart?.key_code ?? "");
       setLastServicedAt(cart?.last_serviced_at ?? "");
@@ -117,13 +125,8 @@ export default function AddCartModal({
       setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
       setOpen(false);
       router.refresh();
-    } catch (err: any) {
-      console.error("Full Error Object:", err);
-      setError(err.message || "Failed to save cart");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  }, [state]);
 
   return (
     <div>
@@ -163,7 +166,7 @@ export default function AddCartModal({
               </button>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            <form className="mt-6 space-y-4" action={formAction}>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Cart Name</label>
                 <input
@@ -358,10 +361,10 @@ export default function AddCartModal({
                 <p className="mt-1 text-xs text-gray-500">Leave blank if unknown.</p>
               </div>
 
-              {error && (
-                <p className="text-sm text-red-600" role="alert">
-                  {error}
-                </p>
+              {state?.error && (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600" role="alert">
+                  {state.error}
+                </div>
               )}
 
               <div className="flex justify-end gap-3 pt-2">
@@ -372,19 +375,7 @@ export default function AddCartModal({
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting
-                    ? isEditing
-                      ? "Saving..."
-                      : "Adding..."
-                    : isEditing
-                    ? "Save Changes"
-                    : "Save Cart"}
-                </button>
+                <SubmitButton isEditing={isEditing} />
               </div>
             </form>
           </div>
