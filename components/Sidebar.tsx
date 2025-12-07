@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Wrench,
   LifeBuoy,
+  Settings,
 } from "lucide-react";
 import { signOut } from "../app/auth/actions";
 
@@ -18,6 +19,7 @@ const navLinks = [
   { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
   { label: "History", href: "/dashboard/history", icon: History },
   { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Support", href: "/dashboard/support", icon: LifeBuoy },
 ];
 
