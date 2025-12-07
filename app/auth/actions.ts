@@ -15,8 +15,6 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 async function createSupabaseActionClient() {
   const cookieStore = await cookies();
-  const headerList = await headers();
-
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
@@ -31,23 +29,13 @@ async function createSupabaseActionClient() {
           // Ignore cookie write failures
         }
       },
-      remove(name) {
-        try {
-          cookieStore.delete(name);
-        } catch {
-          // Ignore cookie delete failures
-        }
-      },
-    },
-    headers: {
-      get(key) {
-        return headerList.get(key) ?? undefined;
-      },
     },
   });
 }
 
 export async function signUp(prevState: any, formData: FormData) {
+  let session = null;
+
   try {
     const email = formData.get("email")?.toString().trim();
     const password = formData.get("password")?.toString();
@@ -68,13 +56,16 @@ export async function signUp(prevState: any, formData: FormData) {
       return { error: error?.message ?? "Unable to sign up." };
     }
 
+    // Capture session to check later
+    session = data.session;
+
     // 1. Create the Admin Client
     const supabaseAdmin = createClient(
       SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // 2. USE the Admin Client (supabaseAdmin) to bypass RLS
+    // 2. USE the Admin Client to bypass RLS for profile creation
     const { error: hostUpdateError } = await supabaseAdmin
       .from("hosts")
       .update({
@@ -89,18 +80,19 @@ export async function signUp(prevState: any, formData: FormData) {
       return { error: "Account created, but profile update failed." };
     }
 
-    // Check if verification is enabled or disabled
-    if (data.session) {
-      // Verification is OFF - user is logged in immediately
-      redirect("/dashboard");
-    } else {
-      // Verification is ON - email confirmation required
+    // Check verification status
+    if (!session) {
+      // Verification is ON - return success message
       return { success: true };
     }
+
   } catch (error) {
     console.error("Unexpected sign up error:", error);
     return { error: "Something went wrong. Please try again." };
   }
+
+  // Redirect happens here, ONLY if we successfully exited the try block with a session
+  redirect("/dashboard");
 }
 
 export async function signIn(prevState: any, formData: FormData) {
