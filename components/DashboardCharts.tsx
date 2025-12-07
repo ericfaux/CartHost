@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Banknote, Hash, TrendingUp } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -32,7 +33,7 @@ type FilterOption = "ytd" | "90_days" | "30_days";
 export default function DashboardCharts({ rentals }: DashboardChartsProps) {
   const [filter, setFilter] = useState<FilterOption>("ytd");
 
-  const chartData = useMemo(() => {
+  const { chartData, totalRevenue, totalRides, avgRevenue } = useMemo(() => {
     const now = new Date();
     let startDate: Date;
 
@@ -56,6 +57,11 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
       const rentalDate = new Date(rental.created_at);
       return rentalDate >= startDate && rentalDate <= now;
     });
+
+    // aggregate totals
+    const totalRevenue = filteredRentals.reduce((sum, rental) => sum + (rental.revenue ?? 0), 0);
+    const totalRides = filteredRentals.length;
+    const avgRevenue = totalRides > 0 ? totalRevenue / totalRides : 0;
 
     // Group rentals by day or month
     const grouped = new Map<string, { revenue: number; rides: number; date: Date }>();
@@ -100,7 +106,12 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
 
     result.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    return result;
+    return {
+      chartData: result,
+      totalRevenue,
+      totalRides,
+      avgRevenue,
+    };
   }, [rentals, filter]);
 
   const formatCurrency = (value: number) => {
@@ -136,19 +147,56 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
   };
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Performance Trends</h2>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as FilterOption)}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="ytd">Year to Date</option>
-          <option value="90_days">Last 3 Months</option>
-          <option value="30_days">Last 30 Days</option>
-        </select>
+        <div className="flex justify-end">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as FilterOption)}
+            className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="ytd">Year to Date</option>
+            <option value="90_days">Last 3 Months</option>
+            <option value="30_days">Last 30 Days</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-500">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+              <Banknote className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-500">Total Rides</p>
+              <p className="text-2xl font-bold text-gray-900">{totalRides}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+              <Hash className="h-5 w-5 text-purple-600" />
+            </div>
+          </div>
+        </div>
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-500">Avg Revenue per Ride</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(avgRevenue)}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Charts Grid */}
