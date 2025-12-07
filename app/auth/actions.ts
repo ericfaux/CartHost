@@ -88,29 +88,41 @@ export async function signUp(prevState: any, formData: FormData) {
       console.error("Failed to update host profile:", hostUpdateError);
       return { error: "Account created, but profile update failed." };
     }
+
+    // Check if verification is enabled or disabled
+    if (data.session) {
+      // Verification is OFF - user is logged in immediately
+      redirect("/dashboard");
+    } else {
+      // Verification is ON - email confirmation required
+      return { success: true };
+    }
   } catch (error) {
     console.error("Unexpected sign up error:", error);
     return { error: "Something went wrong. Please try again." };
   }
-
-  redirect("/dashboard");
 }
 
-export async function signIn(formData: FormData) {
-  const email = formData.get("email")?.toString().trim();
-  const password = formData.get("password")?.toString();
+export async function signIn(prevState: any, formData: FormData) {
+  try {
+    const email = formData.get("email")?.toString().trim();
+    const password = formData.get("password")?.toString();
 
-  if (!email || !password) {
-    throw new Error("Email and password are required");
-  }
+    if (!email || !password) {
+      return { error: "Email and password are required." };
+    }
 
-  const supabase = await createSupabaseActionClient();
+    const supabase = await createSupabaseActionClient();
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    console.error("Sign in failed:", error);
-    throw new Error(error.message);
+    if (error) {
+      console.error("Sign in failed:", error);
+      return { error: "Invalid email or password." };
+    }
+  } catch (error) {
+    console.error("Unexpected sign in error:", error);
+    return { error: "Something went wrong. Please try again." };
   }
 
   redirect("/dashboard");
