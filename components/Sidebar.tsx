@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
   History,
@@ -11,7 +11,7 @@ import {
   Wrench,
   LifeBuoy,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { signOut } from "../app/auth/actions";
 
 const navLinks = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
@@ -22,12 +22,10 @@ const navLinks = [
 ];
 
 export default function Sidebar() {
-  const router = useRouter();
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    await signOut();
   };
 
   return (
