@@ -4,7 +4,12 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-export async function updateProfile(formData: FormData) {
+type UpdateProfileState = { success?: boolean; error?: string } | null;
+
+export async function updateProfile(
+  _prevState: UpdateProfileState,
+  formData: FormData
+) {
   try {
     // Extract form data
     const fullName = formData.get("fullName")?.toString().trim() || null;
