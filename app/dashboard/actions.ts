@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache"; // Import this!
 
-export async function createCart(formData: FormData) {
+export async function createCart(prevState: any, formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
@@ -21,7 +21,7 @@ export async function createCart(formData: FormData) {
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
 
   if (!name) {
-    throw new Error("Cart name is required.");
+    return { error: "Cart name is required." };
   }
 
   const sanitizedAccessType = accessType === "upsell" ? "upsell" : "included";
@@ -31,17 +31,17 @@ export async function createCart(formData: FormData) {
 
   if (sanitizedAccessType === "upsell") {
     if (!upsellPriceRaw) {
-      throw new Error("Upsell price is required for upsell carts.");
+      return { error: "Upsell price is required for upsell carts." };
     }
 
     const parsedPrice = parseFloat(upsellPriceRaw);
 
     if (Number.isNaN(parsedPrice)) {
-      throw new Error("Upsell price must be a valid number.");
+      return { error: "Upsell price must be a valid number." };
     }
 
     if (!accessCode) {
-      throw new Error("Access code is required for upsell carts.");
+      return { error: "Access code is required for upsell carts." };
     }
 
     sanitizedUpsellPrice = parsedPrice;
@@ -87,7 +87,7 @@ export async function createCart(formData: FormData) {
 
   if (userError || !user) {
     console.error("Auth Error in createCart:", userError);
-    throw new Error("You must be logged in to add a cart.");
+    return { error: "You must be logged in to add a cart." };
   }
 
   // 2. Insert Data
@@ -108,14 +108,16 @@ export async function createCart(formData: FormData) {
 
   if (error) {
     console.error("Database Insert Error:", error);
-    throw new Error("Failed to save cart: " + error.message);
+    return { error: "Failed to save cart: " + error.message };
   }
 
   // 3. Refresh the Dashboard
   revalidatePath("/dashboard");
+  return { success: true };
 }
 
-export async function updateCart(id: string, formData: FormData) {
+export async function updateCart(prevState: any, formData: FormData) {
+  const id = formData.get("id")?.toString().trim();
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();
   const lastServicedAt = formData.get("lastServicedAt")?.toString().trim();
@@ -131,8 +133,12 @@ export async function updateCart(id: string, formData: FormData) {
   const accessCode = formData.get("accessCode")?.toString().trim();
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
 
+  if (!id) {
+    return { error: "Cart ID is required." };
+  }
+
   if (!name) {
-    throw new Error("Cart name is required.");
+    return { error: "Cart name is required." };
   }
 
   const sanitizedAccessType = accessType === "upsell" ? "upsell" : "included";
@@ -142,17 +148,17 @@ export async function updateCart(id: string, formData: FormData) {
 
   if (sanitizedAccessType === "upsell") {
     if (!upsellPriceRaw) {
-      throw new Error("Upsell price is required for upsell carts.");
+      return { error: "Upsell price is required for upsell carts." };
     }
 
     const parsedPrice = parseFloat(upsellPriceRaw);
 
     if (Number.isNaN(parsedPrice)) {
-      throw new Error("Upsell price must be a valid number.");
+      return { error: "Upsell price must be a valid number." };
     }
 
     if (!accessCode) {
-      throw new Error("Access code is required for upsell carts.");
+      return { error: "Access code is required for upsell carts." };
     }
 
     sanitizedUpsellPrice = parsedPrice;
@@ -196,7 +202,7 @@ export async function updateCart(id: string, formData: FormData) {
 
   if (userError || !user) {
     console.error("Auth Error in updateCart:", userError);
-    throw new Error("You must be logged in to update a cart.");
+    return { error: "You must be logged in to update a cart." };
   }
 
   const { error } = await supabase
@@ -221,10 +227,11 @@ export async function updateCart(id: string, formData: FormData) {
 
   if (error) {
     console.error("Database Update Error:", error);
-    throw new Error("Failed to update cart: " + error.message);
+    return { error: "Failed to update cart: " + error.message };
   }
 
   revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function deleteCart(id: string) {
