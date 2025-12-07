@@ -2,14 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  Banknote,
-  CarFront,
-  Hash,
-  History,
-  TrendingUp,
-  Wrench,
-} from "lucide-react";
+import { CarFront, History, Wrench } from "lucide-react";
 import DashboardCharts from "../../components/DashboardCharts";
 
 const GREEN = "healthy" as const;
@@ -233,7 +226,7 @@ export default async function DashboardHome() {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-6">
         <div>
           <p className="text-2xl font-bold tracking-tight text-gray-900">
             Financial Performance
@@ -242,47 +235,8 @@ export default async function DashboardHome() {
             Revenue, expenses, and net profit across your fleet.
           </p>
         </div>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(totalRevenue)}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <Banknote className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500">Total Rides</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalRides}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                <Hash className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </div>
-          <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-500">Average Revenue per Ride</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(avgRevenuePerRide)}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+
+        {/* The old grid is gone, only the new component remains */}
         <DashboardCharts rentals={typedRentals} />
       </div>
 
