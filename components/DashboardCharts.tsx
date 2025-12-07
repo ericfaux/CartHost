@@ -115,7 +115,7 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
   }, [rentals, filter]);
 
   const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString()}`;
+    return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
   };
 
   const CustomTooltip = ({
