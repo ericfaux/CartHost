@@ -5,10 +5,12 @@ import Link from "next/link";
 import {
   Banknote,
   CarFront,
+  Hash,
   History,
   TrendingUp,
   Wrench,
 } from "lucide-react";
+import RevenueChart from "../../components/RevenueChart";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -89,6 +91,34 @@ function calculateHealth(
   });
 }
 
+function calculateChartData(
+  rentals: Rental[],
+  today: Date
+): { month: string; revenue: number }[] {
+  const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "short" });
+  const result: { month: string; revenue: number }[] = [];
+
+  // Generate last 6 months
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const monthName = monthFormatter.format(date);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    // Sum revenue for rentals in this month
+    const monthRevenue = rentals
+      .filter((rental) => {
+        const rentalDate = new Date(rental.created_at);
+        return rentalDate.getFullYear() === year && rentalDate.getMonth() === month;
+      })
+      .reduce((sum, rental) => sum + Number(rental.revenue ?? 0), 0);
+
+    result.push({ month: monthName, revenue: monthRevenue });
+  }
+
+  return result;
+}
+
 export default async function DashboardHome() {
   const cookieStore = await cookies();
 
@@ -153,6 +183,11 @@ export default async function DashboardHome() {
   const formatCurrency = (value: number) => currencyFormatter.format(value);
 
   const today = new Date();
+
+  // Calculate chart data and stats for Revenue & Trends
+  const chartData = calculateChartData(typedRentals, today);
+  const totalRides = typedRentals.length;
+  const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
   const health = calculateHealth(carts as Cart[], typedRentals, today);
 
   const healthyCount = health.filter((item) => item.status === GREEN).length;
@@ -254,22 +289,22 @@ export default async function DashboardHome() {
           <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-500">Maintenance Costs</p>
+                <p className="text-sm font-semibold text-gray-500">Total Rides</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(totalExpenses)}
+                  {totalRides}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-                <Wrench className="h-5 w-5 text-amber-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                <Hash className="h-5 w-5 text-purple-600" />
               </div>
             </div>
           </div>
           <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-500">Net Profit</p>
+                <p className="text-sm font-semibold text-gray-500">Average Revenue per Ride</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(netProfit)}
+                  {formatCurrency(avgRevenuePerRide)}
                 </p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
@@ -277,6 +312,10 @@ export default async function DashboardHome() {
               </div>
             </div>
           </div>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="mb-4 text-lg font-semibold text-gray-900">Revenue Trend</p>
+          <RevenueChart data={chartData} />
         </div>
       </div>
 
