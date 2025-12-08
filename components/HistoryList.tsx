@@ -11,7 +11,7 @@ import {
   Edit2,
   Loader2,
 } from "lucide-react";
-import { updateRentalRevenue } from "../app/dashboard/history/actions";
+import { updateRentalRevenue, updateDepositStatus } from "../app/dashboard/history/actions";
 
 const revenueFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -25,9 +25,26 @@ type Rental = {
   guest_name?: string | null;
   status?: string | null;
   revenue?: number | null;
+  deposit_amount?: number | null;
+  deposit_status?: string | null;
   carts?: {
     name?: string | null;
   } | null;
+};
+
+const getNextStatus = (current: string): string => {
+  switch (current) {
+    case 'pending':
+      return 'collected';
+    case 'collected':
+      return 'refunded';
+    case 'refunded':
+      return 'collected';
+    case 'withheld':
+      return 'collected';
+    default:
+      return 'collected';
+  }
 };
 
 export default function HistoryList({ rentals }: { rentals: Rental[] }) {
@@ -39,6 +56,8 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [updatingDepositId, setUpdatingDepositId] = useState<string | null>(null);
+  const [isDepositPending, startDepositTransition] = useTransition();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -185,6 +204,74 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     );
   };
 
+  const handleDepositClick = (rental: Rental) => {
+    const currentStatus = rental.deposit_status || 'pending';
+    const nextStatus = getNextStatus(currentStatus);
+    setUpdatingDepositId(rental.id);
+    
+    startDepositTransition(async () => {
+      try {
+        const result = await updateDepositStatus(rental.id, nextStatus);
+        if (result?.error) {
+          alert(result.error);
+        }
+      } catch (error) {
+        alert("Something went wrong while updating deposit status.");
+      } finally {
+        setUpdatingDepositId(null);
+      }
+    });
+  };
+
+  const renderDepositBadge = (rental: Rental) => {
+    const status = rental.deposit_status?.toLowerCase() || 'pending';
+    const amount = rental.deposit_amount || 0;
+    const isUpdating = updatingDepositId === rental.id && isDepositPending;
+
+    let bgColor = '';
+    let textColor = '';
+    let label = '';
+
+    switch (status) {
+      case 'pending':
+        bgColor = 'bg-gray-100';
+        textColor = 'text-gray-700';
+        label = 'Pending';
+        break;
+      case 'collected':
+        bgColor = 'bg-blue-100';
+        textColor = 'text-blue-700';
+        label = `Held: $${amount}`;
+        break;
+      case 'refunded':
+        bgColor = 'bg-green-100';
+        textColor = 'text-green-700';
+        label = 'Refunded';
+        break;
+      case 'withheld':
+        bgColor = 'bg-red-100';
+        textColor = 'text-red-700';
+        label = 'Withheld';
+        break;
+      default:
+        bgColor = 'bg-gray-100';
+        textColor = 'text-gray-700';
+        label = 'Pending';
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleDepositClick(rental)}
+        disabled={isUpdating}
+        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${bgColor} ${textColor} transition hover:opacity-80 disabled:cursor-not-allowed`}
+      >
+        {isUpdating && <Loader2 className="h-3 w-3 animate-spin" />}
+        {label}
+      </button>
+    );
+  };
+
   if (rentals.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
@@ -254,6 +341,9 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                 Revenue
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Deposit
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Status
               </th>
               <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -264,7 +354,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
           <tbody className="divide-y divide-gray-100">
             {filteredRentals.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
                   No rentals match your filters.
                 </td>
               </tr>
@@ -282,6 +372,9 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     {renderRevenue(rental)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    {renderDepositBadge(rental)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
                     {renderStatus(rental.status)}
