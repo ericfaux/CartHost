@@ -53,11 +53,12 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const cartSelectFields =
+    "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount";
+
   const { data: carts = [] } = await supabase
     .from("carts")
-    .select(
-      "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount"
-    )
+    .select(cartSelectFields)
     .eq("host_id", user.id)
     .order("name");
 

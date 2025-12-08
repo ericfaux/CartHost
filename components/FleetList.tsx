@@ -12,6 +12,7 @@ import {
   CarFront,
   Banknote,
   Lock,
+  Shield,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
@@ -29,6 +30,7 @@ type Cart = {
   upsell_price?: number | null;
   upsell_unit?: string | null;
   access_code?: string | null;
+  deposit_amount?: number | null;
   is_currently_rented: boolean;
 };
 
@@ -107,6 +109,16 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 <Zap className="h-6 w-6" />
               );
 
+            const depositAmount =
+              typeof cart.deposit_amount === "number" ? cart.deposit_amount : 0;
+            const showDepositBadge = depositAmount > 0;
+            const formattedDeposit = showDepositBadge
+              ? depositAmount.toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })
+              : null;
+
             return (
               <div
                 key={cart.id}
@@ -183,6 +195,12 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                       ? "Active: In Use"
                       : "Active: Not in Use"}
                   </div>
+                  {showDepositBadge && formattedDeposit && (
+                    <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                      <Shield className="h-3.5 w-3.5 text-slate-600" />
+                      <span>{`Dep: $${formattedDeposit}`}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6">
