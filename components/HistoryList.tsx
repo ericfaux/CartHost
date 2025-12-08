@@ -2,7 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Search, Filter, Check, X, Edit2, Loader2 } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Calendar,
+  Check,
+  X,
+  Edit2,
+  Loader2,
+} from "lucide-react";
 import { updateRentalRevenue } from "../app/dashboard/history/actions";
 
 const revenueFormatter = new Intl.NumberFormat("en-US", {
@@ -25,7 +33,9 @@ type Rental = {
 export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
+  const [statusFilter, setStatusFilter] =
+    useState<"all" | "active" | "completed">("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -59,12 +69,22 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   };
 
   const handleSave = (rentalId: string) => {
+    const parsedValue = parseFloat(editValue || "0");
+    if (Number.isNaN(parsedValue)) {
+      alert("Enter a valid revenue amount.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await updateRentalRevenue(rentalId, parseFloat(editValue));
-      if (result.error) {
-        alert(result.error);
-      } else {
+      try {
+        const result = await updateRentalRevenue(rentalId, parsedValue);
+        if (result?.error) {
+          alert(result.error);
+          return;
+        }
         setEditingId(null);
+      } catch (error) {
+        alert("Something went wrong while saving revenue.");
       }
     });
   };
@@ -79,20 +99,28 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     setEditValue("");
   };
 
-  // Filter rentals based on searchTerm and statusFilter
+  // Filter rentals based on searchTerm, statusFilter, and dateFilter
   const filteredRentals = rentals.filter((rental) => {
     const guestName = rental.guest_name?.toLowerCase() || "";
     const cartName = rental.carts?.name?.toLowerCase() || "";
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = guestName.includes(search) || cartName.includes(search);
+    const search = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      search.length === 0 ||
+      guestName.includes(search) ||
+      cartName.includes(search);
 
     const rentalStatus = rental.status?.toLowerCase() || "completed";
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && rentalStatus === "active") ||
-      (statusFilter === "completed" && rentalStatus !== "active");
+      (statusFilter === "completed" && rentalStatus === "completed");
 
-    return matchesSearch && matchesStatus;
+    const matchesDate =
+      !dateFilter ||
+      rental.created_at.startsWith(dateFilter) ||
+      new Date(rental.created_at).toISOString().startsWith(dateFilter);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const renderRevenue = (rental: Rental) => {
@@ -139,7 +167,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     return (
       <div className="flex items-center gap-2">
         {typeof rental.revenue === "number" && rental.revenue > 0 ? (
-          <span className="text-emerald-600 font-medium">
+          <span className="font-medium text-emerald-600">
             +{revenueFormatter.format(rental.revenue)}
           </span>
         ) : (
@@ -148,7 +176,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
         <button
           type="button"
           onClick={() => handleStartEdit(rental)}
-          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="rounded p-1 text-gray-400 opacity-0 transition hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
           title="Edit revenue"
         >
           <Edit2 className="h-3.5 w-3.5" />
@@ -173,23 +201,34 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search guest or cart..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:w-64"
+            className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="relative w-full lg:w-56">
+          <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900">
           <Filter className="h-4 w-4 text-gray-400" />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "completed")}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "all" | "active" | "completed")
+            }
+            className="h-full bg-transparent text-sm focus:outline-none"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -231,7 +270,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
               </tr>
             ) : (
               filteredRentals.map((rental) => (
-                <tr key={rental.id} className="hover:bg-gray-50">
+                <tr key={rental.id} className="group hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     {formatDate(rental.created_at)}
                   </td>
