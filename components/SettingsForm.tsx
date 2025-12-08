@@ -12,6 +12,7 @@ export type HostProfile = {
   company_name: string | null;
   property_name: string | null;
   billing_address: string | null;
+  default_deposit: number | null;
   [key: string]: unknown;
 };
 
@@ -129,6 +130,23 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
               defaultValue={profile.property_name ?? ""}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               placeholder="Lakeside Villas"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="defaultDeposit"
+              className="text-sm font-medium text-gray-700"
+            >
+              Default Security Deposit ($)
+            </label>
+            <input
+              id="defaultDeposit"
+              name="defaultDeposit"
+              type="number"
+              defaultValue={profile.default_deposit ?? 0}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="0"
             />
           </div>
         </div>
