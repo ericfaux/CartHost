@@ -20,6 +20,7 @@ type Cart = {
   upsell_price?: number | null;
   upsell_unit?: string | null;
   access_code?: string | null;
+  deposit_amount?: number | null;
 } | null;
 
 export default function RentalInspectionPage() {
@@ -275,6 +276,7 @@ export default function RentalInspectionPage() {
             cartId={resolvedId!}
             onComplete={handleUnlock}
             revenue={cart?.upsell_price}
+            depositAmount={cart?.deposit_amount ?? 0}
           />
 
         ) : (
