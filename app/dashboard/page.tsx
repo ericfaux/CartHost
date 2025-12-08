@@ -23,6 +23,8 @@ type Rental = {
   cart_id: string;
   created_at: string;
   revenue: number | null;
+  deposit_status: string | null;
+  deposit_amount: number | null;
 };
 
 type ServiceLog = {
@@ -125,7 +127,7 @@ export default async function DashboardHome() {
 
   const { data: rentals = [] } = await supabase
     .from("rentals")
-    .select("cart_id, created_at, revenue, carts!inner(host_id)")
+    .select("cart_id, created_at, revenue, deposit_status, deposit_amount, carts!inner(host_id)")
     .eq("carts.host_id", user.id);
 
   const { data: serviceLogs = [] } = await supabase
