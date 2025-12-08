@@ -17,6 +17,11 @@ export async function updateProfile(
     const companyName = formData.get("companyName")?.toString().trim() || null;
     const propertyName = formData.get("propertyName")?.toString().trim() || null;
     const billingAddress = formData.get("billingAddress")?.toString().trim() || null;
+    const defaultDepositRaw = formData.get("defaultDeposit")?.toString().trim() || "";
+    
+    // Sanitize defaultDeposit: parse to float, default to 0 if invalid
+    const parsedDeposit = parseFloat(defaultDepositRaw);
+    const sanitizedDeposit = isNaN(parsedDeposit) ? 0 : parsedDeposit;
 
     // Create Supabase client
     const cookieStore = await cookies();
@@ -61,6 +66,7 @@ export async function updateProfile(
         company_name: companyName,
         property_name: propertyName,
         billing_address: billingAddress,
+        default_deposit: sanitizedDeposit,
       })
       .eq("id", user.id);
 
