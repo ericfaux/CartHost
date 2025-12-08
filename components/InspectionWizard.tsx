@@ -2,6 +2,7 @@
 
 import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { sendWelcomeSms } from '../app/actions/notifications';
 
@@ -9,6 +10,7 @@ type InspectionWizardProps = {
   cartId: string;
   onComplete: (rentalId: string) => void;
   revenue?: number | null;
+  depositAmount: number;
 };
 
 type Step = {
@@ -26,7 +28,7 @@ const steps: Step[] = [
   { title: 'Back', description: 'Back Bumper', type: 'photo' },
 ];
 
-export default function InspectionWizard({ cartId, onComplete, revenue }: InspectionWizardProps) {
+export default function InspectionWizard({ cartId, onComplete, revenue, depositAmount }: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -186,6 +188,8 @@ export default function InspectionWizard({ cartId, onComplete, revenue }: Inspec
           waiver_agreed_at: new Date().toISOString(),
           photos: updatedPhotoUrls,
           revenue: revenue ?? null,
+          deposit_amount: depositAmount,
+          deposit_status: 'pending',
         })
         .select()
         .single();
@@ -232,6 +236,15 @@ export default function InspectionWizard({ cartId, onComplete, revenue }: Inspec
 
       {isGuestStep ? (
         <div className="space-y-4">
+          {depositAmount > 0 && (
+            <div className="flex items-start gap-3 rounded-lg bg-blue-50 p-4 text-blue-800">
+              <Shield className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Security Deposit Required: ${depositAmount}</p>
+                <p className="text-sm mt-1">A fully refundable deposit of ${depositAmount} applies to this rental.</p>
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700" htmlFor="guest-name">
               Full Name
