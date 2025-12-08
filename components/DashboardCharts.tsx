@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Banknote, Hash, TrendingUp } from "lucide-react";
+import { Banknote, Hash, TrendingUp, Shield } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -15,6 +15,8 @@ import {
 interface Rental {
   created_at: string;
   revenue: number | null;
+  deposit_status: string | null;
+  deposit_amount: number | null;
 }
 
 interface DashboardChartsProps {
@@ -33,7 +35,7 @@ type FilterOption = "ytd" | "90_days" | "30_days";
 export default function DashboardCharts({ rentals }: DashboardChartsProps) {
   const [filter, setFilter] = useState<FilterOption>("ytd");
 
-  const { chartData, totalRevenue, totalRides, avgRevenue } = useMemo(() => {
+  const { chartData, totalRevenue, totalRides, avgRevenue, totalDepositsHeld } = useMemo(() => {
     const now = new Date();
     let startDate: Date;
 
@@ -62,6 +64,12 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
     const totalRevenue = filteredRentals.reduce((sum, rental) => sum + (rental.revenue ?? 0), 0);
     const totalRides = filteredRentals.length;
     const avgRevenue = totalRides > 0 ? totalRevenue / totalRides : 0;
+    const totalDepositsHeld = filteredRentals.reduce((sum, rental) => {
+      if (rental.deposit_status === "collected") {
+        return sum + Number(rental.deposit_amount ?? 0);
+      }
+      return sum;
+    }, 0);
 
     // Group rentals by day or month
     const grouped = new Map<string, { revenue: number; rides: number; date: Date }>();
@@ -111,6 +119,7 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
       totalRevenue,
       totalRides,
       avgRevenue,
+      totalDepositsHeld,
     };
   }, [rentals, filter]);
 
@@ -163,7 +172,7 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -194,6 +203,17 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
               <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-500">Deposits Held</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalDepositsHeld)}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+              <Shield className="h-5 w-5 text-blue-600" />
             </div>
           </div>
         </div>
