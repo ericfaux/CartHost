@@ -18,6 +18,7 @@ type Cart = {
   upsell_price?: number | null;
   upsell_unit?: string | null;
   access_code?: string | null;
+  deposit_amount?: number | null;
 };
 
 type AddCartModalProps = {
@@ -66,6 +67,7 @@ export default function AddCartModal({
   const [upsellPrice, setUpsellPrice] = useState("");
   const [upsellUnit, setUpsellUnit] = useState("day");
   const [accessCode, setAccessCode] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
   const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
   const router = useRouter();
 
@@ -92,6 +94,7 @@ export default function AddCartModal({
     setUpsellPrice(cart?.upsell_price?.toString() ?? "");
     setUpsellUnit(cart?.upsell_unit ?? "day");
     setAccessCode(cart?.access_code ?? "");
+    setDepositAmount(cart?.deposit_amount?.toString() ?? "");
     setRequiresLockPhoto(
       cart?.requires_lock_photo ?? true
     );
@@ -122,6 +125,7 @@ export default function AddCartModal({
       setUpsellPrice(cart?.upsell_price?.toString() ?? "");
       setUpsellUnit(cart?.upsell_unit ?? "day");
       setAccessCode(cart?.access_code ?? "");
+      setDepositAmount(cart?.deposit_amount?.toString() ?? "");
       setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
       setOpen(false);
       router.refresh();
@@ -331,6 +335,28 @@ export default function AddCartModal({
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-semibold text-gray-800">Security Settings</p>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Security Deposit ($)
+                  </label>
+                  <input
+                    type="number"
+                    name="depositAmount"
+                    min="0"
+                    step="0.01"
+                    value={depositAmount}
+                    onChange={(event) => setDepositAmount(event.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                    placeholder="0.00"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Amount to track for this specific vehicle.
+                  </p>
+                </div>
               </div>
 
               <div>

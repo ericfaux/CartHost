@@ -19,6 +19,18 @@ export async function createCart(prevState: any, formData: FormData) {
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
+  const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
+  let sanitizedDepositAmount = 0;
+
+  if (depositAmountRaw) {
+    const parsedDeposit = parseFloat(depositAmountRaw);
+
+    if (Number.isNaN(parsedDeposit)) {
+      return { error: "Security deposit must be a valid number." };
+    }
+
+    sanitizedDepositAmount = parsedDeposit;
+  }
 
   if (!name) {
     return { error: "Cart name is required." };
@@ -104,6 +116,7 @@ export async function createCart(prevState: any, formData: FormData) {
     upsell_unit: sanitizedUpsellUnit,
     access_code: sanitizedAccessCode,
     requires_lock_photo: requiresLockPhoto,
+    deposit_amount: sanitizedDepositAmount,
   });
 
   if (error) {
@@ -132,6 +145,18 @@ export async function updateCart(prevState: any, formData: FormData) {
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
+  const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
+  let sanitizedDepositAmount = 0;
+
+  if (depositAmountRaw) {
+    const parsedDeposit = parseFloat(depositAmountRaw);
+
+    if (Number.isNaN(parsedDeposit)) {
+      return { error: "Security deposit must be a valid number." };
+    }
+
+    sanitizedDepositAmount = parsedDeposit;
+  }
 
   if (!id) {
     return { error: "Cart ID is required." };
@@ -219,6 +244,7 @@ export async function updateCart(prevState: any, formData: FormData) {
       upsell_unit: sanitizedUpsellUnit,
       access_code: sanitizedAccessCode,
       requires_lock_photo: requiresLockPhoto,
+      deposit_amount: sanitizedDepositAmount,
     })
     .eq("id", id)
     .eq("host_id", user.id)
