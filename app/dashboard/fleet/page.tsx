@@ -16,6 +16,7 @@ type Cart = {
   upsell_price?: number | null;
   upsell_unit?: string | null;
   access_code?: string | null;
+  deposit_amount?: number | null;
   is_currently_rented: boolean;
 };
 
@@ -55,7 +56,7 @@ export default async function DashboardPage() {
   const { data: carts = [] } = await supabase
     .from("carts")
     .select(
-      "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code"
+      "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount"
     )
     .eq("host_id", user.id)
     .order("name");
