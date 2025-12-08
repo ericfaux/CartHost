@@ -83,3 +83,74 @@ export async function createServiceLog(formData: FormData) {
     throw new Error('An unexpected error occurred while creating the service log.');
   }
 }
+
+export async function updateServiceCost(logId: string, newCost: number) {
+  try {
+    if (!logId?.trim()) {
+      return { error: 'Service log ID is required.' };
+    }
+
+    if (!Number.isFinite(newCost)) {
+      return { error: 'A valid numeric cost is required.' };
+    }
+
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignore cookie setting errors
+            }
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return { error: 'You must be logged in to update maintenance logs.' };
+    }
+
+    const { error, data } = await supabase
+      .from('service_logs')
+      .update({ cost: newCost })
+      .eq('id', logId)
+      .eq('host_id', user.id)
+      .select('id')
+      .single();
+
+    if (error) {
+      return { error: `Failed to update service cost: ${error.message}` };
+    }
+
+    if (!data) {
+      return { error: 'Service log not found for this user.' };
+    }
+
+    revalidatePath('/dashboard/maintenance');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    console.error('updateServiceCost error:', error);
+    if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: 'An unexpected error occurred while updating the service cost.' };
+  }
+}
