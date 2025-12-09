@@ -11,6 +11,7 @@ type InspectionWizardProps = {
   onComplete: (rentalId: string) => void;
   revenue?: number | null;
   depositAmount: number;
+  hostPhone?: string | null;
 };
 
 type Step = {
@@ -28,7 +29,13 @@ const steps: Step[] = [
   { title: 'Back', description: 'Back Bumper', type: 'photo' },
 ];
 
-export default function InspectionWizard({ cartId, onComplete, revenue, depositAmount }: InspectionWizardProps) {
+export default function InspectionWizard({
+  cartId,
+  onComplete,
+  revenue,
+  depositAmount,
+  hostPhone,
+}: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -414,6 +421,11 @@ export default function InspectionWizard({ cartId, onComplete, revenue, depositA
           )}
         </button>
       </div>
+      {hostPhone && (
+        <p className="mt-6 text-center text-xs text-gray-400">
+          Having trouble? <a href={`sms:${hostPhone}`} className="underline hover:text-gray-600">Text your host</a>
+        </p>
+      )}
     </div>
   );
 }
