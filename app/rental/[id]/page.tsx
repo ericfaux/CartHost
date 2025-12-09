@@ -303,6 +303,7 @@ export default function RentalInspectionPage() {
             onComplete={handleUnlock}
             revenue={cart?.upsell_price}
             depositAmount={cart?.deposit_amount ?? 0}
+            hostPhone={cart?.hosts?.phone_number}
           />
 
         ) : (
