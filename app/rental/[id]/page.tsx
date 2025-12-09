@@ -213,11 +213,9 @@ export default function RentalInspectionPage() {
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome to {cart?.name || 'Magic Cart'}!</h1>
               <p className="text-gray-600">You are good to go!</p>
             </div>
-            <div className="bg-green-50 border-2 border-green-200 p-6 rounded-xl">
-              <p className="text-sm font-semibold text-green-800 uppercase tracking-wider mb-1">
-                Key Safe Code
-              </p>
-              <p className="text-4xl font-mono font-bold text-black tracking-widest">
+            <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-2xl shadow-slate-900/20 border border-slate-800">
+              <p className="text-xs uppercase tracking-[0.2em] text-blue-400 mb-2 font-semibold">Access Code</p>
+              <p className="font-mono text-5xl tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">
                 {cart?.key_code || '----'}
               </p>
             </div>
@@ -231,8 +229,8 @@ export default function RentalInspectionPage() {
             
             <div className="pt-8">
               <p className="text-sm text-gray-400 mb-3">Done for the day?</p>
-              <button 
-                className="w-full bg-gray-900 text-white rounded-lg py-4 font-bold shadow-lg hover:bg-gray-800 active:scale-95 transition-all"
+              <button
+                className="w-full bg-white border border-gray-200 text-slate-900 hover:bg-gray-50 py-4 font-semibold rounded-xl shadow-sm"
                 onClick={() => setIsCheckingOut(true)}
               >
                 End Rental & Verify Plug
