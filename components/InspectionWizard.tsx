@@ -41,6 +41,9 @@ export default function InspectionWizard({ cartId, onComplete, revenue, depositA
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
+  const totalSteps = steps.length;
+  const progress = useMemo(() => ((currentStep + 1) / totalSteps) * 100, [currentStep, totalSteps]);
+
   // 1. Fetch Anonymous User ID
   useEffect(() => {
     const fetchUser = async () => {
@@ -69,12 +72,6 @@ export default function InspectionWizard({ cartId, onComplete, revenue, depositA
     setPreviewUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
-
-  const stepLabel = useMemo(() => {
-    const stepNumber = currentStep + 1;
-    const step = steps[currentStep];
-    return `Step ${stepNumber} of ${steps.length}: ${step.description}`;
-  }, [currentStep]);
 
   const currentStepData = steps[currentStep];
   const isGuestStep = currentStepData.type === 'info';
@@ -219,10 +216,20 @@ export default function InspectionWizard({ cartId, onComplete, revenue, depositA
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-6 space-y-6 border border-gray-100">
+    <div className="bg-white shadow-xl shadow-blue-900/5 border border-white/50 rounded-xl p-6 space-y-6 backdrop-blur-sm">
+      <div className="flex gap-2 mb-6" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+        {steps.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isActive = index === currentStep;
+          const statusClass = isCompleted || isActive ? 'bg-blue-600' : 'bg-gray-100';
+
+          return <div key={step.title} className={`h-1 flex-1 rounded-full transition-all duration-300 ${statusClass}`} />;
+        })}
+      </div>
+
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-500">{steps[currentStep].title} Inspection</p>
-        <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{currentStepData.description}</h2>
         {isGuestStep ? (
           <p className="text-sm text-gray-600">Please provide the guest information before starting the inspection.</p>
         ) : isWaiverStep ? (
@@ -387,9 +394,7 @@ export default function InspectionWizard({ cartId, onComplete, revenue, depositA
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">{`Step ${currentStep + 1} of ${steps.length}`}</div>
-        
+      <div className="flex items-center justify-end">
         <button
           onClick={handleNext}
           disabled={
