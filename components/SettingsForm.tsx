@@ -13,6 +13,7 @@ export type HostProfile = {
   property_name: string | null;
   billing_address: string | null;
   default_deposit: number | null;
+  welcome_message: string | null;
   [key: string]: unknown;
 };
 
@@ -169,6 +170,51 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
           />
         </div>
 
+        <div className="space-y-4 border-t border-gray-100 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Rental Configuration
+              </h2>
+              <p className="text-sm text-gray-500">
+                Customize the default waiver riders acknowledge before unlocking a
+                cart.
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+              Custom Waivers coming soon to Pro
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="welcomeMessage"
+              className="text-sm font-medium text-gray-700"
+            >
+              Guest Welcome Message (Optional)
+            </label>
+            <input
+              id="welcomeMessage"
+              name="welcomeMessage"
+              type="text"
+              maxLength={100}
+              defaultValue={profile.welcome_message ?? ""}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="e.g. Have a great stay at Sunset Villa!"
+            />
+            <p className="text-xs text-gray-500">
+              Displayed on the first screen when a guest scans the cart.
+            </p>
+          </div>
+
+          <textarea
+            value={DEFAULT_WAIVER_TEXT}
+            disabled
+            rows={6}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
+          />
+        </div>
+
         <div className="flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
           {state?.success && (
             <div
@@ -193,29 +239,6 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
           </div>
         </div>
       </form>
-
-      <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Rental Configuration
-            </h2>
-            <p className="text-sm text-gray-500">
-              Customize the default waiver riders acknowledge before unlocking a
-              cart.
-            </p>
-          </div>
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
-            Custom Waivers coming soon to Pro
-          </span>
-        </div>
-        <textarea
-          value={DEFAULT_WAIVER_TEXT}
-          disabled
-          rows={6}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
-        />
-      </div>
 
       <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="space-y-1">

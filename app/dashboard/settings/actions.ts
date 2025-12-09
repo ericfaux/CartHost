@@ -19,6 +19,10 @@ export async function updateProfile(
     const billingAddress = formData.get("billingAddress")?.toString().trim() || null;
     const defaultDepositRaw = formData.get("defaultDeposit")?.toString().trim() || "";
     
+    // Extract and sanitize welcomeMessage: limit to 100 characters
+    const welcomeMessageRaw = formData.get("welcomeMessage")?.toString().trim() || null;
+    const welcomeMessage = welcomeMessageRaw ? welcomeMessageRaw.slice(0, 100) : null;
+    
     // Sanitize defaultDeposit: parse to float, default to 0 if invalid
     const parsedDeposit = parseFloat(defaultDepositRaw);
     const sanitizedDeposit = isNaN(parsedDeposit) ? 0 : parsedDeposit;
@@ -67,6 +71,7 @@ export async function updateProfile(
         property_name: propertyName,
         billing_address: billingAddress,
         default_deposit: sanitizedDeposit,
+        welcome_message: welcomeMessage,
       })
       .eq("id", user.id);
 
