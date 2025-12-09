@@ -209,7 +209,11 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const renderDepositActions = (rental: Rental) => {
     // Condition 1: No deposit or deposit <= 0
     if (!rental.deposit_amount || rental.deposit_amount <= 0) {
-      return <span className="text-gray-400">-</span>;
+      return (
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">
+          Not Required
+        </span>
+      );
     }
 
     // Condition 2: Has a deposit - render dropdown
@@ -254,7 +258,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
           <option value="pending">Pending</option>
           <option value="collected">Collected</option>
           <option value="refunded">Refunded</option>
-          <option value="withheld">Withheld</option>
+          <option value="withheld">Applied to Damage</option>
         </select>
         {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-gray-500" />}
       </div>
