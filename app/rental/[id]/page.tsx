@@ -137,16 +137,33 @@ export default function RentalInspectionPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-gray-500" />
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-white pb-20">
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-gray-500" />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div className="max-w-md w-full mx-auto text-center space-y-6">
-        
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-white pb-20">
+      <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-md mx-auto h-full px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-sm">
+              <Lock className="h-5 w-5" />
+            </div>
+            <span className="text-lg font-semibold text-slate-800">CartHost</span>
+          </div>
+          {cart?.hosts?.property_name && (
+            <div className="rounded-full bg-slate-100 px-4 py-1 text-sm font-semibold text-slate-700 shadow-sm">
+              {cart.hosts.property_name}
+            </div>
+          )}
+        </div>
+      </header>
+      <div className="max-w-md mx-auto pt-20 px-6 space-y-6 text-center">
+
         {/* STATE 4: RENTAL COMPLETED (SUCCESS) */}
         {isCompleted ? (
            <div className="space-y-6 animate-in fade-in duration-500">
@@ -193,7 +210,7 @@ export default function RentalInspectionPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-green-700">Welcome to {cart?.name || 'Magic Cart'}!</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome to {cart?.name || 'Magic Cart'}!</h1>
               <p className="text-gray-600">You are good to go!</p>
             </div>
             <div className="bg-green-50 border-2 border-green-200 p-6 rounded-xl">
@@ -291,7 +308,7 @@ export default function RentalInspectionPage() {
           />
 
         ) : (
-          
+
           /* STATE 1: LOCKED (START) */
           <div className="space-y-6">
             <div className="flex justify-center">
@@ -299,9 +316,6 @@ export default function RentalInspectionPage() {
             </div>
 
             <div className="space-y-3">
-              {cart?.hosts?.property_name && (
-                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 inline-block">Welcome to {cart.hosts.property_name}</div>
-              )}
               <h1 className="text-2xl font-bold">Safety Check Required</h1>
               <p className="text-gray-600">
                 You must complete a visual inspection to unlock the key.
@@ -314,7 +328,9 @@ export default function RentalInspectionPage() {
               </div>
 
               {cart?.hosts?.welcome_message && (
-                <blockquote className="italic text-gray-500 text-sm mt-4 border-l-4 border-gray-200 pl-3 text-left">"{cart.hosts.welcome_message}"</blockquote>
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-sm text-gray-600 italic text-left">
+                  "{cart.hosts.welcome_message}"
+                </div>
               )}
 
               {error && (
