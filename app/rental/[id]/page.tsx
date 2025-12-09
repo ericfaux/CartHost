@@ -21,6 +21,11 @@ type Cart = {
   upsell_unit?: string | null;
   access_code?: string | null;
   deposit_amount?: number | null;
+  hosts?: {
+    property_name?: string | null;
+    phone_number?: string | null;
+    welcome_message?: string | null;
+  } | null;
 } | null;
 
 export default function RentalInspectionPage() {
@@ -55,7 +60,7 @@ export default function RentalInspectionPage() {
 
         const { data: cartData, error: cartError } = await supabase
           .from('carts')
-          .select('*')
+          .select('*, hosts(property_name, phone_number, welcome_message)')
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
@@ -188,7 +193,7 @@ export default function RentalInspectionPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-green-700">RIDE UNLOCKED</h1>
+              <h1 className="text-3xl font-bold text-green-700">Welcome to {cart?.name || 'Magic Cart'}!</h1>
               <p className="text-gray-600">You are good to go!</p>
             </div>
             <div className="bg-green-50 border-2 border-green-200 p-6 rounded-xl">
@@ -216,6 +221,12 @@ export default function RentalInspectionPage() {
                 End Rental & Verify Plug
               </button>
             </div>
+
+            {cart?.hosts?.phone_number && (
+              <p className="text-xs text-gray-400 mt-8">
+                Having trouble? <a href={`sms:${cart.hosts.phone_number}`} className="underline hover:text-gray-600">Text your host</a> if the camera isn't working.
+              </p>
+            )}
           </div>
 
         ) : isLocked ? (
@@ -288,6 +299,9 @@ export default function RentalInspectionPage() {
             </div>
 
             <div className="space-y-3">
+              {cart?.hosts?.property_name && (
+                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 inline-block">Welcome to {cart.hosts.property_name}</div>
+              )}
               <h1 className="text-2xl font-bold">Safety Check Required</h1>
               <p className="text-gray-600">
                 You must complete a visual inspection to unlock the key.
@@ -298,6 +312,10 @@ export default function RentalInspectionPage() {
                   Cart: {cart?.name}
                 </h2>
               </div>
+
+              {cart?.hosts?.welcome_message && (
+                <blockquote className="italic text-gray-500 text-sm mt-4 border-l-4 border-gray-200 pl-3 text-left">"{cart.hosts.welcome_message}"</blockquote>
+              )}
 
               {error && (
                 <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 flex items-center gap-2 justify-center">
