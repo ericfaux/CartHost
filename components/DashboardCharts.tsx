@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useMemo } from "react";
 import { Banknote, Hash, TrendingUp, Shield } from "lucide-react";
 import {
@@ -211,6 +212,9 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
             <div>
               <p className="text-sm font-semibold text-gray-500">Deposits Held</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalDepositsHeld)}</p>
+              <Link href="/dashboard/history" className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline block">
+                Manage in History →
+              </Link>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
               <Shield className="h-5 w-5 text-blue-600" />
