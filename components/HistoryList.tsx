@@ -32,21 +32,6 @@ type Rental = {
   } | null;
 };
 
-const getNextStatus = (current: string): string => {
-  switch (current) {
-    case 'pending':
-      return 'collected';
-    case 'collected':
-      return 'refunded';
-    case 'refunded':
-      return 'collected';
-    case 'withheld':
-      return 'collected';
-    default:
-      return 'collected';
-  }
-};
-
 export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,14 +189,12 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     );
   };
 
-  const handleDepositClick = (rental: Rental) => {
-    const currentStatus = rental.deposit_status || 'pending';
-    const nextStatus = getNextStatus(currentStatus);
-    setUpdatingDepositId(rental.id);
+  const handleDepositChange = (rentalId: string, newStatus: string) => {
+    setUpdatingDepositId(rentalId);
     
     startDepositTransition(async () => {
       try {
-        const result = await updateDepositStatus(rental.id, nextStatus);
+        const result = await updateDepositStatus(rentalId, newStatus);
         if (result?.error) {
           alert(result.error);
         }
@@ -223,52 +206,58 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     });
   };
 
-  const renderDepositBadge = (rental: Rental) => {
-    const status = rental.deposit_status?.toLowerCase() || 'pending';
-    const amount = rental.deposit_amount || 0;
-    const isUpdating = updatingDepositId === rental.id && isDepositPending;
+  const renderDepositActions = (rental: Rental) => {
+    // Condition 1: No deposit or deposit <= 0
+    if (!rental.deposit_amount || rental.deposit_amount <= 0) {
+      return <span className="text-gray-400">-</span>;
+    }
 
+    // Condition 2: Has a deposit - render dropdown
+    const status = rental.deposit_status?.toLowerCase() || 'pending';
+    const isUpdating = isDepositPending && updatingDepositId === rental.id;
+
+    // Color logic based on status
     let bgColor = '';
     let textColor = '';
-    let label = '';
 
     switch (status) {
       case 'pending':
         bgColor = 'bg-gray-100';
         textColor = 'text-gray-700';
-        label = 'Pending';
         break;
       case 'collected':
         bgColor = 'bg-blue-100';
         textColor = 'text-blue-700';
-        label = `Held: $${amount}`;
         break;
       case 'refunded':
         bgColor = 'bg-green-100';
         textColor = 'text-green-700';
-        label = 'Refunded';
         break;
       case 'withheld':
         bgColor = 'bg-red-100';
         textColor = 'text-red-700';
-        label = 'Withheld';
         break;
       default:
         bgColor = 'bg-gray-100';
         textColor = 'text-gray-700';
-        label = 'Pending';
     }
 
     return (
-      <button
-        type="button"
-        onClick={() => handleDepositClick(rental)}
-        disabled={isUpdating}
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${bgColor} ${textColor} transition hover:opacity-80 disabled:cursor-not-allowed`}
-      >
-        {isUpdating && <Loader2 className="h-3 w-3 animate-spin" />}
-        {label}
-      </button>
+      <div className="inline-flex items-center gap-1.5">
+        <select
+          value={rental.deposit_status || 'pending'}
+          onChange={(e) => handleDepositChange(rental.id, e.target.value)}
+          disabled={isUpdating}
+          className={`cursor-pointer appearance-none rounded-full border-0 px-3 py-1 pr-6 text-xs font-semibold ${bgColor} ${textColor} focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50`}
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.25rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
+        >
+          <option value="pending">Pending</option>
+          <option value="collected">Collected</option>
+          <option value="refunded">Refunded</option>
+          <option value="withheld">Withheld</option>
+        </select>
+        {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-gray-500" />}
+      </div>
     );
   };
 
@@ -374,7 +363,7 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                     {renderRevenue(rental)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    {renderDepositBadge(rental)}
+                    {renderDepositActions(rental)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
                     {renderStatus(rental.status)}
