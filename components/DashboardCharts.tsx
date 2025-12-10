@@ -174,50 +174,50 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Total Revenue</p>
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{formatCurrency(totalRevenue)}</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-              <Banknote className="h-5 w-5 text-green-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-50/80">
+              <Banknote className="h-5 w-5 text-emerald-600" />
             </div>
           </div>
         </div>
-        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-500">Total Rides</p>
-              <p className="text-2xl font-bold text-gray-900">{totalRides}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Total Rides</p>
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{totalRides}</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50/80">
               <Hash className="h-5 w-5 text-purple-600" />
             </div>
           </div>
         </div>
-        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-500">Avg Revenue per Ride</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(avgRevenue)}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Avg Revenue per Ride</p>
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{formatCurrency(avgRevenue)}</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-50/80">
+              <TrendingUp className="h-5 w-5 text-sky-600" />
             </div>
           </div>
         </div>
-        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-500">Deposits Held</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalDepositsHeld)}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Deposits Held</p>
+              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{formatCurrency(totalDepositsHeld)}</p>
               <Link href="/dashboard/history" className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline block">
                 Manage in History →
               </Link>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <Shield className="h-5 w-5 text-blue-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50/80">
+              <Shield className="h-5 w-5 text-indigo-600" />
             </div>
           </div>
         </div>
