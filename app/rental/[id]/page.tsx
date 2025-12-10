@@ -26,6 +26,7 @@ type Cart = {
     property_name?: string | null;
     phone_number?: string | null;
     welcome_message?: string | null;
+    enable_guest_text_support?: boolean | null;
   } | null;
 } | null;
 
@@ -61,7 +62,7 @@ export default function RentalInspectionPage() {
 
         const { data: cartData, error: cartError } = await supabase
           .from('carts')
-          .select('*, hosts(property_name, phone_number, welcome_message)')
+          .select('*, hosts(property_name, phone_number, welcome_message, enable_guest_text_support)')
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
@@ -240,7 +241,7 @@ export default function RentalInspectionPage() {
               </button>
             </div>
 
-            {cart?.hosts?.phone_number && (
+            {cart.hosts?.enable_guest_text_support !== false && cart.hosts?.phone_number && (
               <p className="text-xs text-gray-400 mt-8">
                 Having trouble? <a href={`sms:${cart.hosts.phone_number}`} className="underline hover:text-gray-600">Text your host</a> if the camera isn't working.
               </p>
@@ -308,6 +309,7 @@ export default function RentalInspectionPage() {
             depositAmount={cart?.deposit_amount ?? 0}
             hostPhone={cart?.hosts?.phone_number}
             assetType={cart?.type ?? 'cart'}
+            showSupportLink={cart?.hosts?.enable_guest_text_support !== false}
           />
 
         ) : (

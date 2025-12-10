@@ -13,6 +13,7 @@ type InspectionWizardProps = {
   depositAmount: number;
   hostPhone?: string | null;
   assetType: string;
+  showSupportLink: boolean;
 };
 
 type Step = {
@@ -28,6 +29,7 @@ export default function InspectionWizard({
   depositAmount,
   hostPhone,
   assetType,
+  showSupportLink,
 }: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
@@ -433,7 +435,7 @@ export default function InspectionWizard({
           )}
         </button>
       </div>
-      {hostPhone && (
+      {showSupportLink && hostPhone && (
         <p className="mt-6 text-center text-xs text-gray-400">
           Having trouble? <a href={`sms:${hostPhone}`} className="underline hover:text-gray-600">Text your host</a>
         </p>
