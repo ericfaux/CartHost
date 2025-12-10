@@ -12,6 +12,7 @@ type InspectionWizardProps = {
   revenue?: number | null;
   depositAmount: number;
   hostPhone?: string | null;
+  assetType: string;
 };
 
 type Step = {
@@ -20,21 +21,13 @@ type Step = {
   type: 'info' | 'waiver' | 'photo';
 };
 
-const steps: Step[] = [
-  { title: 'Guest', description: 'Guest Information', type: 'info' },
-  { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
-  { title: 'Front', description: 'Front Bumper', type: 'photo' },
-  { title: 'Left', description: 'Left Side', type: 'photo' },
-  { title: 'Right', description: 'Right Side', type: 'photo' },
-  { title: 'Back', description: 'Back Bumper', type: 'photo' },
-];
-
 export default function InspectionWizard({
   cartId,
   onComplete,
   revenue,
   depositAmount,
   hostPhone,
+  assetType,
 }: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
@@ -47,6 +40,25 @@ export default function InspectionWizard({
   const [departureDate, setDepartureDate] = useState('');
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+
+  const steps = useMemo<Step[]>(
+    () =>
+      assetType === 'hot_tub'
+        ? [
+            { title: 'Guest', description: 'Guest Information', type: 'info' },
+            { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
+            { title: 'Water', description: 'Current Water Clarity', type: 'photo' },
+          ]
+        : [
+            { title: 'Guest', description: 'Guest Information', type: 'info' },
+            { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
+            { title: 'Front', description: 'Front Bumper', type: 'photo' },
+            { title: 'Left', description: 'Left Side', type: 'photo' },
+            { title: 'Right', description: 'Right Side', type: 'photo' },
+            { title: 'Back', description: 'Back Bumper', type: 'photo' },
+          ],
+    [assetType],
+  );
 
   const totalSteps = steps.length;
   const progress = useMemo(() => ((currentStep + 1) / totalSteps) * 100, [currentStep, totalSteps]);
