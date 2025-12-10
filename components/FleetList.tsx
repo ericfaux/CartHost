@@ -14,9 +14,11 @@ import {
   Banknote,
   Lock,
   Shield,
+  QrCode,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart } from "../app/dashboard/actions";
+import QrCodeModal from "./QrCodeModal";
 
 type Cart = {
   id: string;
@@ -39,6 +41,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
   const [selectedCart, setSelectedCart] = useState<Cart | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [qrAsset, setQrAsset] = useState<Cart | null>(null);
 
   const handleEdit = (cart: Cart) => {
     setSelectedCart(cart);
@@ -124,34 +127,40 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 })
               : null;
 
-            return (
-              <div
-                key={cart.id}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
-              >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div className={iconWrapperClass}>{cartIcon}</div>
-                    <div className="flex gap-1">
+              return (
+                <div
+                  key={cart.id}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
+                >
+                  <div>
+                    <div className="flex items-start justify-between">
+                      <div className={iconWrapperClass}>{cartIcon}</div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setQrAsset(cart)}
+                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-blue-50 hover:text-blue-600 group-hover:opacity-100"
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => handleEdit(cart)}
                           className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-gray-50 hover:text-gray-900 group-hover:opacity-100"
                         >
-                           <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(cart.id)}
                           disabled={deletingId === cart.id}
                           className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
                         >
-                           <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
+                      </div>
                     </div>
-                  </div>
 
-                  <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
-                    {cart.name}
-                  </h3>
+                    <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
+                      {cart.name}
+                    </h3>
                   {cart.access_type === "upsell" && cart.upsell_price !== null && (
                     <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                       <Banknote className="h-3.5 w-3.5" />
@@ -260,6 +269,12 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
           if (!open) setSelectedCart(null);
         }}
         showTrigger={false}
+      />
+      <QrCodeModal
+        isOpen={!!qrAsset}
+        onClose={() => setQrAsset(null)}
+        assetId={qrAsset?.id ?? ""}
+        assetName={qrAsset?.name ?? ""}
       />
     </div>
   );
