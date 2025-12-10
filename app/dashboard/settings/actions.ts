@@ -18,6 +18,9 @@ export async function updateProfile(
     const propertyName = formData.get("propertyName")?.toString().trim() || null;
     const billingAddress = formData.get("billingAddress")?.toString().trim() || null;
     const defaultDepositRaw = formData.get("defaultDeposit")?.toString().trim() || "";
+    const enableGuestTextSupport = Boolean(formData.get("enableGuestTextSupport"));
+    const showFinancialTiles = Boolean(formData.get("showFinancialTiles"));
+    const enableSmsNotifications = Boolean(formData.get("enableSmsNotifications"));
     
     // Extract and sanitize welcomeMessage: limit to 100 characters
     const welcomeMessageRaw = formData.get("welcomeMessage")?.toString().trim() || null;
@@ -72,6 +75,9 @@ export async function updateProfile(
         billing_address: billingAddress,
         default_deposit: sanitizedDeposit,
         welcome_message: welcomeMessage,
+        enable_guest_text_support: enableGuestTextSupport,
+        show_financial_tiles: showFinancialTiles,
+        enable_sms_notifications: enableSmsNotifications,
       })
       .eq("id", user.id);
 
