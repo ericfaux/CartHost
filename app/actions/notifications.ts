@@ -33,7 +33,10 @@ export async function sendWelcomeSms(rentalId: string) {
       guest_phone,
       carts (
         name,
-        key_code
+        key_code,
+        hosts (
+          enable_sms_notifications
+        )
       )
     `)
     .eq('id', rentalId)
@@ -49,6 +52,9 @@ export async function sendWelcomeSms(rentalId: string) {
   // @ts-ignore
   const keyCode = rental.carts?.key_code || '----';
 //Welcome to ${cartName}! Your key code is: ${keyCode}. Please drive safely and remember to plug in the cart when you return!
+  // @ts-ignore
+  if (rental.carts?.hosts?.enable_sms_notifications === false) return;
+
   if (rental.guest_phone) {
     const message = `Welcome to ${cartName}! Your key code is: ${keyCode}. Please drive safely and remember to plug in the cart when you return!`;
     await sendSms(rental.guest_phone, message);
