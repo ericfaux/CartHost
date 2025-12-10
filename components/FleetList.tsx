@@ -130,14 +130,14 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(cart)}
-                          className="rounded-md p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-gray-50 hover:text-gray-900 group-hover:opacity-100"
                         >
                            <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(cart.id)}
                           disabled={deletingId === cart.id}
-                          className="rounded-md p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
                         >
                            <Trash2 className="h-4 w-4" />
                         </button>
@@ -179,7 +179,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     }}
                   >
                     <span
-                      className="inline-block h-2 w-2 rounded-full"
+                      className={`inline-block h-2 w-2 rounded-full ${cart.is_currently_rented ? "animate-pulse" : ""}`}
                       style={{
                         backgroundColor:
                           cart.status === "inactive"
