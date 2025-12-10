@@ -119,24 +119,33 @@ export default async function DashboardHome() {
     redirect("/login");
   }
 
-  const { data: carts = [] } = await supabase
+  const { data: carts, error: cartsError } = await supabase
     .from("carts")
     .select("id, name, last_serviced_at")
     .eq("host_id", user.id)
     .order("name");
 
-  const { data: rentals = [] } = await supabase
+  const { data: rentals, error: rentalsError } = await supabase
     .from("rentals")
     .select("cart_id, created_at, revenue, deposit_status, deposit_amount, carts!inner(host_id)")
     .eq("carts.host_id", user.id);
 
-  const { data: serviceLogs = [] } = await supabase
+  const { data: serviceLogs, error: logsError } = await supabase
     .from("service_logs")
     .select("cost")
     .eq("host_id", user.id);
 
-  const typedRentals = rentals as Rental[];
-  const typedServiceLogs = serviceLogs as ServiceLog[];
+  if (cartsError || rentalsError || logsError) {
+    console.error("Data fetch failed:", cartsError, rentalsError, logsError);
+    redirect("/login");
+  }
+
+  const finalCarts = carts || [];
+  const finalRentals = rentals || [];
+  const finalLogs = serviceLogs || [];
+
+  const typedRentals = finalRentals as Rental[];
+  const typedServiceLogs = finalLogs as ServiceLog[];
 
   const totalRevenue = typedRentals.reduce(
     (sum, rental) => sum + Number(rental.revenue ?? 0),
@@ -153,7 +162,7 @@ export default async function DashboardHome() {
 
   const totalRides = typedRentals.length;
   const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
-  const health = calculateHealth(carts as Cart[], typedRentals, today);
+  const health = calculateHealth(finalCarts as Cart[], typedRentals, today);
 
   const healthyCount = health.filter((item) => item.status === GREEN).length;
   const dueSoonCount = health.filter((item) => item.status === YELLOW).length;
