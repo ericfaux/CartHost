@@ -8,6 +8,7 @@ import InspectionWizard from '../../../components/InspectionWizard';
 import PlugVerifier from '../../../components/PlugVerifier';
 import GasCheckout from '../../../components/GasCheckout';
 import LockCheckout from '../../../components/LockCheckout';
+import HotTubCheckout from '../../../components/HotTubCheckout';
 
 type Cart = {
   id: string;
@@ -185,7 +186,9 @@ export default function RentalInspectionPage() {
         ) : isCheckingOut ? (
 
         /* STATE 3: CHECKOUT */
-          cart?.type === 'gas' ? (
+          cart?.type === 'hot_tub' ? (
+            <HotTubCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+          ) : cart?.type === 'gas' ? (
             <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'bike' && (cart?.requires_lock_photo ?? true) ? (
             <LockCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
