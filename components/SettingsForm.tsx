@@ -14,6 +14,9 @@ export type HostProfile = {
   billing_address: string | null;
   default_deposit: number | null;
   welcome_message: string | null;
+  enable_guest_text_support: boolean | null;
+  show_financial_tiles: boolean | null;
+  enable_sms_notifications: boolean | null;
   [key: string]: unknown;
 };
 
@@ -213,6 +216,66 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
             rows={6}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
           />
+        </div>
+
+        <div className="space-y-4 border-t border-gray-100 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Feature Configuration
+              </h2>
+              <p className="text-sm text-gray-500">
+                Enable or disable the experiences your guests and team see.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="enableGuestTextSupport"
+                defaultChecked={profile.enable_guest_text_support ?? true}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">Guest Support Link</p>
+                <p className="text-sm text-gray-500">
+                  Show a 'Text Host' link in the guest app for issues.
+                </p>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="showFinancialTiles"
+                defaultChecked={profile.show_financial_tiles ?? true}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">Financial Dashboard</p>
+                <p className="text-sm text-gray-500">
+                  Show revenue, ride counts, and charts on the home page.
+                </p>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="enableSmsNotifications"
+                defaultChecked={profile.enable_sms_notifications ?? true}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">Guest SMS Notifications</p>
+                <p className="text-sm text-gray-500">
+                  Send automated text messages to guests (Welcome &amp; Return).
+                </p>
+              </div>
+            </label>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
