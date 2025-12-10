@@ -43,7 +43,7 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
           : "Adding..."
         : isEditing
         ? "Save Changes"
-        : "Save Cart"}
+        : "Save Asset"}
     </button>
   );
 }
@@ -142,7 +142,7 @@ export default function AddCartModal({
             className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800"
             onClick={() => setOpen(true)}
           >
-            Add Cart
+            Add Asset
           </button>
         )
       )}
@@ -153,12 +153,12 @@ export default function AddCartModal({
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {isEditing ? "Edit Cart" : "Add Cart"}
+                  {isEditing ? "Edit Asset" : "Add Asset"}
                 </h2>
                 <p className="text-sm text-gray-500">
                   {isEditing
-                    ? "Update cart details for your fleet."
-                    : "Create a new cart for your fleet."}
+                    ? "Update asset details for your fleet."
+                    : "Create a new asset for your fleet."}
                 </p>
               </div>
               <button
@@ -172,7 +172,7 @@ export default function AddCartModal({
 
             <form className="mt-6 space-y-4" action={formAction}>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Cart Name</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Asset Name</label>
                 <input
                   type="text"
                   name="name"
