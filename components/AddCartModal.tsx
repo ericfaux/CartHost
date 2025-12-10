@@ -195,6 +195,7 @@ export default function AddCartModal({
                   <option value="electric">Electric</option>
                   <option value="gas">Gas</option>
                   <option value="bike">Bike</option>
+                  <option value="hot_tub">Hot Tub</option>
                 </select>
               </div>
 

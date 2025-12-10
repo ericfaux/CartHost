@@ -9,6 +9,7 @@ import {
   Zap,
   Fuel,
   Bike,
+  Bath,
   CarFront,
   Banknote,
   Lock,
@@ -76,7 +77,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
               className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-all active:scale-95"
             >
               <Plus className="h-4 w-4" />
-              Add Vehicle
+              Add Asset
             </button>
           )}
         />
@@ -98,6 +99,8 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 ? "flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
                 : cart.type === "bike"
                 ? "flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600"
+                : cart.type === "hot_tub"
+                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600"
                 : "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600";
 
             const cartIcon =
@@ -105,6 +108,8 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 <Fuel className="h-6 w-6" />
               ) : cart.type === "bike" ? (
                 <Bike className="h-6 w-6" />
+              ) : cart.type === "hot_tub" ? (
+                <Bath className="h-6 w-6" />
               ) : (
                 <Zap className="h-6 w-6" />
               );
