@@ -125,6 +125,12 @@ export default async function DashboardHome() {
     .eq("host_id", user.id)
     .order("name");
 
+  const { data: profile, error: profileError } = await supabase
+    .from("hosts")
+    .select("show_financial_tiles")
+    .eq("id", user.id)
+    .single();
+
   const { data: rentals, error: rentalsError } = await supabase
     .from("rentals")
     .select("cart_id, created_at, revenue, deposit_status, deposit_amount, carts!inner(host_id)")
@@ -135,8 +141,14 @@ export default async function DashboardHome() {
     .select("cost")
     .eq("host_id", user.id);
 
-  if (cartsError || rentalsError || logsError) {
-    console.error("Data fetch failed:", cartsError, rentalsError, logsError);
+  if (cartsError || rentalsError || logsError || profileError) {
+    console.error(
+      "Data fetch failed:",
+      cartsError,
+      rentalsError,
+      logsError,
+      profileError
+    );
     redirect("/login");
   }
 
@@ -229,19 +241,21 @@ export default async function DashboardHome() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <p className="text-2xl font-bold tracking-tight text-gray-900">
-            Financial Performance
-          </p>
-          <p className="text-sm text-gray-500">
-            Revenue, expenses, and net profit across your fleet.
-          </p>
-        </div>
+      {profile?.show_financial_tiles !== false && (
+        <div className="space-y-6">
+          <div>
+            <p className="text-2xl font-bold tracking-tight text-gray-900">
+              Financial Performance
+            </p>
+            <p className="text-sm text-gray-500">
+              Revenue, expenses, and net profit across your fleet.
+            </p>
+          </div>
 
-        {/* The old grid is gone, only the new component remains */}
-        <DashboardCharts rentals={typedRentals} />
-      </div>
+          {/* The old grid is gone, only the new component remains */}
+          <DashboardCharts rentals={typedRentals} />
+        </div>
+      )}
 
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Fleet Health</h1>
