@@ -128,7 +128,7 @@ export async function forgotPassword(formData: FormData) {
       return { error: "Email is required." };
     }
 
-    const origin = headers().get("origin");
+    const origin = (await headers()).get("origin");
 
     if (!origin) {
       return { error: "Unable to determine request origin." };
