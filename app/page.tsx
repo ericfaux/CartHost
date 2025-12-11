@@ -56,22 +56,46 @@ export default function LandingPage() {
     {
       id: 1,
       label: "Dashboard Overview",
-      content: <img src="/host-dashboard.jpg" alt="Host Dashboard" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Host+Dashboard"
+          alt="Dashboard"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 2,
       label: "Fleet Management",
-      content: <img src="/host-fleet.jpg" alt="Fleet Manager" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Fleet+Manager"
+          alt="Fleet"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 3,
       label: "Rental History",
-      content: <img src="/host-history.jpg" alt="Rental History" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Rental+History"
+          alt="History"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 4,
       label: "Settings",
-      content: <img src="/host-settings.jpg" alt="Settings" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Settings"
+          alt="Settings"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
   ];
 
@@ -79,22 +103,46 @@ export default function LandingPage() {
     {
       id: 1,
       label: "Scan to Unlock",
-      content: <img src="/guest-scan.jpg" alt="Scan QR" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Scan+QR"
+          alt="Scan"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 2,
       label: "Identity Verification",
-      content: <img src="/guest-verify.jpg" alt="Verify ID" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Verify+ID"
+          alt="ID"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 3,
       label: "Safety Inspection",
-      content: <img src="/guest-inspect.jpg" alt="Inspection" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Safety+Check"
+          alt="Inspect"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
     {
       id: 4,
       label: "Digital Key",
-      content: <img src="/guest-unlock.jpg" alt="Digital Key" className="h-full w-full object-cover" />,
+      content: (
+        <img
+          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Digital+Key"
+          alt="Unlock"
+          className="h-full w-full object-cover"
+        />
+      ),
     },
   ];
 
