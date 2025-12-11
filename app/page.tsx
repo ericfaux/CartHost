@@ -4,6 +4,7 @@ import {
   CheckCircle,
   ClipboardList,
   Mail,
+  Play,
   Shield,
   Zap,
 } from "lucide-react";
@@ -44,7 +45,7 @@ const steps = [
   },
   {
     label: "Step 3",
-    title: "The Plug Police",
+    title: "Charge Check",
     description: "Guest must photograph the plug in the wall to end the rental.",
   },
 ];
@@ -81,24 +82,28 @@ export default function LandingPage() {
                 The Digital Gate for Your Golf Cart Fleet.
               </h1>
               <p className="text-lg text-slate-300">
-                Stop eating $2,000 battery costs. Protect your liability. Automate
-                the handoff.
+                Avoid $2,000 battery replacements, win damage disputes, and
+                automate every cart handoff.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/login"
+                href="mailto:support@carthost.app?subject=Early Access"
                 className="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
               >
-                Host Login
+                Get Early Access
               </Link>
               <Link
-                href="mailto:support@carthost.app"
-                className="inline-flex items-center justify-center rounded-md border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-blue-500/60 hover:text-white"
+                href="#demo"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-700 bg-white/5 px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-blue-500/60 hover:text-white"
               >
-                Contact Sales
+                <Play size={16} />
+                Watch 2-min demo
               </Link>
             </div>
+            <p className="text-sm text-slate-400">
+              If CartHost prevents one dead battery, it pays for itself for years.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl shadow-blue-900/30">
@@ -122,6 +127,29 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="demo" className="border-b border-slate-900 bg-slate-900">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-2 lg:py-20">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-white">Host View</h2>
+            <p className="text-base text-slate-300">
+              See every ride, photo, and waiver in one place.
+            </p>
+            <div className="flex aspect-video items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-sm text-slate-400">
+              Host Dashboard Screenshot
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-white">Guest View</h2>
+            <p className="text-base text-slate-300">
+              2-minute safety check on their phone – no app download.
+            </p>
+            <div className="mx-auto flex aspect-[9/19] max-w-[240px] items-center justify-center rounded-3xl border-4 border-slate-700 bg-slate-800 text-sm text-slate-400">
+              Mobile App Screenshot
             </div>
           </div>
         </div>
@@ -157,6 +185,10 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+            <div className="mt-8 grid gap-3 rounded-2xl border border-slate-800 bg-slate-800/60 px-6 py-4 text-center text-sm text-slate-300 sm:grid-cols-2 sm:text-base">
+              <p>Works with lockboxes, key safes, or hidden keys – no hardware required.</p>
+              <p>Now onboarding founding hosts in beach and lake markets.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -165,10 +197,10 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h3 className="text-xl font-semibold text-white">
-              Have questions? Need help setting up?
+              Want CartHost set up for you?
             </h3>
             <p className="text-sm text-slate-300">
-              We&apos;re here to get your fleet live without the headaches.
+              We’ll configure your waivers, QR codes, and first cart for free.
             </p>
           </div>
           <Link
@@ -176,7 +208,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
           >
             <Mail className="h-4 w-4" aria-hidden />
-            support@carthost.app
+            Email us to get started
           </Link>
         </div>
       </section>
