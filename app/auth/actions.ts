@@ -120,6 +120,62 @@ export async function signIn(prevState: any, formData: FormData) {
   redirect("/dashboard");
 }
 
+export async function forgotPassword(formData: FormData) {
+  try {
+    const email = formData.get("email")?.toString().trim();
+
+    if (!email) {
+      return { error: "Email is required." };
+    }
+
+    const origin = headers().get("origin");
+
+    if (!origin) {
+      return { error: "Unable to determine request origin." };
+    }
+
+    const supabase = await createSupabaseActionClient();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      console.error("Password reset request failed:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected password reset request error:", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function updatePassword(formData: FormData) {
+  try {
+    const password = formData.get("password")?.toString();
+
+    if (!password) {
+      return { error: "Password is required." };
+    }
+
+    const supabase = await createSupabaseActionClient();
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      console.error("Password update failed:", error);
+      return { error: error.message };
+    }
+  } catch (error) {
+    console.error("Unexpected password update error:", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
+  redirect("/dashboard");
+}
+
 export async function signOut() {
   const supabase = await createSupabaseActionClient();
 
