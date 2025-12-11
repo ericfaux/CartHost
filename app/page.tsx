@@ -55,108 +55,23 @@ export default function LandingPage() {
   const hostSlides = [
     {
       id: 1,
-      label: "Dashboard Home",
-      content: (
-        <div className="flex h-full w-full flex-col gap-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-left text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-300">Revenue</p>
-              <p className="text-2xl font-semibold text-blue-400">$24,300</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-blue-600/20 ring-1 ring-blue-500/30" />
-          </div>
-          <div className="grid grid-cols-4 items-end gap-2">
-            {[50, 70, 40, 90, 65, 80, 55].map((height, idx) => (
-              <div key={idx} className="rounded-md bg-blue-500/70" style={{ height: `${height}%` }} />
-            ))}
-          </div>
-          <div className="rounded-xl bg-slate-900/80 p-4 ring-1 ring-slate-800">
-            <p className="text-sm text-slate-300">Active rentals</p>
-            <p className="text-lg font-semibold">7 carts</p>
-          </div>
-        </div>
-      ),
+      label: "Dashboard Overview",
+      content: <img src="/host-dashboard.jpg" alt="Host Dashboard" className="h-full w-full object-cover" />,
     },
     {
       id: 2,
-      label: "Fleet Manager",
-      content: (
-        <div className="flex h-full w-full flex-col gap-3 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-left text-white">
-          <h3 className="text-lg font-semibold">Carts</h3>
-          <div className="space-y-3">
-            {["Beach Runner", "Lake Cruiser", "Club Elite", "Harbor Hopper"].map((name, idx) => (
-              <div
-                key={name}
-                className="flex items-center justify-between rounded-lg bg-slate-900/70 px-4 py-3 ring-1 ring-slate-800"
-              >
-                <div>
-                  <p className="font-semibold">{name}</p>
-                  <p className="text-xs text-slate-300">Battery {85 - idx * 10}%</p>
-                </div>
-                <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs text-green-300 ring-1 ring-green-500/30">
-                  Ready
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
+      label: "Fleet Management",
+      content: <img src="/host-fleet.jpg" alt="Fleet Manager" className="h-full w-full object-cover" />,
     },
     {
       id: 3,
       label: "Rental History",
-      content: (
-        <div className="flex h-full w-full flex-col gap-3 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-left text-white">
-          <h3 className="text-lg font-semibold">Recent rides</h3>
-          <div className="overflow-hidden rounded-xl bg-slate-900/80 ring-1 ring-slate-800">
-            <div className="grid grid-cols-4 bg-slate-800/80 px-4 py-2 text-xs uppercase tracking-wide text-slate-300">
-              <span>Guest</span>
-              <span>Cart</span>
-              <span>Duration</span>
-              <span className="text-right">Revenue</span>
-            </div>
-            {["Liam", "Ava", "Noah", "Isla"].map((name, idx) => (
-              <div
-                key={name}
-                className="grid grid-cols-4 items-center px-4 py-2 text-sm text-slate-200 odd:bg-slate-900 even:bg-slate-800"
-              >
-                <span>{name}</span>
-                <span>{idx % 2 === 0 ? "Beach Runner" : "Lake Cruiser"}</span>
-                <span>{45 + idx * 10} mins</span>
-                <span className="text-right text-green-300">${80 + idx * 15}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
+      content: <img src="/host-history.jpg" alt="Rental History" className="h-full w-full object-cover" />,
     },
     {
       id: 4,
       label: "Settings",
-      content: (
-        <div className="flex h-full w-full flex-col gap-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-left text-white">
-          <h3 className="text-lg font-semibold">Rental rules</h3>
-          <div className="space-y-3">
-            {["Require waiver", "Verify ID", "Pre-ride photos", "Safety checklist"].map((item, idx) => (
-              <div key={item} className="flex items-center justify-between rounded-lg bg-slate-900/80 px-4 py-3 ring-1 ring-slate-800">
-                <div className="space-y-1">
-                  <p className="font-semibold">{item}</p>
-                  <p className="text-xs text-slate-300">Applied to all carts</p>
-                </div>
-                <div
-                  className={`relative h-6 w-11 rounded-full border ${idx % 2 === 0 ? "border-blue-400 bg-blue-500" : "border-slate-600 bg-slate-700"}`}
-                >
-                  <span
-                    className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white transition-all ${
-                      idx % 2 === 0 ? "right-1" : "left-1"
-                    }`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
+      content: <img src="/host-settings.jpg" alt="Settings" className="h-full w-full object-cover" />,
     },
   ];
 
@@ -164,63 +79,22 @@ export default function LandingPage() {
     {
       id: 1,
       label: "Scan to Unlock",
-      content: (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 p-6 text-center text-white">
-          <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-white text-slate-900">
-            <div className="grid grid-cols-3 gap-1 p-3 text-xs font-bold">
-              {[...Array(9)].map((_, idx) => (
-                <div key={idx} className={`h-6 w-6 ${idx % 2 === 0 ? "bg-slate-900" : "bg-white"}`} />
-              ))}
-            </div>
-          </div>
-          <p className="text-sm text-slate-200">Scan the QR code to start your ride.</p>
-        </div>
-      ),
+      content: <img src="/guest-scan.jpg" alt="Scan QR" className="h-full w-full object-cover" />,
     },
     {
       id: 2,
       label: "Identity Verification",
-      content: (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 p-6 text-center text-white">
-          <div className="flex h-36 w-28 flex-col items-center justify-center rounded-2xl bg-slate-900/80 ring-1 ring-slate-800">
-            <div className="h-12 w-20 rounded bg-blue-500/30" />
-            <div className="mt-2 h-2 w-16 rounded bg-slate-700" />
-            <div className="mt-1 h-2 w-14 rounded bg-slate-700" />
-          </div>
-          <p className="text-sm text-slate-200">Snap a photo of your ID to continue.</p>
-        </div>
-      ),
+      content: <img src="/guest-verify.jpg" alt="Verify ID" className="h-full w-full object-cover" />,
     },
     {
       id: 3,
-      label: "Safety Check",
-      content: (
-        <div className="flex h-full w-full flex-col justify-center gap-4 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 p-6 text-left text-white">
-          <h3 className="text-center text-lg font-semibold">Safety Checklist</h3>
-          <div className="space-y-2 rounded-xl bg-slate-900/80 p-4 ring-1 ring-slate-800">
-            {["Tires look good", "Brakes tested", "Lights working", "Seatbelts secured"].map((item, idx) => (
-              <div key={item} className="flex items-center gap-3">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-green-400 bg-green-500/20 text-[10px] font-bold text-green-200">
-                  ✓
-                </span>
-                <p className="text-sm text-slate-200">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
+      label: "Safety Inspection",
+      content: <img src="/guest-inspect.jpg" alt="Inspection" className="h-full w-full object-cover" />,
     },
     {
       id: 4,
       label: "Digital Key",
-      content: (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 p-6 text-center text-white">
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-green-500 text-lg font-semibold text-white ring-4 ring-green-400/60">
-            START
-          </div>
-          <p className="text-sm text-slate-200">Tap to unlock and begin the rental.</p>
-        </div>
-      ),
+      content: <img src="/guest-unlock.jpg" alt="Digital Key" className="h-full w-full object-cover" />,
     },
   ];
 
