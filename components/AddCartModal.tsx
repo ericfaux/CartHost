@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useActionState, ReactNode } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useMemo, useState, ReactNode } from "react";
+import { useFormStatus, useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createCart, updateCart } from "../app/dashboard/actions";
 
@@ -84,7 +84,7 @@ export default function AddCartModal({
     return createCart(prevState, formData);
   };
 
-  const [state, formAction] = useActionState(handleSave, null);
+  const [state, formAction] = useFormState(handleSave, null);
 
   useEffect(() => {
     setName(cart?.name ?? "");
