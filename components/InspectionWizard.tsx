@@ -22,6 +22,8 @@ type Step = {
   title: string;
   description: string;
   type: 'info' | 'waiver' | 'photo';
+  id?: string;
+  field?: string;
 };
 
 export default function InspectionWizard({
@@ -47,24 +49,34 @@ export default function InspectionWizard({
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
-  const steps = useMemo<Step[]>(
-    () =>
+  const steps = useMemo<Step[]>(() => {
+    const baseSteps: Step[] = [
+      { title: 'Guest', description: 'Guest Information', type: 'info' },
+      { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
+    ];
+
+    const photoSteps: Step[] =
       assetType === 'hot_tub'
-        ? [
-            { title: 'Guest', description: 'Guest Information', type: 'info' },
-            { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
-            { title: 'Water', description: 'Current Water Clarity', type: 'photo' },
-          ]
+        ? [{ title: 'Water', description: 'Current Water Clarity', type: 'photo' }]
         : [
-            { title: 'Guest', description: 'Guest Information', type: 'info' },
-            { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
             { title: 'Front', description: 'Front Bumper', type: 'photo' },
             { title: 'Left', description: 'Left Side', type: 'photo' },
             { title: 'Right', description: 'Right Side', type: 'photo' },
             { title: 'Back', description: 'Back Bumper', type: 'photo' },
-          ],
-    [assetType],
-  );
+          ];
+
+    if (customPhotoRequired) {
+      photoSteps.push({
+        id: 'custom_photo',
+        title: 'Additional Requirement',
+        description: customPhotoLabel || 'Please take the requested photo.',
+        type: 'photo',
+        field: 'custom_photo_url',
+      });
+    }
+
+    return [...baseSteps, ...photoSteps];
+  }, [assetType, customPhotoLabel, customPhotoRequired]);
 
   const totalSteps = steps.length;
   const progress = useMemo(() => ((currentStep + 1) / totalSteps) * 100, [currentStep, totalSteps]);
@@ -101,7 +113,10 @@ export default function InspectionWizard({
   const currentStepData = steps[currentStep];
   const isGuestStep = currentStepData.type === 'info';
   const isWaiverStep = currentStepData.type === 'waiver';
-  const photoLabel = customPhotoRequired && customPhotoLabel ? customPhotoLabel : currentStepData.description;
+  const photoLabel =
+    currentStepData.id === 'custom_photo' && customPhotoLabel
+      ? customPhotoLabel
+      : currentStepData.description;
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] ?? null;
