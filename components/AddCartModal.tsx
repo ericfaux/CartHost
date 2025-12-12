@@ -19,6 +19,8 @@ type Cart = {
   upsell_unit?: string | null;
   access_code?: string | null;
   deposit_amount?: number | null;
+  custom_photo_required?: boolean | null;
+  custom_photo_label?: string | null;
 };
 
 type AddCartModalProps = {
@@ -69,6 +71,8 @@ export default function AddCartModal({
   const [accessCode, setAccessCode] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
+  const [customPhotoRequired, setCustomPhotoRequired] = useState(false);
+  const [customPhotoLabel, setCustomPhotoLabel] = useState("");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -98,6 +102,8 @@ export default function AddCartModal({
     setRequiresLockPhoto(
       cart?.requires_lock_photo ?? true
     );
+    setCustomPhotoRequired(cart?.custom_photo_required ?? false);
+    setCustomPhotoLabel(cart?.custom_photo_label ?? "");
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -127,6 +133,8 @@ export default function AddCartModal({
       setAccessCode(cart?.access_code ?? "");
       setDepositAmount(cart?.deposit_amount?.toString() ?? "");
       setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
+      setCustomPhotoRequired(cart?.custom_photo_required ?? false);
+      setCustomPhotoLabel(cart?.custom_photo_label ?? "");
       setOpen(false);
       router.refresh();
     }
@@ -358,6 +366,42 @@ export default function AddCartModal({
                     Amount to track for this specific vehicle.
                   </p>
                 </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-semibold text-gray-800">Custom Requirements</p>
+                <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2">
+                  <div className="text-sm text-gray-700">
+                    <p className="font-medium">Require an additional custom photo?</p>
+                    <p className="text-xs text-gray-500">
+                      Capture tailored photo instructions for this asset.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="customPhotoRequired"
+                    checked={customPhotoRequired}
+                    onChange={(event) => setCustomPhotoRequired(event.target.checked)}
+                    className="h-5 w-5 accent-purple-600"
+                  />
+                </div>
+
+                {customPhotoRequired && (
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Photo Instruction
+                    </label>
+                    <input
+                      type="text"
+                      name="customPhotoLabel"
+                      required
+                      value={customPhotoLabel}
+                      onChange={(event) => setCustomPhotoLabel(event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                      placeholder="e.g. Take a photo of your Driver's License"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

@@ -19,6 +19,8 @@ export async function createCart(prevState: any, formData: FormData) {
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
+  const customPhotoRequired = formData.get("customPhotoRequired") === "on";
+  const customPhotoLabel = formData.get("customPhotoLabel")?.toString().trim();
   const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
   let sanitizedDepositAmount = 0;
 
@@ -116,6 +118,8 @@ export async function createCart(prevState: any, formData: FormData) {
     upsell_unit: sanitizedUpsellUnit,
     access_code: sanitizedAccessCode,
     requires_lock_photo: requiresLockPhoto,
+    custom_photo_required: customPhotoRequired,
+    custom_photo_label: customPhotoLabel || null,
     deposit_amount: sanitizedDepositAmount,
   });
 
@@ -145,6 +149,8 @@ export async function updateCart(prevState: any, formData: FormData) {
   const upsellUnit = formData.get("upsellUnit")?.toString().trim() || "day";
   const accessCode = formData.get("accessCode")?.toString().trim();
   const requiresLockPhoto = formData.get("requiresLockPhoto") === "on";
+  const customPhotoRequired = formData.get("customPhotoRequired") === "on";
+  const customPhotoLabel = formData.get("customPhotoLabel")?.toString().trim();
   const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
   let sanitizedDepositAmount = 0;
 
@@ -244,6 +250,8 @@ export async function updateCart(prevState: any, formData: FormData) {
       upsell_unit: sanitizedUpsellUnit,
       access_code: sanitizedAccessCode,
       requires_lock_photo: requiresLockPhoto,
+      custom_photo_required: customPhotoRequired,
+      custom_photo_label: customPhotoLabel || null,
       deposit_amount: sanitizedDepositAmount,
     })
     .eq("id", id)
