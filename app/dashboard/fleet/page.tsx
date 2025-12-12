@@ -76,7 +76,7 @@ export default async function DashboardPage() {
     (activeRentals ?? []).map((rental) => rental.cart_id)
   );
 
-  const cartsWithRentalStatus = (carts ?? []).map((cart) => ({
+  const cartsWithRentalStatus = ((carts as any[]) ?? []).map((cart) => ({
     ...cart,
     is_currently_rented: activeRentalIds.has(cart.id),
   }));
