@@ -14,6 +14,8 @@ type InspectionWizardProps = {
   hostPhone?: string | null;
   assetType: string;
   showSupportLink: boolean;
+  customPhotoRequired?: boolean;
+  customPhotoLabel?: string;
 };
 
 type Step = {
@@ -30,6 +32,8 @@ export default function InspectionWizard({
   hostPhone,
   assetType,
   showSupportLink,
+  customPhotoRequired,
+  customPhotoLabel,
 }: InspectionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
@@ -97,6 +101,7 @@ export default function InspectionWizard({
   const currentStepData = steps[currentStep];
   const isGuestStep = currentStepData.type === 'info';
   const isWaiverStep = currentStepData.type === 'waiver';
+  const photoLabel = customPhotoRequired && customPhotoLabel ? customPhotoLabel : currentStepData.description;
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] ?? null;
@@ -257,7 +262,7 @@ export default function InspectionWizard({
           <p className="text-sm text-gray-600">Please review and agree to the liability terms before continuing.</p>
         ) : (
           <p className="text-sm text-gray-600">
-            Please take a clear photo of the {steps[currentStep].description.toLowerCase()} of the cart.
+            Please take a clear photo of the {photoLabel.toLowerCase()} of the cart.
           </p>
         )}
       </div>
@@ -386,7 +391,7 @@ export default function InspectionWizard({
               <div className="relative w-full h-full">
                 <Image
                   src={previewUrl}
-                  alt={`${steps[currentStep].description} preview`}
+                  alt={`${photoLabel} preview`}
                   fill
                   className="object-cover rounded-lg"
                 />

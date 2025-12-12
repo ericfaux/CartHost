@@ -17,6 +17,8 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
+  custom_photo_required?: boolean | null;
+  custom_photo_label?: string | null;
   access_type?: string | null;
   upsell_price?: number | null;
   upsell_unit?: string | null;
@@ -62,7 +64,7 @@ export default function RentalInspectionPage() {
 
         const { data: cartData, error: cartError } = await supabase
           .from('carts')
-          .select('*, hosts(property_name, phone_number, welcome_message, enable_guest_text_support)')
+          .select('*, custom_photo_required, custom_photo_label, hosts(property_name, phone_number, welcome_message, enable_guest_text_support)')
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
@@ -310,6 +312,8 @@ export default function RentalInspectionPage() {
             hostPhone={cart?.hosts?.phone_number}
             assetType={cart?.type ?? 'cart'}
             showSupportLink={cart?.hosts?.enable_guest_text_support !== false}
+            customPhotoRequired={cart?.custom_photo_required ?? false}
+            customPhotoLabel={cart?.custom_photo_label ?? ''}
           />
 
         ) : (
