@@ -69,6 +69,8 @@ export default function AddCartModal({
   const [accessCode, setAccessCode] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
+  const [customPhotoRequired, setCustomPhotoRequired] = useState(false);
+  const [customPhotoLabel, setCustomPhotoLabel] = useState("");
   const router = useRouter();
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
@@ -98,6 +100,8 @@ export default function AddCartModal({
     setRequiresLockPhoto(
       cart?.requires_lock_photo ?? true
     );
+    setCustomPhotoRequired(false);
+    setCustomPhotoLabel("");
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -127,6 +131,8 @@ export default function AddCartModal({
       setAccessCode(cart?.access_code ?? "");
       setDepositAmount(cart?.deposit_amount?.toString() ?? "");
       setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
+      setCustomPhotoRequired(false);
+      setCustomPhotoLabel("");
       setOpen(false);
       router.refresh();
     }
@@ -358,6 +364,42 @@ export default function AddCartModal({
                     Amount to track for this specific vehicle.
                   </p>
                 </div>
+              </div>
+
+              {/* Custom Requirements */}
+              <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <p className="text-sm font-semibold text-blue-900">Custom Requirements</p>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="customPhotoRequired"
+                    id="customPhotoRequired"
+                    checked={customPhotoRequired}
+                    onChange={(e) => setCustomPhotoRequired(e.target.checked)}
+                    className="h-4 w-4 accent-blue-600"
+                  />
+                  <label htmlFor="customPhotoRequired" className="text-sm text-blue-800">
+                    Require an additional custom photo?
+                  </label>
+                </div>
+
+                {customPhotoRequired && (
+                  <div className="mt-2">
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Photo Instruction
+                    </label>
+                    <input
+                      type="text"
+                      name="customPhotoLabel"
+                      value={customPhotoLabel}
+                      onChange={(e) => setCustomPhotoLabel(e.target.value)}
+                      required={customPhotoRequired}
+                      className="w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
+                      placeholder="e.g. Take a picture of your Driver's License"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
