@@ -11,8 +11,6 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
-  custom_photo_required?: boolean | null;
-  custom_photo_label?: string | null;
   status: string;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
@@ -20,6 +18,9 @@ type Cart = {
   access_code?: string | null;
   deposit_amount?: number | null;
   is_currently_rented: boolean;
+  // NEW FIELDS ADDED HERE
+  custom_photo_required?: boolean | null;
+  custom_photo_label?: string | null;
 };
 
 export default async function DashboardPage() {
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // UPDATED: Added custom_photo_required and custom_photo_label to the query
   const cartSelectFields =
     "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount, custom_photo_required, custom_photo_label";
 
@@ -74,6 +76,7 @@ export default async function DashboardPage() {
     (activeRentals ?? []).map((rental) => rental.cart_id)
   );
 
+  // UPDATED: Added (carts as any[]) to fix the build error
   const cartsWithRentalStatus = ((carts as any[]) ?? []).map((cart) => ({
     ...cart,
     is_currently_rented: activeRentalIds.has(cart.id),
