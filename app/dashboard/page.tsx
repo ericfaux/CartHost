@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
-import DashboardCharts from "../../components/DashboardCharts";
+import FinancialSection from "../../components/FinancialSection";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -242,19 +242,7 @@ export default async function DashboardHome() {
       </div>
 
       {profile?.show_financial_tiles !== false && (
-        <div className="space-y-6">
-          <div>
-            <p className="text-2xl font-bold tracking-tight text-gray-900">
-              Financial Performance
-            </p>
-            <p className="text-sm text-gray-500">
-              Revenue, expenses, and net profit across your fleet.
-            </p>
-          </div>
-
-          {/* The old grid is gone, only the new component remains */}
-          <DashboardCharts rentals={typedRentals} />
-        </div>
+        <FinancialSection rentals={typedRentals} />
       )}
 
       <div>

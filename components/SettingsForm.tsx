@@ -389,9 +389,12 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
                 className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">Financial Dashboard</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Show Financial Performance on dashboard
+                </p>
                 <p className="text-sm text-gray-500">
-                  Show revenue, ride counts, and charts on the home page.
+                  Turn this off if you don’t need revenue and deposit metrics in
+                  CartHost.
                 </p>
               </div>
             </label>
