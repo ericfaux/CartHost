@@ -19,6 +19,8 @@ type Cart = {
   upsell_unit?: string | null;
   access_code?: string | null;
   deposit_amount?: number | null;
+  custom_photo_required?: boolean | null;
+  custom_photo_label?: string | null;
 };
 
 type AddCartModalProps = {
@@ -100,8 +102,8 @@ export default function AddCartModal({
     setRequiresLockPhoto(
       cart?.requires_lock_photo ?? true
     );
-    setCustomPhotoRequired(false);
-    setCustomPhotoLabel("");
+    setCustomPhotoRequired(cart?.custom_photo_required ?? false);
+    setCustomPhotoLabel(cart?.custom_photo_label ?? "");
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
