@@ -319,3 +319,51 @@ export async function deleteCart(id: string) {
 
   revalidatePath("/dashboard");
 }
+
+export async function hideFinancialPerformance() {
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignore
+          }
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.error("Auth Error in hideFinancialPerformance:", userError);
+    throw new Error("You must be logged in to update dashboard settings.");
+  }
+
+  const { error } = await supabase
+    .from("hosts")
+    .update({ show_financial_tiles: false })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Database Update Error:", error);
+    throw new Error("Failed to hide financial performance: " + error.message);
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
