@@ -25,6 +25,12 @@ export async function updateProfile(
     // Extract and sanitize welcomeMessage: limit to 100 characters
     const welcomeMessageRaw = formData.get("welcomeMessage")?.toString().trim() || null;
     const welcomeMessage = welcomeMessageRaw ? welcomeMessageRaw.slice(0, 100) : null;
+
+    // Extract additionalRules (optional): empty string => null
+    const additionalRulesRaw = formData.get("additionalRules")?.toString() ?? "";
+    const additionalRulesSanitized = additionalRulesRaw.trim();
+    const additionalRules =
+      additionalRulesSanitized.length > 0 ? additionalRulesSanitized : null;
     
     // Sanitize defaultDeposit: parse to float, default to 0 if invalid
     const parsedDeposit = parseFloat(defaultDepositRaw);
@@ -75,6 +81,7 @@ export async function updateProfile(
         billing_address: billingAddress,
         default_deposit: sanitizedDeposit,
         welcome_message: welcomeMessage,
+        additional_rules: additionalRules,
         enable_guest_text_support: enableGuestTextSupport,
         show_financial_tiles: showFinancialTiles,
         enable_sms_notifications: enableSmsNotifications,
