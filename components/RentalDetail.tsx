@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Rental = {
@@ -50,6 +52,7 @@ By clicking “I Agree” or otherwise electronically signing below, I acknowled
 
 export default function RentalDetail({ rental }: { rental: Rental }) {
   const [showWaiver, setShowWaiver] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const photos = rental.photos ?? [];
   const preRidePhotos = photos.slice(0, 4);
   const checkoutPhoto = photos[photos.length - 1];
@@ -83,126 +86,188 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-2 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {rental.guest_name || "Guest"}
-          </h1>
-          <p className="text-sm text-gray-600">{formattedDate}</p>
-          <p className="text-sm text-gray-600">
-            Cart: {rental.carts?.name || "Unknown"}
-          </p>
+    <>
+      <div className="space-y-8">
+        <div className="flex flex-col gap-2 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {rental.guest_name || "Guest"}
+            </h1>
+            <p className="text-sm text-gray-600">{formattedDate}</p>
+            <p className="text-sm text-gray-600">
+              Cart: {rental.carts?.name || "Unknown"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 md:w-auto"
+          >
+            Print
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 md:w-auto"
-        >
-          Print
-        </button>
+
+        {!photos.length ? (
+          <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center text-gray-600">
+            No evidence photos available for this rental
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Pre-Ride</h2>
+                <p className="text-sm text-gray-500">First four photos</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {preRidePhotos.map((photo, index) => (
+                  <button
+                    key={`${photo}-${index}`}
+                    type="button"
+                    onClick={() => setSelectedImage(photo)}
+                    className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:opacity-90 cursor-pointer"
+                    aria-label={`Open pre-ride photo ${index + 1}`}
+                  >
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={photo}
+                        alt={`Pre-ride photo ${index + 1}`}
+                        fill
+                        unoptimized
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Legal Agreement
+                </h2>
+              </div>
+              <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                {rental.waiver_agreed ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                            className="h-5 w-5"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16Zm3.707-10.293a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-semibold text-green-800">
+                            Liability Waiver Signed
+                          </p>
+                          {formattedWaiverDate && (
+                            <p className="text-sm text-gray-600">
+                              Signed on {formattedWaiverDate}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowWaiver((previous) => !previous)}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        (View Signed Terms)
+                      </button>
+                    </div>
+
+                    {showWaiver && (
+                      <div className="max-h-80 overflow-y-auto rounded bg-gray-50 p-4 text-xs text-gray-700 whitespace-pre-line">
+                        {WAIVER_TEXT}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
+                    Not Signed
+                  </span>
+                )}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Checkout</h2>
+                <p className="text-sm text-gray-500">Last photo</p>
+              </div>
+
+              {checkoutPhoto ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedImage(checkoutPhoto)}
+                  className="group w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:opacity-90 cursor-pointer"
+                  aria-label="Open checkout photo"
+                >
+                  <div className="relative h-80 w-full">
+                    <Image
+                      src={checkoutPhoto}
+                      alt="Checkout photo"
+                      fill
+                      unoptimized
+                      sizes="100vw"
+                      className="object-cover"
+                    />
+                  </div>
+                </button>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center text-gray-600">
+                  No checkout photo available for this rental
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </div>
 
-      {!photos.length ? (
-        <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center text-gray-600">
-          No evidence photos available for this rental
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Pre-Ride</h2>
-              <p className="text-sm text-gray-500">First four photos</p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {preRidePhotos.map((photo, index) => (
-                <div
-                  key={`${photo}-${index}`}
-                  className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
-                >
-                  <img
-                    src={photo}
-                    alt={`Pre-ride photo ${index + 1}`}
-                    className="h-48 w-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Evidence photo viewer"
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedImage(null)}
+            className="absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/60"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
 
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Legal Agreement</h2>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              {rental.waiver_agreed ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                          className="h-5 w-5"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16Zm3.707-10.293a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </span>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-semibold text-green-800">
-                          Liability Waiver Signed
-                        </p>
-                        {formattedWaiverDate && (
-                          <p className="text-sm text-gray-600">
-                            Signed on {formattedWaiverDate}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowWaiver((previous) => !previous)}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                    >
-                      (View Signed Terms)
-                    </button>
-                  </div>
-
-                  {showWaiver && (
-                    <div className="max-h-80 overflow-y-auto rounded bg-gray-50 p-4 text-xs text-gray-700 whitespace-pre-line">
-                      {WAIVER_TEXT}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
-                  Not Signed
-                </span>
-              )}
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Checkout</h2>
-              <p className="text-sm text-gray-500">Last photo</p>
-            </div>
-            <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-              <img
-                src={checkoutPhoto}
-                alt="Checkout photo"
-                className="h-80 w-full object-cover"
-              />
-            </div>
-          </section>
+          <div
+            className="relative w-full h-full max-w-6xl max-h-[90vh]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src={selectedImage}
+              alt="Selected evidence photo"
+              fill
+              unoptimized
+              sizes="100vw"
+              className="object-contain"
+            />
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
