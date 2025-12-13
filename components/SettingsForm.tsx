@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { updateProfile } from "../app/dashboard/settings/actions";
+import { BikeWaiver, GolfCartWaiver } from "./WaiverContent";
 
 export type HostProfile = {
   id: string;
@@ -14,6 +15,7 @@ export type HostProfile = {
   billing_address: string | null;
   default_deposit: number | null;
   welcome_message: string | null;
+  additional_rules: string | null;
   enable_guest_text_support: boolean | null;
   show_financial_tiles: boolean | null;
   enable_sms_notifications: boolean | null;
@@ -25,10 +27,6 @@ type SettingsFormProps = {
 };
 
 type UpdateProfileState = { success?: boolean; error?: string } | null;
-
-const DEFAULT_WAIVER_TEXT = `By operating this vehicle you acknowledge receipt of the safety briefing, agree to return the cart fully charged, and accept liability for damages during your rental window.
-
-Always obey posted property rules, report any maintenance issues immediately, and ensure guests are listed on the waiver.`;
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -49,6 +47,23 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
     updateProfile,
     null
   );
+
+  const [waiverPreview, setWaiverPreview] = useState<"golf_cart" | "bike">(
+    "golf_cart"
+  );
+  const [additionalRules, setAdditionalRules] = useState<string>(
+    profile.additional_rules ?? ""
+  );
+
+  const propertyNameForPreview = useMemo(() => {
+    const name = profile.property_name?.trim();
+    return name && name.length > 0 ? name : "Your Property";
+  }, [profile.property_name]);
+
+  const additionalRulesPreview = useMemo(() => {
+    const trimmed = additionalRules.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }, [additionalRules]);
 
   return (
     <div className="space-y-6">
@@ -180,8 +195,7 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
                 Rental Configuration
               </h2>
               <p className="text-sm text-gray-500">
-                Customize the default waiver riders acknowledge before unlocking a
-                cart.
+                Customize what guests see before they agree to the legal waiver.
               </p>
             </div>
             <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
@@ -189,33 +203,154 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
             </span>
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="welcomeMessage"
-              className="text-sm font-medium text-gray-700"
-            >
-              Guest Welcome Message (Optional)
-            </label>
-            <input
-              id="welcomeMessage"
-              name="welcomeMessage"
-              type="text"
-              maxLength={100}
-              defaultValue={profile.welcome_message ?? ""}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              placeholder="e.g. Have a great stay at Sunset Villa!"
-            />
-            <p className="text-xs text-gray-500">
-              Displayed on the first screen when a guest scans the cart.
-            </p>
-          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label
+                  htmlFor="welcomeMessage"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Guest Welcome Message (Optional)
+                </label>
+                <input
+                  id="welcomeMessage"
+                  name="welcomeMessage"
+                  type="text"
+                  maxLength={100}
+                  defaultValue={profile.welcome_message ?? ""}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="e.g. Have a great stay at Sunset Villa!"
+                />
+                <p className="text-xs text-gray-500">
+                  Displayed on the first screen when a guest scans the cart.
+                </p>
+              </div>
 
-          <textarea
-            value={DEFAULT_WAIVER_TEXT}
-            disabled
-            rows={6}
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
-          />
+              <div className="space-y-2">
+                <label
+                  htmlFor="additionalRules"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Additional Rules &amp; Instructions (Optional)
+                </label>
+                <textarea
+                  id="additionalRules"
+                  name="additionalRules"
+                  rows={4}
+                  value={additionalRules}
+                  onChange={(e) => setAdditionalRules(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="e.g. Please park in the driveway only..."
+                />
+                <p className="text-xs text-gray-500">
+                  Property-specific rules (e.g., parking, quiet hours). These
+                  appear above the legal waiver.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    Read-only waiver preview
+                  </p>
+                  <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+                    <button
+                      type="button"
+                      onClick={() => setWaiverPreview("golf_cart")}
+                      className={[
+                        "rounded-md px-3 py-1 text-xs font-semibold transition",
+                        waiverPreview === "golf_cart"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-700 hover:bg-gray-50",
+                      ].join(" ")}
+                    >
+                      Golf Cart
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWaiverPreview("bike")}
+                      className={[
+                        "rounded-md px-3 py-1 text-xs font-semibold transition",
+                        waiverPreview === "bike"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-700 hover:bg-gray-50",
+                      ].join(" ")}
+                    >
+                      Bike
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  {waiverPreview === "golf_cart" ? (
+                    <GolfCartWaiver />
+                  ) : (
+                    <BikeWaiver />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">Guest Preview</p>
+              <div className="mx-auto w-full max-w-sm rounded-[2rem] border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="mx-auto mb-4 h-5 w-24 rounded-full bg-gray-100" />
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Welcome
+                    </p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      Welcome to {propertyNameForPreview}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-blue-200 bg-yellow-50 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-900">
+                        Host Rules
+                      </p>
+                      <span className="rounded-full bg-blue-600/10 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                        Shows above waiver
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm text-gray-800">
+                      {additionalRulesPreview ?? (
+                        <span className="text-gray-500">
+                          e.g. Please park in the driveway only...
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-900">
+                        Legal Waiver
+                      </p>
+                      <span className="text-xs font-semibold text-gray-500">
+                        Standard CartHost Waiver
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      (Tap to read full text)
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm"
+                  >
+                    I Agree
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                Preview is illustrative; guests will see your saved content.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4 border-t border-gray-100 pt-4">
