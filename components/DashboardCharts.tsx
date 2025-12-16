@@ -158,19 +158,16 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Performance Trends</h2>
-        <div className="flex justify-end">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as FilterOption)}
-            className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="ytd">Year to Date</option>
-            <option value="90_days">Last 3 Months</option>
-            <option value="30_days">Last 30 Days</option>
-          </select>
-        </div>
+      <div className="flex justify-end mb-4">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as FilterOption)}
+          className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="ytd">Year to Date</option>
+          <option value="90_days">Last 3 Months</option>
+          <option value="30_days">Last 30 Days</option>
+        </select>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

@@ -73,10 +73,7 @@ export default function FinancialSection({ rentals }: FinancialSectionProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-2xl font-bold tracking-tight text-gray-900">
-            Financial Performance
-          </p>
-          <p className="text-sm text-gray-500">
-            Revenue, expenses, and net profit across your fleet.
+            Business Performance
           </p>
         </div>
 
