@@ -4,6 +4,69 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache"; // Import this!
 
+export async function forceEndRental(rentalId: string) {
+  try {
+    if (!rentalId) return { error: "Rental ID is required." };
+
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignore
+            }
+          },
+        },
+      }
+    );
+
+    // 1. Verify Auth
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Auth Error in forceEndRental:", userError);
+      return { error: "You must be logged in to end a rental." };
+    }
+
+    // 2. Update rental record
+    const { error } = await supabase
+      .from("rentals")
+      .update({
+        status: "completed",
+        checkout_time: new Date().toISOString(),
+        closure_source: "host",
+      })
+      .eq("id", rentalId)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Database Update Error in forceEndRental:", error);
+      return { error: "Failed to end rental: " + error.message };
+    }
+
+    revalidatePath("/dashboard/fleet");
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected Error in forceEndRental:", err);
+    return { error: "Failed to end rental. Please try again." };
+  }
+}
+
 export async function createCart(prevState: any, formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const keyCode = formData.get("keyCode")?.toString().trim();

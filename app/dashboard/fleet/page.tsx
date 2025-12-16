@@ -18,6 +18,7 @@ type Cart = {
   access_code?: string | null;
   deposit_amount?: number | null;
   is_currently_rented: boolean;
+  active_rental_id?: string | null;
   // NEW FIELDS ADDED HERE
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
@@ -68,18 +69,22 @@ export default async function DashboardPage() {
 
   const { data: activeRentals = [] } = await supabase
     .from("rentals")
-    .select("cart_id, carts!inner(host_id)")
+    .select("id, cart_id, carts!inner(host_id)")
     .eq("status", "active")
     .eq("carts.host_id", user.id);
 
-  const activeRentalIds = new Set(
-    (activeRentals ?? []).map((rental) => rental.cart_id)
-  );
+  const activeRentalByCartId = new Map<string, string>();
+  (activeRentals ?? []).forEach((rental: any) => {
+    if (rental?.cart_id && rental?.id) {
+      activeRentalByCartId.set(rental.cart_id, rental.id);
+    }
+  });
 
   // UPDATED: Added (carts as any[]) to fix the build error
   const cartsWithRentalStatus = ((carts as any[]) ?? []).map((cart) => ({
     ...cart,
-    is_currently_rented: activeRentalIds.has(cart.id),
+    active_rental_id: activeRentalByCartId.get(cart.id) ?? null,
+    is_currently_rented: activeRentalByCartId.has(cart.id),
   }));
 
   return <FleetList carts={cartsWithRentalStatus as Cart[]} />;
