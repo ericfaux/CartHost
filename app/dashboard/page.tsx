@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
 import FinancialSection from "../../components/FinancialSection";
+import SessionStatusTile from "../../components/SessionStatusTile";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -136,18 +137,43 @@ export default async function DashboardHome() {
     .select("cart_id, created_at, revenue, deposit_status, deposit_amount, carts!inner(host_id)")
     .eq("carts.host_id", user.id);
 
+  const [
+    { count: activeCount, error: activeCountError },
+    { count: reviewCount, error: reviewCountError },
+  ] = await Promise.all([
+    supabase
+      .from("rentals")
+      .select("id, carts!inner(host_id)", { count: "exact", head: true })
+      .eq("carts.host_id", user.id)
+      .eq("status", "active"),
+    supabase
+      .from("rentals")
+      .select("id, carts!inner(host_id)", { count: "exact", head: true })
+      .eq("carts.host_id", user.id)
+      .eq("status", "needs_review"),
+  ]);
+
   const { data: serviceLogs, error: logsError } = await supabase
     .from("service_logs")
     .select("cost")
     .eq("host_id", user.id);
 
-  if (cartsError || rentalsError || logsError || profileError) {
+  if (
+    cartsError ||
+    rentalsError ||
+    logsError ||
+    profileError ||
+    activeCountError ||
+    reviewCountError
+  ) {
     console.error(
       "Data fetch failed:",
       cartsError,
       rentalsError,
       logsError,
-      profileError
+      profileError,
+      activeCountError,
+      reviewCountError
     );
     redirect("/login");
   }
@@ -216,6 +242,10 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
+      <SessionStatusTile
+        activeCount={activeCount ?? 0}
+        reviewCount={reviewCount ?? 0}
+      />
       <div className="space-y-3">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
