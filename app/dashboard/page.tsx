@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
 import FinancialSection from "../../components/FinancialSection";
-import SessionStatusTile from "../../components/SessionStatusTile";
+import ProtectionOverview from "../../components/ProtectionOverview";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -23,6 +23,8 @@ type Cart = {
 type Rental = {
   cart_id: string;
   created_at: string;
+  status?: string | null;
+  closure_source?: string | null;
   revenue: number | null;
   deposit_status: string | null;
   deposit_amount: number | null;
@@ -134,7 +136,9 @@ export default async function DashboardHome() {
 
   const { data: rentals, error: rentalsError } = await supabase
     .from("rentals")
-    .select("cart_id, created_at, revenue, deposit_status, deposit_amount, carts!inner(host_id)")
+    .select(
+      "cart_id, created_at, status, closure_source, revenue, deposit_status, deposit_amount, carts!inner(host_id)"
+    )
     .eq("carts.host_id", user.id);
 
   const [
@@ -197,10 +201,36 @@ export default async function DashboardHome() {
   const formatCurrency = (value: number) => currencyFormatter.format(value);
 
   const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const totalRides = typedRentals.length;
   const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
   const health = calculateHealth(finalCarts as Cart[], typedRentals, today);
+
+  const inLastThirtyDays = (createdAt: string) =>
+    new Date(createdAt).getTime() > thirtyDaysAgo.getTime();
+
+  const protectedCount = typedRentals.filter((r) => inLastThirtyDays(r.created_at))
+    .length;
+
+  const completedRentals = typedRentals.filter(
+    (r) =>
+      (r.status || "").toLowerCase() === "completed" && inLastThirtyDays(r.created_at)
+  );
+
+  const manualCount = completedRentals.filter(
+    (r) => (r.closure_source || "").toLowerCase() === "host"
+  ).length;
+
+  const guestCount = completedRentals.filter(
+    (r) => (r.closure_source || "").toLowerCase() !== "host"
+  ).length;
+
+  const documentedRate =
+    completedRentals.length > 0
+      ? Math.round((guestCount / completedRentals.length) * 100)
+      : 0;
 
   const healthyCount = health.filter((item) => item.status === GREEN).length;
   const dueSoonCount = health.filter((item) => item.status === YELLOW).length;
@@ -242,9 +272,13 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
-      <SessionStatusTile
+      <ProtectionOverview
+        protectedCount={protectedCount}
         activeCount={activeCount ?? 0}
         reviewCount={reviewCount ?? 0}
+        documentedRate={documentedRate}
+        documentedTotal={completedRentals.length}
+        manualCount={manualCount}
       />
       <div className="space-y-3">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
