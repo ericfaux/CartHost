@@ -33,13 +33,25 @@ type Rental = {
   } | null;
 };
 
-type StatusTab = "all" | "active" | "needs_review" | "completed";
+type StatusFilter = "all" | "open" | "active" | "needs_review" | "completed";
 
 export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusTab, setStatusTab] = useState<StatusTab>("all");
+
+  const initialFilter = (searchParams.get("filter") || "all").toLowerCase();
+  const normalizeFilter = (raw: string): StatusFilter => {
+    if (raw === "open") return "open";
+    if (raw === "active") return "active";
+    if (raw === "needs_review") return "needs_review";
+    if (raw === "completed") return "completed";
+    return "all";
+  };
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() =>
+    normalizeFilter(initialFilter)
+  );
   const [dateFilter, setDateFilter] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -49,16 +61,13 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [isClosingPending, startCloseTransition] = useTransition();
 
-  const initialTab = useMemo<StatusTab>(() => {
-    const raw = (searchParams.get("filter") || "").toLowerCase();
-    if (raw === "active") return "active";
-    if (raw === "needs_review") return "needs_review";
-    if (raw === "completed") return "completed";
-    return "all";
-  }, [searchParams]);
+  const initialTab = useMemo<StatusFilter>(
+    () => normalizeFilter((searchParams.get("filter") || "all").toLowerCase()),
+    [searchParams]
+  );
 
   useEffect(() => {
-    setStatusTab(initialTab);
+    setStatusFilter(initialTab);
   }, [initialTab]);
 
   const formatDate = (dateString: string) => {
@@ -95,14 +104,14 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     if (closure === "host") {
       return (
         <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
-          Completed by Host
+          Host Override
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-100">
-        Completed by Guest
+        Completed
       </span>
     );
   };
@@ -138,8 +147,8 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     setEditValue("");
   };
 
-  const handleTabClick = (tab: StatusTab) => {
-    setStatusTab(tab);
+  const handleTabClick = (tab: StatusFilter) => {
+    setStatusFilter(tab);
     if (tab === "all") {
       router.push("/dashboard/history");
       return;
@@ -180,10 +189,12 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
 
     const rentalStatus = (rental.status || "completed").toLowerCase();
     const matchesStatus =
-      statusTab === "all" ||
-      (statusTab === "active" && rentalStatus === "active") ||
-      (statusTab === "needs_review" && rentalStatus === "needs_review") ||
-      (statusTab === "completed" && rentalStatus === "completed");
+      statusFilter === "all" ||
+      (statusFilter === "open" &&
+        (rentalStatus === "active" || rentalStatus === "needs_review")) ||
+      (statusFilter === "active" && rentalStatus === "active") ||
+      (statusFilter === "needs_review" && rentalStatus === "needs_review") ||
+      (statusFilter === "completed" && rentalStatus === "completed");
 
     const matchesDate =
       !dateFilter ||
@@ -351,12 +362,14 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
         {(
           [
             { key: "all", label: "All" },
-            { key: "active", label: "Active" },
-            { key: "needs_review", label: "Needs Review" },
+            { key: "open", label: "Open" },
             { key: "completed", label: "Completed" },
           ] as const
         ).map((tab) => {
-          const isActive = statusTab === tab.key;
+          const isActive =
+            statusFilter === tab.key ||
+            (tab.key === "open" &&
+              (statusFilter === "active" || statusFilter === "needs_review"));
           return (
             <button
               key={tab.key}

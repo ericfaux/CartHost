@@ -8,6 +8,7 @@ type Rental = {
   created_at: string;
   guest_name?: string | null;
   status?: string | null;
+  closure_source?: string | null;
   revenue?: number | null;
   deposit_amount?: number | null;
   deposit_status?: string | null;
