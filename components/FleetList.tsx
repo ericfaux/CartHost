@@ -37,6 +37,7 @@ type Cart = {
   deposit_amount?: number | null;
   is_currently_rented: boolean;
   active_rental_id?: string | null;
+  photo_requirements?: string[] | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
