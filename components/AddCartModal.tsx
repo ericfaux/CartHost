@@ -179,6 +179,7 @@ export default function AddCartModal({
             </div>
 
             <form className="mt-6 space-y-4" action={formAction}>
+              <input type="hidden" name="status" value={status || "active"} />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Asset Name</label>
                 <input
@@ -239,6 +240,7 @@ export default function AddCartModal({
                 />
               </div>
 
+              {/*
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                 <select
@@ -251,6 +253,7 @@ export default function AddCartModal({
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
+              */}
 
               <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <p className="text-sm font-semibold text-gray-800">Access & Pricing</p>
