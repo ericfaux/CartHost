@@ -1,10 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Search,
-  Filter,
   Calendar,
   Check,
   X,
@@ -12,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { updateRentalRevenue, updateDepositStatus } from "../app/dashboard/history/actions";
+import { forceEndRental } from "../app/dashboard/actions";
 
 const revenueFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -24,6 +24,7 @@ type Rental = {
   created_at: string;
   guest_name?: string | null;
   status?: string | null;
+  closure_source?: string | null;
   revenue?: number | null;
   deposit_amount?: number | null;
   deposit_status?: string | null;
@@ -32,17 +33,33 @@ type Rental = {
   } | null;
 };
 
+type StatusTab = "all" | "active" | "needs_review" | "completed";
+
 export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<"all" | "active" | "completed">("all");
+  const [statusTab, setStatusTab] = useState<StatusTab>("all");
   const [dateFilter, setDateFilter] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isPending, startTransition] = useTransition();
   const [updatingDepositId, setUpdatingDepositId] = useState<string | null>(null);
   const [isDepositPending, startDepositTransition] = useTransition();
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [isClosingPending, startCloseTransition] = useTransition();
+
+  const initialTab = useMemo<StatusTab>(() => {
+    const raw = (searchParams.get("filter") || "").toLowerCase();
+    if (raw === "active") return "active";
+    if (raw === "needs_review") return "needs_review";
+    if (raw === "completed") return "completed";
+    return "all";
+  }, [searchParams]);
+
+  useEffect(() => {
+    setStatusTab(initialTab);
+  }, [initialTab]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -55,19 +72,37 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     });
   };
 
-  const renderStatus = (status?: string | null) => {
-    const normalized = status?.toLowerCase();
-    const isActive = normalized === "active";
+  const renderStatus = (rental: Rental) => {
+    const normalized = (rental.status || "").toLowerCase();
+
+    if (normalized === "active") {
+      return (
+        <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-100">
+          Active
+        </span>
+      );
+    }
+
+    if (normalized === "needs_review") {
+      return (
+        <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-100">
+          Needs Review
+        </span>
+      );
+    }
+
+    const closure = (rental.closure_source || "").toLowerCase();
+    if (closure === "host") {
+      return (
+        <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
+          Completed by Host
+        </span>
+      );
+    }
 
     return (
-      <span
-        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-          isActive
-            ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-100"
-            : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-200"
-        }`}
-      >
-        {isActive ? "Active" : "Completed"}
+      <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-100">
+        Completed by Guest
       </span>
     );
   };
@@ -103,7 +138,37 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     setEditValue("");
   };
 
-  // Filter rentals based on searchTerm, statusFilter, and dateFilter
+  const handleTabClick = (tab: StatusTab) => {
+    setStatusTab(tab);
+    if (tab === "all") {
+      router.push("/dashboard/history");
+      return;
+    }
+    router.push(`/dashboard/history?filter=${tab}`);
+  };
+
+  const handleClose = (rentalId: string) => {
+    const ok = confirm("Close this session? This will mark it as completed by host.");
+    if (!ok) return;
+
+    setClosingId(rentalId);
+    startCloseTransition(async () => {
+      try {
+        const result = await forceEndRental(rentalId);
+        if (result?.error) {
+          alert(result.error);
+          return;
+        }
+        router.refresh();
+      } catch {
+        alert("Something went wrong while closing the session.");
+      } finally {
+        setClosingId(null);
+      }
+    });
+  };
+
+  // Filter rentals based on searchTerm, statusTab, and dateFilter
   const filteredRentals = rentals.filter((rental) => {
     const guestName = rental.guest_name?.toLowerCase() || "";
     const cartName = rental.carts?.name?.toLowerCase() || "";
@@ -113,11 +178,12 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
       guestName.includes(search) ||
       cartName.includes(search);
 
-    const rentalStatus = rental.status?.toLowerCase() || "completed";
+    const rentalStatus = (rental.status || "completed").toLowerCase();
     const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && rentalStatus === "active") ||
-      (statusFilter === "completed" && rentalStatus === "completed");
+      statusTab === "all" ||
+      (statusTab === "active" && rentalStatus === "active") ||
+      (statusTab === "needs_review" && rentalStatus === "needs_review") ||
+      (statusTab === "completed" && rentalStatus === "completed");
 
     const matchesDate =
       !dateFilter ||
@@ -280,6 +346,34 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
         <p className="text-sm text-gray-500">Review past and active rentals.</p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(
+          [
+            { key: "all", label: "All" },
+            { key: "active", label: "Active" },
+            { key: "needs_review", label: "Needs Review" },
+            { key: "completed", label: "Completed" },
+          ] as const
+        ).map((tab) => {
+          const isActive = statusTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => handleTabClick(tab.key)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-700 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row">
         <div className="relative flex-1">
@@ -300,20 +394,6 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
             onChange={(e) => setDateFilter(e.target.value)}
             className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-        </div>
-        <div className="flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as "all" | "active" | "completed")
-            }
-            className="h-full bg-transparent text-sm focus:outline-none"
-          >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-          </select>
         </div>
       </div>
 
@@ -370,16 +450,28 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
                     {renderDepositActions(rental)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    {renderStatus(rental.status)}
+                    {renderStatus(rental)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/dashboard/history/${rental.id}`)}
-                      className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-                    >
-                      View
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {(rental.status || "").toLowerCase() === "needs_review" && (
+                        <button
+                          type="button"
+                          onClick={() => handleClose(rental.id)}
+                          disabled={isClosingPending && closingId === rental.id}
+                          className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
+                        >
+                          {isClosingPending && closingId === rental.id ? "Closing..." : "Close"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/dashboard/history/${rental.id}`)}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                      >
+                        View
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

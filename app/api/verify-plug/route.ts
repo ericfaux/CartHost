@@ -5,13 +5,21 @@ import { cookies } from "next/headers";
 // FIX: Correct depth for import
 import { sendSms } from "../../../lib/sms";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 const SYSTEM_PROMPT =
   "You are an AI inspector. Look at this image. Does it show a power cord plugged into an electrical wall outlet? Don't be too strict with your judgement, if its close then pass it. Return strictly JSON: { is_plugged_in: boolean, reason: string }.";
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Missing OPENAI_API_KEY configuration." },
+        { status: 500 }
+      );
+    }
+
+    const openai = new OpenAI({ apiKey });
+
     const body = await req.json();
     const { imageUrl, rentalId } = body ?? {};
 
