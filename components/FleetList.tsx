@@ -159,20 +159,6 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     <div className="flex items-start justify-between">
                       <div className={iconWrapperClass}>{cartIcon}</div>
                       <div className="flex gap-1">
-                        {cart.is_currently_rented && cart.active_rental_id && (
-                          <button
-                            onClick={() => handleForceEnd(cart.active_rental_id!)}
-                            disabled={endingId === cart.active_rental_id}
-                            title="Force End Session"
-                            className="rounded-md p-2 text-amber-600 transition-colors hover:bg-amber-50"
-                          >
-                            {endingId === cart.active_rental_id ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                            ) : (
-                              <Square className="h-4 w-4 fill-current" />
-                            )}
-                          </button>
-                        )}
                         <button
                           onClick={() => setQrAsset(cart)}
                           className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-blue-50 hover:text-blue-600 group-hover:opacity-100"
@@ -255,6 +241,20 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 </div>
 
                 <div className="mt-6">
+                  {cart.is_currently_rented && cart.active_rental_id && (
+                    <button
+                      onClick={() => handleForceEnd(cart.active_rental_id!)}
+                      disabled={endingId === cart.active_rental_id}
+                      className="w-full mt-4 flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 border border-red-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {endingId === cart.active_rental_id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                      ) : (
+                        <Square className="h-4 w-4 fill-current" />
+                      )}
+                      <span>Manually End Session</span>
+                    </button>
+                  )}
                   {(cart.key_code || cart.access_code) && (
                     <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
                       <div className="flex flex-col gap-2 text-gray-500 sm:flex-row sm:items-center sm:gap-4">
