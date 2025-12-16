@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { useFormStatus, useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createCart, updateCart } from "../app/dashboard/actions";
@@ -21,6 +21,7 @@ type Cart = {
   deposit_amount?: number | null;
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
+  photo_requirements?: string[] | null;
 };
 
 type AddCartModalProps = {
@@ -73,9 +74,19 @@ export default function AddCartModal({
   const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
   const [customPhotoRequired, setCustomPhotoRequired] = useState(false);
   const [customPhotoLabel, setCustomPhotoLabel] = useState("");
+  const [photoReqs, setPhotoReqs] = useState<string[]>([]);
   const router = useRouter();
+  const skipNextTypeDefaults = useRef(false);
 
   const isEditing = useMemo(() => Boolean(cart), [cart]);
+
+  const getDefaultPhotoReqs = (assetType: string) => {
+    const normalized = (assetType || "").toLowerCase();
+    if (normalized === "bike") return ["general"];
+    if (normalized === "hot_tub") return ["water"];
+    // electric | gas (and any legacy/unknown cart-like types)
+    return ["front", "left", "right", "back"];
+  };
 
   // Wrapper function that routes to the correct action
   const handleSave = async (prevState: any, formData: FormData) => {
@@ -88,12 +99,24 @@ export default function AddCartModal({
 
   const [state, formAction] = useFormState(handleSave, null);
 
+  // Smart defaults when type changes (user-driven).
+  useEffect(() => {
+    if (skipNextTypeDefaults.current) {
+      skipNextTypeDefaults.current = false;
+      return;
+    }
+    setPhotoReqs(getDefaultPhotoReqs(type));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
   useEffect(() => {
     setName(cart?.name ?? "");
     setKeyCode(cart?.key_code ?? "");
     setAccessInstructions(cart?.access_instructions ?? "");
     setStatus((cart?.status ?? "active").toLowerCase());
-    setType((cart?.type ?? "electric").toLowerCase());
+    const nextType = (cart?.type ?? "electric").toLowerCase();
+    skipNextTypeDefaults.current = true;
+    setType(nextType);
     setAccessType(cart?.access_type ?? "included");
     setUpsellPrice(cart?.upsell_price?.toString() ?? "");
     setUpsellUnit(cart?.upsell_unit ?? "day");
@@ -104,6 +127,11 @@ export default function AddCartModal({
     );
     setCustomPhotoRequired(cart?.custom_photo_required ?? false);
     setCustomPhotoLabel(cart?.custom_photo_label ?? "");
+    if (cart?.photo_requirements && Array.isArray(cart.photo_requirements)) {
+      setPhotoReqs(cart.photo_requirements);
+    } else {
+      setPhotoReqs(getDefaultPhotoReqs(nextType));
+    }
     if (cart?.last_serviced_at) {
       setLastServicedAt(cart.last_serviced_at);
     } else {
@@ -180,6 +208,11 @@ export default function AddCartModal({
 
             <form className="mt-6 space-y-4" action={formAction}>
               <input type="hidden" name="status" value={status || "active"} />
+              <input
+                type="hidden"
+                name="photoRequirements"
+                value={JSON.stringify(photoReqs)}
+              />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Asset Name</label>
                 <input
@@ -206,6 +239,63 @@ export default function AddCartModal({
                   <option value="bike">Bike</option>
                   <option value="hot_tub">Hot Tub</option>
                 </select>
+              </div>
+
+              {/* Inspection Photos */}
+              <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-semibold text-gray-800">Inspection Photos</p>
+
+                {(type === "electric" || type === "gas") && (
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
+                    {[
+                      { key: "front", label: "Front" },
+                      { key: "left", label: "Left" },
+                      { key: "right", label: "Right" },
+                      { key: "back", label: "Back" },
+                    ].map((item) => (
+                      <label key={item.key} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={photoReqs.includes(item.key)}
+                          onChange={(event) => {
+                            setPhotoReqs((prev) => {
+                              if (event.target.checked) {
+                                return prev.includes(item.key) ? prev : [...prev, item.key];
+                              }
+                              return prev.filter((x) => x !== item.key);
+                            });
+                          }}
+                          className="h-4 w-4 accent-black"
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {type === "bike" && (
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={photoReqs.includes("general")}
+                      disabled
+                      className="h-4 w-4 accent-black"
+                    />
+                    <span>General Condition</span>
+                  </label>
+                )}
+
+                {type === "hot_tub" && (
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={photoReqs.includes("water")}
+                      disabled
+                      className="h-4 w-4 accent-black"
+                    />
+                    <span>Water Clarity</span>
+                  </label>
+                )}
               </div>
 
               {type === "bike" && (

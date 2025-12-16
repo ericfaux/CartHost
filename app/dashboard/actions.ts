@@ -85,6 +85,19 @@ export async function createCart(prevState: any, formData: FormData) {
   const customPhotoRequired = formData.get("customPhotoRequired") === "on";
   const customPhotoLabel =
     formData.get("customPhotoLabel")?.toString() || null;
+  const photoRequirementsRaw = formData.get("photoRequirements")?.toString();
+  let photoRequirements: string[] | null = null;
+  if (photoRequirementsRaw) {
+    try {
+      const parsed = JSON.parse(photoRequirementsRaw);
+      if (Array.isArray(parsed)) {
+        photoRequirements = parsed.filter((item) => typeof item === "string");
+      }
+    } catch {
+      // Ignore malformed JSON; keep null to avoid breaking saves.
+      photoRequirements = null;
+    }
+  }
   const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
   let sanitizedDepositAmount = 0;
 
@@ -184,6 +197,7 @@ export async function createCart(prevState: any, formData: FormData) {
     requires_lock_photo: requiresLockPhoto,
     custom_photo_required: customPhotoRequired,
     custom_photo_label: customPhotoLabel,
+    photo_requirements: photoRequirements,
     deposit_amount: sanitizedDepositAmount,
   });
 
@@ -216,6 +230,19 @@ export async function updateCart(prevState: any, formData: FormData) {
   const customPhotoRequired = formData.get("customPhotoRequired") === "on";
   const customPhotoLabel =
     formData.get("customPhotoLabel")?.toString() || null;
+  const photoRequirementsRaw = formData.get("photoRequirements")?.toString();
+  let photoRequirements: string[] | null = null;
+  if (photoRequirementsRaw) {
+    try {
+      const parsed = JSON.parse(photoRequirementsRaw);
+      if (Array.isArray(parsed)) {
+        photoRequirements = parsed.filter((item) => typeof item === "string");
+      }
+    } catch {
+      // Ignore malformed JSON; keep null to avoid breaking saves.
+      photoRequirements = null;
+    }
+  }
   const depositAmountRaw = formData.get("depositAmount")?.toString().trim();
   let sanitizedDepositAmount = 0;
 
@@ -317,6 +344,7 @@ export async function updateCart(prevState: any, formData: FormData) {
       requires_lock_photo: requiresLockPhoto,
       custom_photo_required: customPhotoRequired,
       custom_photo_label: customPhotoLabel,
+      photo_requirements: photoRequirements,
       deposit_amount: sanitizedDepositAmount,
     })
     .eq("id", id)

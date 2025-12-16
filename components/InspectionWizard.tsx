@@ -15,6 +15,7 @@ type InspectionWizardProps = {
   hostPhone?: string | null;
   assetType: string;
   showSupportLink: boolean;
+  photoRequirements?: string[];
   customPhotoRequired?: boolean;
   customPhotoLabel?: string;
 };
@@ -35,6 +36,7 @@ export default function InspectionWizard({
   hostPhone,
   assetType,
   showSupportLink,
+  photoRequirements,
   customPhotoRequired,
   customPhotoLabel,
 }: InspectionWizardProps) {
@@ -56,7 +58,26 @@ export default function InspectionWizard({
       { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
     ];
 
-    const photoSteps: Step[] =
+    const photoStepConfig: Record<string, { title: string; description: string }> = {
+      front: { title: 'Front', description: 'Front Bumper' },
+      left: { title: 'Left', description: 'Left Side' },
+      right: { title: 'Right', description: 'Right Side' },
+      back: { title: 'Back', description: 'Back Bumper' },
+      general: { title: 'Bike', description: 'Full view of the bike' },
+      water: { title: 'Water', description: 'Current Water Clarity' },
+    };
+
+    const normalizedReqs = (photoRequirements ?? []).filter((x) => typeof x === 'string' && x.trim().length > 0);
+    const configuredPhotoSteps = normalizedReqs
+      .map((req) => {
+        const cfg = photoStepConfig[req];
+        if (!cfg) return null;
+        return { title: cfg.title, description: cfg.description, type: 'photo' as const, id: req };
+      })
+      .filter(Boolean) as Step[];
+
+    // Fallback for legacy data (older carts without photo_requirements)
+    const legacyPhotoSteps: Step[] =
       assetType === 'hot_tub'
         ? [{ title: 'Water', description: 'Current Water Clarity', type: 'photo' }]
         : [
@@ -65,6 +86,8 @@ export default function InspectionWizard({
             { title: 'Right', description: 'Right Side', type: 'photo' },
             { title: 'Back', description: 'Back Bumper', type: 'photo' },
           ];
+
+    const photoSteps: Step[] = configuredPhotoSteps.length > 0 ? configuredPhotoSteps : legacyPhotoSteps;
 
     if (customPhotoRequired) {
       photoSteps.push({
@@ -77,7 +100,7 @@ export default function InspectionWizard({
     }
 
     return [...baseSteps, ...photoSteps];
-  }, [assetType, customPhotoLabel, customPhotoRequired]);
+  }, [assetType, customPhotoLabel, customPhotoRequired, photoRequirements]);
 
   const totalSteps = steps.length;
   const progress = useMemo(() => ((currentStep + 1) / totalSteps) * 100, [currentStep, totalSteps]);
@@ -278,7 +301,7 @@ export default function InspectionWizard({
           <p className="text-sm text-gray-600">Please review and agree to the liability terms before continuing.</p>
         ) : (
           <p className="text-sm text-gray-600">
-            Please take a clear photo of the {photoLabel.toLowerCase()} of the cart.
+            Please take a clear photo of the {photoLabel.toLowerCase()} of the asset.
           </p>
         )}
       </div>
