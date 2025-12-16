@@ -25,6 +25,7 @@ type Rental = {
   created_at: string;
   status?: string | null;
   closure_source?: string | null;
+  photos?: string[] | null;
   revenue: number | null;
   deposit_status: string | null;
   deposit_amount: number | null;
@@ -137,47 +138,22 @@ export default async function DashboardHome() {
   const { data: rentals, error: rentalsError } = await supabase
     .from("rentals")
     .select(
-      "cart_id, created_at, status, closure_source, revenue, deposit_status, deposit_amount, carts!inner(host_id)"
+      "cart_id, created_at, status, closure_source, photos, revenue, deposit_status, deposit_amount, carts!inner(host_id)"
     )
     .eq("carts.host_id", user.id);
-
-  const [
-    { count: activeCount, error: activeCountError },
-    { count: reviewCount, error: reviewCountError },
-  ] = await Promise.all([
-    supabase
-      .from("rentals")
-      .select("id, carts!inner(host_id)", { count: "exact", head: true })
-      .eq("carts.host_id", user.id)
-      .eq("status", "active"),
-    supabase
-      .from("rentals")
-      .select("id, carts!inner(host_id)", { count: "exact", head: true })
-      .eq("carts.host_id", user.id)
-      .eq("status", "needs_review"),
-  ]);
 
   const { data: serviceLogs, error: logsError } = await supabase
     .from("service_logs")
     .select("cost")
     .eq("host_id", user.id);
 
-  if (
-    cartsError ||
-    rentalsError ||
-    logsError ||
-    profileError ||
-    activeCountError ||
-    reviewCountError
-  ) {
+  if (cartsError || rentalsError || logsError || profileError) {
     console.error(
       "Data fetch failed:",
       cartsError,
       rentalsError,
       logsError,
-      profileError,
-      activeCountError,
-      reviewCountError
+      profileError
     );
     redirect("/login");
   }
@@ -208,28 +184,37 @@ export default async function DashboardHome() {
   const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
   const health = calculateHealth(finalCarts as Cart[], typedRentals, today);
 
-  const inLastThirtyDays = (createdAt: string) =>
-    new Date(createdAt).getTime() > thirtyDaysAgo.getTime();
-
-  const protectedCount = typedRentals.filter((r) => inLastThirtyDays(r.created_at))
-    .length;
-
-  const completedRentals = typedRentals.filter(
-    (r) =>
-      (r.status || "").toLowerCase() === "completed" && inLastThirtyDays(r.created_at)
+  const recentRentals = typedRentals.filter(
+    (r) => new Date(r.created_at) >= thirtyDaysAgo
   );
 
-  const manualCount = completedRentals.filter(
-    (r) => (r.closure_source || "").toLowerCase() === "host"
+  const protectedCount = recentRentals.length;
+
+  const activeCount = typedRentals.filter((r) => r.status === "active").length;
+  const reviewCount = typedRentals.filter(
+    (r) => r.status === "needs_review"
   ).length;
 
-  const guestCount = completedRentals.filter(
-    (r) => (r.closure_source || "").toLowerCase() !== "host"
+  const completedRentals = typedRentals.filter(
+    (r) => r.status === "completed"
+  );
+
+  const manualCount = recentRentals.filter(
+    (r) => r.status === "completed" && r.closure_source === "host"
+  ).length;
+
+  const guestCompletedRentals = completedRentals.filter(
+    (r) => r.closure_source !== "host"
+  );
+
+  const documentedTotal = guestCompletedRentals.length;
+  const documentedGuest = guestCompletedRentals.filter(
+    (r) => (r.photos?.length ?? 0) > 0
   ).length;
 
   const documentedRate =
-    completedRentals.length > 0
-      ? Math.round((guestCount / completedRentals.length) * 100)
+    documentedTotal > 0
+      ? Math.round((documentedGuest / documentedTotal) * 100)
       : 0;
 
   const healthyCount = health.filter((item) => item.status === GREEN).length;
@@ -272,14 +257,6 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
-      <ProtectionOverview
-        protectedCount={protectedCount}
-        activeCount={activeCount ?? 0}
-        reviewCount={reviewCount ?? 0}
-        documentedRate={documentedRate}
-        documentedTotal={completedRentals.length}
-        manualCount={manualCount}
-      />
       <div className="space-y-3">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -304,6 +281,16 @@ export default async function DashboardHome() {
           ))}
         </div>
       </div>
+
+      <ProtectionOverview
+        protectedCount={protectedCount}
+        activeCount={activeCount}
+        reviewCount={reviewCount}
+        documentedRate={documentedRate}
+        documentedTotal={documentedTotal}
+        documentedGuest={documentedGuest}
+        manualCount={manualCount}
+      />
 
       {profile?.show_financial_tiles !== false && (
         <FinancialSection rentals={typedRentals} />
