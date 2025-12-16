@@ -38,6 +38,7 @@ type Cart = {
   deposit_amount?: number | null;
   is_currently_rented: boolean;
   active_rental_id?: string | null;
+  tripsSinceService: number;
   photo_requirements?: string[] | null;
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
@@ -153,6 +154,21 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                   maximumFractionDigits: 2,
                 })
               : null;
+
+            const tripsCount =
+              typeof cart.tripsSinceService === "number" ? cart.tripsSinceService : 0;
+            const isOverdue = tripsCount >= 30;
+            const isDueSoon = tripsCount >= 20 && tripsCount < 30;
+            const tripsTextClass = isOverdue
+              ? "text-red-600"
+              : isDueSoon
+              ? "text-amber-600"
+              : "text-gray-500";
+            const tripsStatusSuffix = isOverdue
+              ? " • Overdue"
+              : isDueSoon
+              ? " • Due Soon"
+              : "";
 
               return (
                 <div
@@ -288,6 +304,10 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     {cart.last_serviced_at
                       ? new Date(cart.last_serviced_at).toLocaleDateString()
                       : "Not recorded"}
+                  </p>
+                  <p className={`mt-1 text-xs ${tripsTextClass}`}>
+                    Trips since service: {tripsCount}
+                    {tripsStatusSuffix}
                   </p>
                   {cart.access_instructions && (
                     <div className="mt-3 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700 border border-gray-100">

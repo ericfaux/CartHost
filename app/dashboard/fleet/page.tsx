@@ -20,6 +20,7 @@ type Cart = {
   deposit_amount?: number | null;
   is_currently_rented: boolean;
   active_rental_id?: string | null;
+  tripsSinceService: number;
   // NEW FIELDS ADDED HERE
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
@@ -75,6 +76,12 @@ export default async function DashboardPage() {
     .eq("status", "active")
     .eq("carts.host_id", user.id);
 
+  const { data: completedRentals = [] } = await supabase
+    .from("rentals")
+    .select("cart_id, created_at, status, carts!inner(host_id)")
+    .eq("status", "completed")
+    .eq("carts.host_id", user.id);
+
   const activeRentalByCartId = new Map<string, string>();
   (activeRentals ?? []).forEach((rental: any) => {
     if (rental?.cart_id && rental?.id) {
@@ -82,11 +89,28 @@ export default async function DashboardPage() {
     }
   });
 
+  const completedRentalsByCartId = new Map<string, Array<{ created_at?: string | null }>>();
+  (completedRentals ?? []).forEach((rental: any) => {
+    if (!rental?.cart_id) return;
+    const existing = completedRentalsByCartId.get(rental.cart_id) ?? [];
+    existing.push({ created_at: rental.created_at ?? null });
+    completedRentalsByCartId.set(rental.cart_id, existing);
+  });
+
   // UPDATED: Added (carts as any[]) to fix the build error
   const cartsWithRentalStatus = ((carts as any[]) ?? []).map((cart) => ({
     ...cart,
     active_rental_id: activeRentalByCartId.get(cart.id) ?? null,
     is_currently_rented: activeRentalByCartId.has(cart.id),
+    tripsSinceService: (() => {
+      const rentalsForCart = completedRentalsByCartId.get(cart.id) ?? [];
+      if (!cart.last_serviced_at) return rentalsForCart.length;
+      const lastServicedAt = new Date(cart.last_serviced_at);
+      return rentalsForCart.filter((r) => {
+        if (!r?.created_at) return false;
+        return new Date(r.created_at) > lastServicedAt;
+      }).length;
+    })(),
   }));
 
   return <FleetList carts={cartsWithRentalStatus as Cart[]} />;
