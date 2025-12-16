@@ -15,9 +15,10 @@ import {
   Lock,
   Shield,
   QrCode,
+  Square,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
-import { deleteCart } from "../app/dashboard/actions";
+import { deleteCart, forceEndRental } from "../app/dashboard/actions";
 import QrCodeModal from "./QrCodeModal";
 
 type Cart = {
@@ -35,17 +36,39 @@ type Cart = {
   access_code?: string | null;
   deposit_amount?: number | null;
   is_currently_rented: boolean;
+  active_rental_id?: string | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {
   const [selectedCart, setSelectedCart] = useState<Cart | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [endingId, setEndingId] = useState<string | null>(null);
   const [qrAsset, setQrAsset] = useState<Cart | null>(null);
 
   const handleEdit = (cart: Cart) => {
     setSelectedCart(cart);
     setIsEditOpen(true);
+  };
+
+  const handleForceEnd = async (rentalId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to manually end this guest session? This will mark the rental as completed."
+    );
+    if (!confirmed) return;
+
+    try {
+      setEndingId(rentalId);
+      const result = await forceEndRental(rentalId);
+      if (result?.error) {
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error("Failed to end rental", error);
+      alert("Failed to end rental. Please try again.");
+    } finally {
+      setEndingId(null);
+    }
   };
 
   const handleDelete = async (cartId: string) => {
@@ -136,6 +159,20 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                     <div className="flex items-start justify-between">
                       <div className={iconWrapperClass}>{cartIcon}</div>
                       <div className="flex gap-1">
+                        {cart.is_currently_rented && cart.active_rental_id && (
+                          <button
+                            onClick={() => handleForceEnd(cart.active_rental_id!)}
+                            disabled={endingId === cart.active_rental_id}
+                            title="Force End Session"
+                            className="rounded-md p-2 text-amber-600 transition-colors hover:bg-amber-50"
+                          >
+                            {endingId === cart.active_rental_id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                            ) : (
+                              <Square className="h-4 w-4 fill-current" />
+                            )}
+                          </button>
+                        )}
                         <button
                           onClick={() => setQrAsset(cart)}
                           className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-blue-50 hover:text-blue-600 group-hover:opacity-100"
