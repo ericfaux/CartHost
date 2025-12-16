@@ -29,6 +29,7 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
+  requires_plug_photo?: boolean | null;
   status: string;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
@@ -38,6 +39,8 @@ type Cart = {
   is_currently_rented: boolean;
   active_rental_id?: string | null;
   photo_requirements?: string[] | null;
+  custom_photo_required?: boolean | null;
+  custom_photo_label?: string | null;
 };
 
 export default function FleetList({ carts }: { carts: Cart[] }) {

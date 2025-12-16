@@ -14,6 +14,7 @@ type Cart = {
   status?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
+  requires_plug_photo?: boolean | null;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
   upsell_unit?: string | null;
@@ -72,6 +73,7 @@ export default function AddCartModal({
   const [accessCode, setAccessCode] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [requiresLockPhoto, setRequiresLockPhoto] = useState(true);
+  const [requiresPlugPhoto, setRequiresPlugPhoto] = useState(true);
   const [customPhotoRequired, setCustomPhotoRequired] = useState(false);
   const [customPhotoLabel, setCustomPhotoLabel] = useState("");
   const [photoReqs, setPhotoReqs] = useState<string[]>([]);
@@ -106,6 +108,9 @@ export default function AddCartModal({
       return;
     }
     setPhotoReqs(getDefaultPhotoReqs(type));
+    if ((type || "").toLowerCase() === "electric") {
+      setRequiresPlugPhoto(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
@@ -125,6 +130,11 @@ export default function AddCartModal({
     setRequiresLockPhoto(
       cart?.requires_lock_photo ?? true
     );
+    if (typeof cart?.requires_plug_photo === "boolean") {
+      setRequiresPlugPhoto(cart.requires_plug_photo);
+    } else {
+      setRequiresPlugPhoto(nextType === "electric");
+    }
     setCustomPhotoRequired(cart?.custom_photo_required ?? false);
     setCustomPhotoLabel(cart?.custom_photo_label ?? "");
     if (cart?.photo_requirements && Array.isArray(cart.photo_requirements)) {
@@ -154,15 +164,26 @@ export default function AddCartModal({
       setLastServicedAt(cart?.last_serviced_at ?? "");
       setAccessInstructions(cart?.access_instructions ?? "");
       setStatus((cart?.status ?? "active").toLowerCase());
-      setType((cart?.type ?? "electric").toLowerCase());
+      const nextType = (cart?.type ?? "electric").toLowerCase();
+      setType(nextType);
       setAccessType(cart?.access_type ?? "included");
       setUpsellPrice(cart?.upsell_price?.toString() ?? "");
       setUpsellUnit(cart?.upsell_unit ?? "day");
       setAccessCode(cart?.access_code ?? "");
       setDepositAmount(cart?.deposit_amount?.toString() ?? "");
       setRequiresLockPhoto(cart?.requires_lock_photo ?? true);
+      setRequiresPlugPhoto(
+        typeof cart?.requires_plug_photo === "boolean"
+          ? cart.requires_plug_photo
+          : nextType === "electric"
+      );
       setCustomPhotoRequired(false);
       setCustomPhotoLabel("");
+      setPhotoReqs(
+        cart?.photo_requirements && Array.isArray(cart.photo_requirements)
+          ? cart.photo_requirements
+          : getDefaultPhotoReqs(nextType)
+      );
       setOpen(false);
       router.refresh();
     }
@@ -213,6 +234,11 @@ export default function AddCartModal({
                 name="photoRequirements"
                 value={JSON.stringify(photoReqs)}
               />
+              <input
+                type="hidden"
+                name="requiresPlugPhoto"
+                value={requiresPlugPhoto ? "on" : "off"}
+              />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Asset Name</label>
                 <input
@@ -241,9 +267,9 @@ export default function AddCartModal({
                 </select>
               </div>
 
-              {/* Inspection Photos */}
+              {/* Inspection Checklist */}
               <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <p className="text-sm font-semibold text-gray-800">Inspection Photos</p>
+                <p className="text-sm font-semibold text-gray-800">Inspection Checklist</p>
 
                 {(type === "electric" || type === "gas") && (
                   <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
@@ -297,6 +323,23 @@ export default function AddCartModal({
                   </label>
                 )}
               </div>
+
+              {type === "electric" && (
+                <div className="flex items-center gap-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2">
+                  <label className="flex flex-1 flex-col text-sm text-gray-700">
+                    Require Plug-in Photo?
+                    <span className="text-xs text-gray-500">
+                      Guest must upload a photo of the plug connected to end the rental.
+                    </span>
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={requiresPlugPhoto}
+                    onChange={(event) => setRequiresPlugPhoto(event.target.checked)}
+                    className="h-5 w-5 accent-purple-600"
+                  />
+                </div>
+              )}
 
               {type === "bike" && (
                 <div className="flex items-center gap-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2">

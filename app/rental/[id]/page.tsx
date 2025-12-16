@@ -17,6 +17,7 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
+  requires_plug_photo?: boolean | null;
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
   photo_requirements?: string[] | null;
@@ -65,7 +66,7 @@ export default function RentalInspectionPage() {
 
         const { data: cartData, error: cartError } = await supabase
           .from('carts')
-          .select('*, photo_requirements, custom_photo_required, custom_photo_label, hosts(property_name, phone_number, welcome_message, enable_guest_text_support)')
+          .select('*, photo_requirements, requires_plug_photo, custom_photo_required, custom_photo_label, hosts(property_name, phone_number, welcome_message, enable_guest_text_support)')
           .eq('id', resolvedId)
           .single();
         if (cartError) throw cartError;
@@ -180,7 +181,7 @@ export default function RentalInspectionPage() {
            <div className="space-y-2">
              <h1 className="text-3xl font-bold text-green-700">All Set!</h1>
              <p className="text-gray-600">
-               Thank you for plugging in. <br/> Your rental session is closed.
+              Your rental session is closed.
              </p>
            </div>
            <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-500">
@@ -199,12 +200,30 @@ export default function RentalInspectionPage() {
           ) : cart?.type === 'bike' ? (
             <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
           ) : (
-            <PlugVerifier
-              cartId={resolvedId}
-              userId={userId!}
-              rentalId={activeRentalId!}
-              onSuccess={handleCheckoutSuccess}
-            />
+            (cart?.requires_plug_photo ?? true) ? (
+              <PlugVerifier
+                cartId={resolvedId}
+                userId={userId!}
+                rentalId={activeRentalId!}
+                onSuccess={handleCheckoutSuccess}
+              />
+            ) : (
+              <div className="bg-white shadow-lg rounded-xl p-6 space-y-6 border border-gray-100">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Final Step</p>
+                  <h2 className="text-xl font-semibold text-gray-900">End Rental</h2>
+                  <p className="text-sm text-gray-600">Tap below to end your rental.</p>
+                </div>
+                <div className="flex items-center justify-end">
+                  <button
+                    onClick={handleCheckoutSuccess}
+                    className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 min-w-[180px] flex items-center justify-center"
+                  >
+                    End Rental
+                  </button>
+                </div>
+              </div>
+            )
           )
 
         ) : isUnlocked ? (
@@ -240,7 +259,9 @@ export default function RentalInspectionPage() {
                 className="w-full bg-white border border-gray-200 text-slate-900 hover:bg-gray-50 py-4 font-semibold rounded-xl shadow-sm"
                 onClick={() => setIsCheckingOut(true)}
               >
-                End Rental & Verify Plug
+                {cart?.type === 'electric' && (cart?.requires_plug_photo ?? true)
+                  ? 'End Rental & Verify Plug'
+                  : 'End Rental'}
               </button>
             </div>
 

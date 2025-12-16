@@ -11,6 +11,7 @@ type Cart = {
   access_instructions?: string | null;
   type?: string | null;
   requires_lock_photo?: boolean | null;
+  requires_plug_photo?: boolean | null;
   status: string;
   access_type: "included" | "upsell";
   upsell_price?: number | null;
@@ -60,7 +61,7 @@ export default async function DashboardPage() {
 
   // UPDATED: Added custom_photo_required and custom_photo_label to the query
   const cartSelectFields =
-    "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount, custom_photo_required, custom_photo_label, photo_requirements";
+    "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, requires_plug_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount, custom_photo_required, custom_photo_label, photo_requirements";
 
   const { data: carts = [] } = await supabase
     .from("carts")

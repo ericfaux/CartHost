@@ -63,8 +63,8 @@ export default function InspectionWizard({
       left: { title: 'Left', description: 'Left Side' },
       right: { title: 'Right', description: 'Right Side' },
       back: { title: 'Back', description: 'Back Bumper' },
-      general: { title: 'Bike', description: 'Full view of the bike' },
-      water: { title: 'Water', description: 'Current Water Clarity' },
+      general: { title: 'General', description: 'General Condition' },
+      water: { title: 'Water', description: 'Water Clarity' },
     };
 
     const normalizedReqs = (photoRequirements ?? []).filter((x) => typeof x === 'string' && x.trim().length > 0);
