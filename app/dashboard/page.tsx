@@ -188,6 +188,10 @@ export default async function DashboardHome() {
     (r) => new Date(r.created_at) >= thirtyDaysAgo
   );
 
+  const recentCompleted = recentRentals.filter(
+    (r) => r.status === "completed"
+  );
+
   const protectedCount = recentRentals.length;
 
   const activeCount = typedRentals.filter((r) => r.status === "active").length;
@@ -195,21 +199,13 @@ export default async function DashboardHome() {
     (r) => r.status === "needs_review"
   ).length;
 
-  const completedRentals = typedRentals.filter(
-    (r) => r.status === "completed"
-  );
-
-  const manualCount = recentRentals.filter(
-    (r) => r.status === "completed" && r.closure_source === "host"
+  const manualCount = recentCompleted.filter(
+    (r) => r.closure_source === "host"
   ).length;
 
-  const guestCompletedRentals = completedRentals.filter(
+  const documentedTotal = recentCompleted.length;
+  const documentedGuest = recentCompleted.filter(
     (r) => r.closure_source !== "host"
-  );
-
-  const documentedTotal = guestCompletedRentals.length;
-  const documentedGuest = guestCompletedRentals.filter(
-    (r) => (r.photos?.length ?? 0) > 0
   ).length;
 
   const documentedRate =
