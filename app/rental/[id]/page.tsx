@@ -54,6 +54,8 @@ export default function RentalInspectionPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false); // New State for Checkout
   const [isCompleted, setIsCompleted] = useState(false); // New State for Done
 
+  const assetLabel = cart?.type === 'hot_tub' ? 'Hot Tub' : cart?.type === 'bike' ? 'Bike' : 'Cart';
+
   useEffect(() => {
     const initializePage = async () => {
       if (!resolvedId) return;
@@ -350,12 +352,12 @@ export default function RentalInspectionPage() {
             <div className="space-y-3">
               <h1 className="text-2xl font-bold">Safety Check Required</h1>
               <p className="text-gray-600">
-                You must complete a visual inspection to unlock the key.
+                You must complete a visual inspection to unlock access.
               </p>
 
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Cart: {cart?.name}
+                  {assetLabel}: {cart?.name}
                 </h2>
               </div>
 
