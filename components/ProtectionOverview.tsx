@@ -30,23 +30,6 @@ export default function ProtectionOverview({
         Protection Overview
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Protected Rides</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">
-                {protectedCount}
-              </p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50">
-              <ShieldCheck className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Sessions started in the last 30 days.
-          </p>
-        </div>
-
         <Link
           href="/dashboard/history?filter=open"
           className="block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
@@ -90,7 +73,24 @@ export default function ProtectionOverview({
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            {documentedGuest} of {documentedTotal} completed rides have evidence.
+            {documentedGuest} of {documentedTotal} completed rides (Last 30d)
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Protected Rides</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">
+                {protectedCount}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50">
+              <ShieldCheck className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Sessions started in the last 30 days.
           </p>
         </div>
 
