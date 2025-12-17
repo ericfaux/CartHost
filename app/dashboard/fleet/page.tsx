@@ -73,7 +73,7 @@ export default async function DashboardPage() {
   const { data: activeRentals = [] } = await supabase
     .from("rentals")
     .select("id, cart_id, carts!inner(host_id)")
-    .eq("status", "active")
+    .in("status", ["active", "needs_review"])
     .eq("carts.host_id", user.id);
 
   const { data: completedRentals = [] } = await supabase
