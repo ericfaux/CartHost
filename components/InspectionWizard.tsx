@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { sendWelcomeSms } from '../app/actions/notifications';
-import { BikeWaiver, GolfCartWaiver } from './WaiverContent';
+import { BikeWaiver, GolfCartWaiver, HotTubWaiver } from './WaiverContent';
 
 type InspectionWizardProps = {
   cartId: string;
@@ -360,7 +360,7 @@ export default function InspectionWizard({
       ) : isWaiverStep ? (
         <div className="space-y-4">
           <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-            {assetType === 'bike' ? <BikeWaiver /> : <GolfCartWaiver />}
+            {assetType === 'hot_tub' ? <HotTubWaiver /> : assetType === 'bike' ? <BikeWaiver /> : <GolfCartWaiver />}
           </div>
           <label className="flex items-center space-x-3 text-sm font-medium text-gray-900 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
             <input
