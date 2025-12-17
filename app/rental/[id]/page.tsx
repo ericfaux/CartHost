@@ -88,7 +88,7 @@ export default function RentalInspectionPage() {
           .from('rentals')
           .select('id, status, cart_id')
           .eq('cart_id', resolvedId)
-          .eq('status', 'active')
+          .in('status', ['active', 'needs_review'])
           .maybeSingle();
         if (rentalError) throw rentalError;
 
