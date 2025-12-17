@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { updateProfile } from "../app/dashboard/settings/actions";
-import { BikeWaiver, GolfCartWaiver } from "./WaiverContent";
+import { BikeWaiver, GolfCartWaiver, HotTubWaiver } from "./WaiverContent";
 
 export type HostProfile = {
   id: string;
@@ -48,9 +48,9 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
     null
   );
 
-  const [waiverPreview, setWaiverPreview] = useState<"golf_cart" | "bike">(
-    "golf_cart"
-  );
+  const [waiverPreview, setWaiverPreview] = useState<
+    "golf_cart" | "bike" | "hot_tub"
+  >("golf_cart");
   const [additionalRules, setAdditionalRules] = useState<string>(
     profile.additional_rules ?? ""
   );
@@ -278,14 +278,28 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
                     >
                       Bike
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setWaiverPreview("hot_tub")}
+                      className={[
+                        "rounded-md px-3 py-1 text-xs font-semibold transition",
+                        waiverPreview === "hot_tub"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-700 hover:bg-gray-50",
+                      ].join(" ")}
+                    >
+                      Hot Tub
+                    </button>
                   </div>
                 </div>
 
                 <div className="max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                  {waiverPreview === "golf_cart" ? (
-                    <GolfCartWaiver />
-                  ) : (
+                  {waiverPreview === "hot_tub" ? (
+                    <HotTubWaiver />
+                  ) : waiverPreview === "bike" ? (
                     <BikeWaiver />
+                  ) : (
+                    <GolfCartWaiver />
                   )}
                 </div>
               </div>
