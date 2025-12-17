@@ -7,6 +7,14 @@ import { supabase } from '../lib/supabase';
 import { sendWelcomeSms } from '../app/actions/notifications';
 import { BikeWaiver, GolfCartWaiver, HotTubWaiver } from './WaiverContent';
 
+const formatPhoneNumber = (value: string) => {
+  const numbers = value.replace(/\D/g, "");
+  if (numbers.length === 0) return "";
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+  return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
+};
+
 type InspectionWizardProps = {
   cartId: string;
   onComplete: (rentalId: string) => void;
@@ -338,7 +346,8 @@ export default function InspectionWizard({
               id="guest-phone"
               type="tel"
               value={guestPhone}
-              onChange={(event) => setGuestPhone(event.target.value)}
+              onChange={(event) => setGuestPhone(formatPhoneNumber(event.target.value))}
+              maxLength={12}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
               placeholder="Enter phone number"
             />
