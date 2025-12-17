@@ -6,6 +6,14 @@ import { useFormStatus } from "react-dom";
 import { updateProfile } from "../app/dashboard/settings/actions";
 import { BikeWaiver, GolfCartWaiver, HotTubWaiver } from "./WaiverContent";
 
+const formatPhoneNumber = (value: string) => {
+  const numbers = value.replace(/\D/g, "");
+  if (numbers.length === 0) return "";
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+  return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
+};
+
 export type HostProfile = {
   id: string;
   full_name: string | null;
@@ -46,6 +54,10 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
   const [state, formAction] = useActionState<UpdateProfileState, FormData>(
     updateProfile,
     null
+  );
+
+  const [phone, setPhone] = useState(
+    formatPhoneNumber(profile.phone_number ?? "")
   );
 
   const [waiverPreview, setWaiverPreview] = useState<
@@ -112,7 +124,8 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
               name="phone"
               type="tel"
               autoComplete="tel"
-              defaultValue={profile.phone_number ?? ""}
+              value={phone}
+              onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               placeholder="(555) 123-4567"
             />
