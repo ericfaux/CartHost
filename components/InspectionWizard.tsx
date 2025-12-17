@@ -188,13 +188,11 @@ export default function InspectionWizard({
 
     if (!userId) {
       console.log("Error: No userId found.");
-      alert("CRITICAL ERROR: No User ID found. Reload the page.");
       setError('Unable to upload without a user session.');
       return;
     }
 
     console.log(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
-    alert(`1. Starting upload... Cart: ${cartId}, User: ${userId}`);
 
     setUploading(true);
 
@@ -203,7 +201,6 @@ export default function InspectionWizard({
     const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
 
     console.log(`2. Path generated: ${path}`);
-    alert(`2. Path generated: ${path}`);
 
     try {
       console.log("Attempting Supabase upload...");
@@ -213,20 +210,17 @@ export default function InspectionWizard({
 
       if (uploadError) {
         console.error('3. UPLOAD FAILED:', uploadError);
-        alert(`3. UPLOAD FAILED: ${uploadError.message}`);
         setError(`Upload failed: ${uploadError.message}`);
         setUploading(false);
         return;
       }
     } catch (err: any) {
       console.error('4. APP CRASHED:', err);
-      alert(`4. APP CRASHED: ${err.message || err}`);
       setUploading(false);
       return;
     }
 
     console.log("5. SUCCESS! File uploaded. Moving to next step.");
-    alert("5. SUCCESS! Moving to next step.");
 
     const { data: publicUrlData } = supabase.storage
       .from('evidence')
