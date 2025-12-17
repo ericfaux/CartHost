@@ -276,3 +276,102 @@ export const BikeWaiver = () => (
     </div>
   </div>
 );
+
+export const HotTubWaiver = () => (
+  <div className="space-y-4">
+    <h3 className="font-bold text-center">HOT TUB RENTAL AGREEMENT AND WAIVER OF LIABILITY</h3>
+    <p>
+      This Hot Tub Rental Agreement and Waiver of Liability (“Agreement”) is between the undersigned guest (“Renter”) and
+      the property owner/host (“Host”). CartHost is a technology provider facilitating this process on behalf of the Host.
+    </p>
+
+    <div>
+      <p className="font-bold">1. ELIGIBILITY AND HEALTH WARNINGS</p>
+      <p>I represent that I am at least 18 years old and competent to sign this Agreement. I acknowledge the following health warnings:</p>
+      <ul className="list-disc pl-5 mt-2 space-y-2">
+        <li>
+          <strong>Medical Conditions:</strong> People with heart disease, low or high blood pressure, diabetes, or circulatory system problems should consult a
+          physician before using the hot tub.
+        </li>
+        <li>
+          <strong>Pregnancy:</strong> Pregnant women should consult a physician before use, as high water temperatures can harm a fetus.
+        </li>
+        <li>
+          <strong>Medication & Alcohol:</strong> The use of alcohol, drugs, or medication before or during hot tub use may lead to unconsciousness with the
+          possibility of drowning.
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <p className="font-bold">2. ASSUMPTION OF RISK</p>
+      <p className="uppercase font-semibold">
+        I UNDERSTAND THAT USING A HOT TUB INVOLVES INHERENT RISKS, INCLUDING BUT NOT LIMITED TO: DROWNING, HEAT STROKE/HYPERTHERMIA, SLIP-AND-FALL
+        INJURIES ON WET SURFACES, SKIN SENSITIVITY TO CHEMICALS, AND INFECTION. I VOLUNTARILY ASSUME ALL SUCH RISKS FOR MYSELF AND FOR ANY MINOR OR
+        GUEST I ALLOW TO USE THE HOT TUB.
+      </p>
+    </div>
+
+    <div>
+      <p className="font-bold">3. RELEASE OF LIABILITY</p>
+      <p>
+        To the fullest extent permitted by law, I release, waive, and discharge the Host, the property owner, their agents, and CartHost from any and all
+        liability, claims, or causes of action arising out of or related to my use of the hot tub, including those arising from ordinary negligence.
+      </p>
+    </div>
+
+    <div>
+      <p className="font-bold">4. RULES OF OPERATION</p>
+      <p>
+        I agree to follow these rules to ensure safety and prevent damage, and I understand that I am responsible for ensuring that all members of my party
+        and any guests follow them as well:
+      </p>
+      <ul className="list-disc pl-5 mt-2 space-y-2">
+        <li>
+          <strong>No Glass:</strong> I will strictly prohibit glass bottles or containers in or near the hot tub. (Broken glass requires a complete drain and
+          clean at my expense.)
+        </li>
+        <li>
+          <strong>No Added Substances:</strong> I will not add soaps, oils, bubbles, dyes, food, or any other foreign substances to the water.
+        </li>
+        <li>
+          <strong>Shower First:</strong> I will ensure all users shower before entering to remove lotions, oils, and makeup that damage the filters.
+        </li>
+        <li>
+          <strong>Cover Care:</strong> I will replace and secure the cover immediately after use to maintain heat and safety and will NOT sit, stand, or lie on the cover.
+        </li>
+        <li>
+          <strong>Supervision:</strong> Children must be supervised by an adult at all times.
+        </li>
+        <li>
+          <strong>Unsanitary Water:</strong> If the water appears cloudy, foamy, or otherwise unsanitary, I will stop using the hot tub and notify the Host.
+        </li>
+        <li>
+          <strong>Posted Rules:</strong> I will comply with all posted rules and manufacturer guidelines regarding temperature, soaking time, and maximum occupancy.
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <p className="font-bold">5. RESPONSIBILITY FOR DAMAGE / EXTRA CLEANING</p>
+      <p>
+        I agree that I am responsible for any damage to the hot tub, equipment, or cover caused by misuse, negligence, or failure to follow these rules by
+        myself or my guests. I understand that the Host may charge for drain-and-fill services and extra cleaning (typically $100–$300 or the actual cost
+        incurred) if the water is rendered unusable due to foreign substances (including but not limited to glass, food, soap, oils, or bodily fluids) introduced during my rental.
+      </p>
+    </div>
+
+    <div>
+      <p className="font-bold">6. INDEMNIFICATION</p>
+      <p>
+        I agree to indemnify and hold the Host harmless from any claims, damages, or expenses (including reasonable attorney’s fees) arising out of my use of
+        the hot tub or that of any member of my party or guest.
+      </p>
+    </div>
+
+    <div>
+      <p className="font-bold">7. ACKNOWLEDGMENT</p>
+      <p>By clicking “I Agree” below, I acknowledge that I have read this Agreement, understand the risks, and voluntarily agree to be bound by its terms.</p>
+    </div>
+  </div>
+);
