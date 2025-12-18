@@ -119,11 +119,10 @@ function getPeriodStartDate(period: DashboardPeriod) {
   return start;
 }
 
-export default async function DashboardHome({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function DashboardHome(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   const cookieStore = await cookies();
 
   const period = getPeriod(searchParams);
