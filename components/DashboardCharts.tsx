@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Banknote, Hash, TrendingUp, Shield } from "lucide-react";
 import {
   AreaChart,
@@ -12,6 +13,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import DashboardDateFilter from "./DashboardDateFilter";
 
 interface Rental {
   created_at: string;
@@ -31,21 +33,26 @@ interface ChartDataPoint {
   date: Date;
 }
 
-type FilterOption = "ytd" | "90_days" | "30_days";
+type FilterOption = "ytd" | "90d" | "30d";
 
 export default function DashboardCharts({ rentals }: DashboardChartsProps) {
-  const [filter, setFilter] = useState<FilterOption>("ytd");
+  const searchParams = useSearchParams();
+  const periodParam = searchParams.get("period");
+  const filter: FilterOption =
+    periodParam === "30d" || periodParam === "90d" || periodParam === "ytd"
+      ? periodParam
+      : "30d";
 
   const { chartData, totalRevenue, totalRides, avgRevenue, totalDepositsHeld } = useMemo(() => {
     const now = new Date();
     let startDate: Date;
 
     switch (filter) {
-      case "30_days":
+      case "30d":
         startDate = new Date(now);
         startDate.setDate(startDate.getDate() - 30);
         break;
-      case "90_days":
+      case "90d":
         startDate = new Date(now);
         startDate.setDate(startDate.getDate() - 90);
         break;
@@ -80,7 +87,7 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
       let key: string;
       let groupDate: Date;
 
-      if (filter === "30_days") {
+      if (filter === "30d") {
         // Group by day
         const month = rentalDate.toLocaleString("en-US", { month: "short" });
         const day = rentalDate.getDate();
@@ -159,15 +166,7 @@ export default function DashboardCharts({ rentals }: DashboardChartsProps) {
   return (
     <div className="w-full space-y-6">
       <div className="flex justify-end mb-4">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as FilterOption)}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="ytd">Year to Date</option>
-          <option value="90_days">Last 3 Months</option>
-          <option value="30_days">Last 30 Days</option>
-        </select>
+        <DashboardDateFilter />
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
