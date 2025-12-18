@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import { Banknote, Hash, TrendingUp, Shield } from "lucide-react";
 import {
   AreaChart,
@@ -15,6 +14,8 @@ import {
 } from "recharts";
 import DashboardDateFilter from "./DashboardDateFilter";
 
+export type DashboardPeriod = "ytd" | "90d" | "30d";
+
 interface Rental {
   created_at: string;
   revenue: number | null;
@@ -24,6 +25,7 @@ interface Rental {
 
 interface DashboardChartsProps {
   rentals: Rental[];
+  period: DashboardPeriod;
 }
 
 interface ChartDataPoint {
@@ -33,15 +35,8 @@ interface ChartDataPoint {
   date: Date;
 }
 
-type FilterOption = "ytd" | "90d" | "30d";
-
-export default function DashboardCharts({ rentals }: DashboardChartsProps) {
-  const searchParams = useSearchParams();
-  const periodParam = searchParams.get("period");
-  const filter: FilterOption =
-    periodParam === "30d" || periodParam === "90d" || periodParam === "ytd"
-      ? periodParam
-      : "30d";
+export default function DashboardCharts({ rentals, period }: DashboardChartsProps) {
+  const filter = period;
 
   const { chartData, totalRevenue, totalRides, avgRevenue, totalDepositsHeld } = useMemo(() => {
     const now = new Date();

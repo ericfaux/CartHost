@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AlertCircle, FileCheck, ShieldCheck, UserCog } from "lucide-react";
+import type { DashboardPeriod } from "./DashboardCharts";
 
 export type ProtectionOverviewProps = {
+  period: DashboardPeriod;
   protectedCount: number;
   activeCount: number;
   reviewCount: number;
@@ -12,6 +14,7 @@ export type ProtectionOverviewProps = {
 };
 
 export default function ProtectionOverview({
+  period,
   protectedCount,
   activeCount,
   reviewCount,
@@ -23,6 +26,13 @@ export default function ProtectionOverview({
   const safeRate = Number.isFinite(documentedRate)
     ? Math.round(Math.max(0, Math.min(100, documentedRate)))
     : 0;
+
+  const periodLabel =
+    period === "90d"
+      ? "Last 3 months"
+      : period === "ytd"
+        ? "Year to Date"
+        : "Last 30 days";
 
   return (
     <section className="space-y-3">
@@ -73,7 +83,7 @@ export default function ProtectionOverview({
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            {documentedGuest} of {documentedTotal} completed rides (Last 30d)
+            {documentedGuest} of {documentedTotal} completed rides ({periodLabel})
           </p>
         </div>
 
@@ -90,7 +100,7 @@ export default function ProtectionOverview({
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            Sessions started in the last 30 days.
+            Sessions started in the {periodLabel.toLowerCase()}.
           </p>
         </div>
 
@@ -107,7 +117,7 @@ export default function ProtectionOverview({
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            Trips force-closed by host (Last 30d).
+            Trips force-closed by host ({periodLabel}).
           </p>
         </div>
       </div>
