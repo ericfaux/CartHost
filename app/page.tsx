@@ -58,9 +58,9 @@ export default function LandingPage() {
       label: "Dashboard Overview",
       content: (
         <img
-          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Host+Dashboard"
+          src="/host-admin-home.jpg"
           alt="Dashboard"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
@@ -69,9 +69,9 @@ export default function LandingPage() {
       label: "Fleet Management",
       content: (
         <img
-          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Fleet+Manager"
+          src="/host-admin-fleet.jpg"
           alt="Fleet"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
@@ -80,20 +80,20 @@ export default function LandingPage() {
       label: "Rental History",
       content: (
         <img
-          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Rental+History"
+          src="/host-admin-history.jpg"
           alt="History"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
     {
       id: 4,
-      label: "Settings",
+      label: "Maintenance Logs",
       content: (
         <img
-          src="https://placehold.co/1920x1080/1e293b/ffffff?text=Settings"
-          alt="Settings"
-          className="h-full w-full object-cover"
+          src="/host-admin-maintenance.jpg"
+          alt="Maintenance Logs"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
@@ -105,20 +105,20 @@ export default function LandingPage() {
       label: "Scan to Unlock",
       content: (
         <img
-          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Scan+QR"
+          src="/guest-ui-home.jpg"
           alt="Scan"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
     {
       id: 2,
-      label: "Identity Verification",
+      label: "Waiver & Liability",
       content: (
         <img
-          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Verify+ID"
-          alt="ID"
-          className="h-full w-full object-cover"
+          src="/guest-ui-liability-form.jpg"
+          alt="Waiver & Liability"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
@@ -127,9 +127,9 @@ export default function LandingPage() {
       label: "Safety Inspection",
       content: (
         <img
-          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Safety+Check"
+          src="/guest-ui-cart-image.jpg"
           alt="Inspect"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
@@ -138,9 +138,9 @@ export default function LandingPage() {
       label: "Digital Key",
       content: (
         <img
-          src="https://placehold.co/1080x1920/2563eb/ffffff?text=Digital+Key"
+          src="/guest-ui-cart-unlock.jpg"
           alt="Unlock"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-slate-900"
         />
       ),
     },
