@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { Ellipsis } from "lucide-react";
 
 import DashboardCharts from "./DashboardCharts";
+import type { DashboardPeriod } from "./DashboardCharts";
 import { hideFinancialPerformance } from "../app/dashboard/actions";
 
 type FinancialSectionProps = {
   rentals: any[];
+  period: DashboardPeriod;
 };
 
-export default function FinancialSection({ rentals }: FinancialSectionProps) {
+export default function FinancialSection({ rentals, period }: FinancialSectionProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -103,7 +105,7 @@ export default function FinancialSection({ rentals }: FinancialSectionProps) {
       </div>
 
       {showNormal ? (
-        <DashboardCharts rentals={rentals} />
+        <DashboardCharts rentals={rentals} period={period} />
       ) : (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-lg font-bold text-gray-900">

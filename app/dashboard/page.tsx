@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
 import FinancialSection from "../../components/FinancialSection";
 import ProtectionOverview from "../../components/ProtectionOverview";
+import DashboardDateFilter from "../../components/DashboardDateFilter";
+import type { DashboardPeriod } from "../../components/DashboardCharts";
 
 const GREEN = "healthy" as const;
 const YELLOW = "dueSoon" as const;
@@ -90,8 +92,40 @@ function calculateHealth(
   });
 }
 
-export default async function DashboardHome() {
+function getPeriod(searchParams: {
+  [key: string]: string | string[] | undefined;
+}): DashboardPeriod {
+  const period = searchParams.period;
+  return typeof period === "string" && ["30d", "90d", "ytd"].includes(period)
+    ? (period as DashboardPeriod)
+    : "30d";
+}
+
+function getPeriodStartDate(period: DashboardPeriod) {
+  const today = new Date();
+
+  if (period === "90d") {
+    const start = new Date(today);
+    start.setDate(start.getDate() - 90);
+    return start;
+  }
+
+  if (period === "ytd") {
+    return new Date(today.getFullYear(), 0, 1);
+  }
+
+  const start = new Date(today);
+  start.setDate(start.getDate() - 30);
+  return start;
+}
+
+export default async function DashboardHome(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
   const cookieStore = await cookies();
+
+  const period = getPeriod(searchParams);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -177,16 +211,16 @@ export default async function DashboardHome() {
   const formatCurrency = (value: number) => currencyFormatter.format(value);
 
   const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const periodStartDate = getPeriodStartDate(period);
 
   const totalRides = typedRentals.length;
   const avgRevenuePerRide = totalRides > 0 ? totalRevenue / totalRides : 0;
   const health = calculateHealth(finalCarts as Cart[], typedRentals, today);
 
-  const recentRentals = typedRentals.filter(
-    (r) => new Date(r.created_at) >= thirtyDaysAgo
-  );
+  const recentRentals = typedRentals.filter((r) => {
+    const rentalDate = new Date(r.created_at);
+    return rentalDate >= periodStartDate && rentalDate <= today;
+  });
 
   const recentCompleted = recentRentals.filter(
     (r) => r.status === "completed"
@@ -253,6 +287,11 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <p className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</p>
+        <DashboardDateFilter />
+      </div>
+
       <div className="space-y-3">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -279,6 +318,7 @@ export default async function DashboardHome() {
       </div>
 
       <ProtectionOverview
+        period={period}
         protectedCount={protectedCount}
         activeCount={activeCount}
         reviewCount={reviewCount}
@@ -289,7 +329,7 @@ export default async function DashboardHome() {
       />
 
       {profile?.show_financial_tiles !== false && (
-        <FinancialSection rentals={typedRentals} />
+        <FinancialSection rentals={typedRentals} period={period} />
       )}
 
       <div>
