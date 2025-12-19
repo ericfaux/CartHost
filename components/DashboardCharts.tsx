@@ -130,6 +130,12 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
     return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
   };
 
+  const depositsHeldHighlight = totalDepositsHeld > 0;
+  const depositsHeldCardClassName = [
+    "flex h-full flex-col gap-4 rounded-2xl border p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100",
+    depositsHeldHighlight ? "bg-amber-50 border-amber-200" : "bg-white border-gray-100",
+  ].join(" ");
+
   const CustomTooltip = ({
     active,
     payload,
@@ -198,7 +204,7 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
             </div>
           </div>
         </div>
-        <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
+        <div className={depositsHeldCardClassName}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Deposits Held</p>
@@ -208,7 +214,7 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
               </Link>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50/80">
-              <Shield className="h-5 w-5 text-indigo-600" />
+              <Shield className={`h-5 w-5 ${depositsHeldHighlight ? "text-amber-600" : "text-indigo-600"}`} />
             </div>
           </div>
         </div>
