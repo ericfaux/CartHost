@@ -7,6 +7,8 @@ import { supabase } from '../lib/supabase';
 import { sendWelcomeSms } from '../app/actions/notifications';
 import { BikeWaiver, GolfCartWaiver, HotTubWaiver } from './WaiverContent';
 
+const WAIVER_VERSION = "v1.0-2025-STANDARD";
+
 const formatPhoneNumber = (value: string) => {
   const numbers = value.replace(/\D/g, "");
   if (numbers.length === 0) return "";
@@ -239,6 +241,19 @@ export default function InspectionWizard({
     const isLastStep = currentStep === steps.length - 1;
 
     if (isLastStep) {
+      const userAgent = window.navigator.userAgent;
+      let ipAddress = 'unknown';
+
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        if (response.ok) {
+          const data = await response.json();
+          ipAddress = data?.ip ?? 'unknown';
+        }
+      } catch (err) {
+        console.error('Failed to fetch IP address:', err);
+      }
+
       const { data, error: rentalError } = await supabase
         .from('rentals')
         .insert({
@@ -250,10 +265,13 @@ export default function InspectionWizard({
           status: 'active',
           waiver_agreed: true,
           waiver_agreed_at: new Date().toISOString(),
+          waiver_version: WAIVER_VERSION,
           photos: updatedPhotoUrls,
           revenue: revenue ?? null,
           deposit_amount: depositAmount,
           deposit_status: 'pending',
+          guest_ip: ipAddress,
+          user_agent: userAgent,
         })
         .select()
         .single();
