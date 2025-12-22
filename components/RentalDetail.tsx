@@ -194,17 +194,34 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                     {showWaiver && (
                       <div className="max-h-80 overflow-y-auto rounded bg-gray-50 p-4 text-xs text-gray-700 whitespace-pre-line">
                         {WAIVER_TEXT}
-                        <div className="my-4 h-px bg-gray-200" />
-                        <div className="space-y-1 font-mono text-gray-800">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-600">
-                            Digital Chain of Custody:
+                        <div className="mt-6 border-t border-gray-200 pt-4">
+                          <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                            Digital Chain of Custody
                           </p>
-                          <p>IP Address: {rental.guest_ip || "Not recorded"}</p>
-                          <p>Device: {rental.user_agent || "Not recorded"}</p>
-                          <p>
-                            Agreement Version: {rental.waiver_version || "Legacy"}
-                          </p>
-                          <p>Timestamp: {formattedWaiverDate || "Not recorded"}</p>
+                          <div className="font-mono text-[10px] text-gray-500 space-y-1">
+                            <div className="flex justify-between">
+                              <span>Signed By:</span>
+                              <span className="text-gray-900">{rental.guest_name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Timestamp:</span>
+                              <span className="text-gray-900">{formattedWaiverDate}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>IP Address:</span>
+                              <span className="text-gray-900">{rental.guest_ip || "Not Recorded"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Device:</span>
+                              <span className="text-gray-900 truncate max-w-[200px]" title={rental.user_agent || ""}>
+                                {rental.user_agent || "Not Recorded"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Version:</span>
+                              <span className="text-gray-900">{rental.waiver_version || "1.0"}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
