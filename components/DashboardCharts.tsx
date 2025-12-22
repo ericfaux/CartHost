@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
-import { Banknote, Hash, TrendingUp, Shield } from "lucide-react";
+import { Banknote, Hash, TrendingUp } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -37,7 +36,7 @@ interface ChartDataPoint {
 export default function DashboardCharts({ rentals, period }: DashboardChartsProps) {
   const filter = period;
 
-  const { chartData, totalRevenue, totalRides, avgRevenue, totalDepositsHeld } = useMemo(() => {
+  const { chartData, totalRevenue, totalRides, avgRevenue } = useMemo(() => {
     const now = new Date();
     let startDate: Date;
 
@@ -66,13 +65,6 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
     const totalRevenue = filteredRentals.reduce((sum, rental) => sum + (rental.revenue ?? 0), 0);
     const totalRides = filteredRentals.length;
     const avgRevenue = totalRides > 0 ? totalRevenue / totalRides : 0;
-    const totalDepositsHeld = filteredRentals.reduce((sum, rental) => {
-      if (rental.deposit_status === "collected") {
-        return sum + Number(rental.deposit_amount ?? 0);
-      }
-      return sum;
-    }, 0);
-
     // Group rentals by day or month
     const grouped = new Map<string, { revenue: number; rides: number; date: Date }>();
 
@@ -121,19 +113,12 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
       totalRevenue,
       totalRides,
       avgRevenue,
-      totalDepositsHeld,
     };
   }, [rentals, filter]);
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
   };
-
-  const depositsHeldHighlight = totalDepositsHeld > 0;
-  const depositsHeldCardClassName = [
-    "flex h-full flex-col gap-4 rounded-2xl border p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100",
-    depositsHeldHighlight ? "bg-amber-50 border-amber-200" : "bg-white border-gray-100",
-  ].join(" ");
 
   const CustomTooltip = ({
     active,
@@ -165,7 +150,7 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
 
   return (
     <div className="w-full space-y-6">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
             <div>
@@ -196,20 +181,6 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-50/80">
               <TrendingUp className="h-5 w-5 text-sky-600" />
-            </div>
-          </div>
-        </div>
-        <div className={depositsHeldCardClassName}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Deposits Held</p>
-              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{formatCurrency(totalDepositsHeld)}</p>
-              <Link href="/dashboard/history" className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline block">
-                Manage in History →
-              </Link>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50/80">
-              <Shield className={`h-5 w-5 ${depositsHeldHighlight ? "text-amber-600" : "text-indigo-600"}`} />
             </div>
           </div>
         </div>
