@@ -12,7 +12,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import DashboardDateFilter from "./DashboardDateFilter";
 
 export type DashboardPeriod = "ytd" | "90d" | "30d";
 
@@ -166,10 +165,6 @@ export default function DashboardCharts({ rentals, period }: DashboardChartsProp
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex justify-end mb-4">
-        <DashboardDateFilter />
-      </div>
-
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex h-full flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-100">
           <div className="flex items-center justify-between">
