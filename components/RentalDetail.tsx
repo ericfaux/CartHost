@@ -12,6 +12,9 @@ type Rental = {
   photos?: string[] | null;
   waiver_agreed?: boolean | null;
   waiver_agreed_at?: string | null;
+  guest_ip?: string | null;
+  user_agent?: string | null;
+  waiver_version?: string | null;
   carts?: {
     name?: string | null;
   } | null;
@@ -191,6 +194,18 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                     {showWaiver && (
                       <div className="max-h-80 overflow-y-auto rounded bg-gray-50 p-4 text-xs text-gray-700 whitespace-pre-line">
                         {WAIVER_TEXT}
+                        <div className="my-4 h-px bg-gray-200" />
+                        <div className="space-y-1 font-mono text-gray-800">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+                            Digital Chain of Custody:
+                          </p>
+                          <p>IP Address: {rental.guest_ip || "Not recorded"}</p>
+                          <p>Device: {rental.user_agent || "Not recorded"}</p>
+                          <p>
+                            Agreement Version: {rental.waiver_version || "Legacy"}
+                          </p>
+                          <p>Timestamp: {formattedWaiverDate || "Not recorded"}</p>
+                        </div>
                       </div>
                     )}
                   </div>
