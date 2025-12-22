@@ -199,6 +199,12 @@ export default async function DashboardHome(props: {
   const typedRentals = finalRentals as Rental[];
   const typedServiceLogs = finalLogs as ServiceLog[];
 
+  const totalDepositsHeld = typedRentals.reduce((sum, rental) => {
+    return rental.deposit_status === "collected"
+      ? sum + (rental.deposit_amount ?? 0)
+      : sum;
+  }, 0);
+
   const totalRevenue = typedRentals.reduce(
     (sum, rental) => sum + Number(rental.revenue ?? 0),
     0
@@ -329,6 +335,7 @@ export default async function DashboardHome(props: {
         documentedTotal={documentedTotal}
         documentedGuest={documentedGuest}
         manualCount={manualCount}
+        totalDepositsHeld={totalDepositsHeld}
       />
 
       {profile?.show_financial_tiles !== false && (
