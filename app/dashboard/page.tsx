@@ -289,7 +289,6 @@ export default async function DashboardHome(props: {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</p>
-        <DashboardDateFilter />
       </div>
 
       <div className="space-y-3">
@@ -315,6 +314,10 @@ export default async function DashboardHome(props: {
             </Link>
           ))}
         </div>
+      </div>
+
+      <div className="mb-6">
+        <DashboardDateFilter />
       </div>
 
       <ProtectionOverview
