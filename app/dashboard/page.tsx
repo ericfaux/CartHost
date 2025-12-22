@@ -316,7 +316,7 @@ export default async function DashboardHome(props: {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="flex justify-end mb-4">
         <DashboardDateFilter />
       </div>
 
