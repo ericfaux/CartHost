@@ -33,7 +33,7 @@ type InspectionWizardProps = {
 type Step = {
   title: string;
   description: string;
-  type: 'info' | 'waiver' | 'photo';
+  type: 'info' | 'waiver' | 'condition' | 'photo';
   id?: string;
   field?: string;
 };
@@ -60,12 +60,15 @@ export default function InspectionWizard({
   const [guestPhone, setGuestPhone] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [waiverAgreed, setWaiverAgreed] = useState(false);
+  const [conditionComment, setConditionComment] = useState('');
+  const [conditionImageUrl, setConditionImageUrl] = useState<string | null>(null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   const steps = useMemo<Step[]>(() => {
     const baseSteps: Step[] = [
       { title: 'Guest', description: 'Guest Information', type: 'info' },
       { title: 'Waiver', description: 'Liability Agreement', type: 'waiver' },
+      { title: 'Condition', description: 'Report Existing Issues', type: 'condition' },
     ];
 
     const photoStepConfig: Record<string, { title: string; description: string }> = {
@@ -147,6 +150,7 @@ export default function InspectionWizard({
   const currentStepData = steps[currentStep];
   const isGuestStep = currentStepData.type === 'info';
   const isWaiverStep = currentStepData.type === 'waiver';
+  const isConditionStep = currentStepData.type === 'condition';
   const photoLabel =
     currentStepData.id === 'custom_photo' && customPhotoLabel
       ? customPhotoLabel
@@ -177,6 +181,60 @@ export default function InspectionWizard({
         return;
       }
       setCurrentStep((prev) => prev + 1);
+      return;
+    }
+
+    if (isConditionStep) {
+      const proceedToNextStep = () => {
+        setCurrentStep((prev) => prev + 1);
+        setFile(null);
+        setPreviewUrl(null);
+        setUploading(false);
+      };
+
+      if (!file) {
+        proceedToNextStep();
+        return;
+      }
+
+      if (!userId) {
+        console.log("Error: No userId found.");
+        setError('Unable to upload without a user session.');
+        return;
+      }
+
+      setUploading(true);
+
+      const stepNumber = currentStep + 1;
+      const timestamp = new Date().getTime();
+      const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
+
+      try {
+        const { error: uploadError } = await supabase.storage.from('evidence').upload(path, file, { upsert: true });
+
+        if (uploadError) {
+          console.error('Condition upload failed:', uploadError);
+          setError(`Upload failed: ${uploadError.message}`);
+          setUploading(false);
+          return;
+        }
+      } catch (err: any) {
+        console.error('Condition upload crashed:', err);
+        setUploading(false);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
+
+      if (!publicUrlData?.publicUrl) {
+        console.error('Failed to retrieve public URL');
+        setError('Failed to retrieve public URL for uploaded file.');
+        setUploading(false);
+        return;
+      }
+
+      setConditionImageUrl(publicUrlData.publicUrl);
+      proceedToNextStep();
       return;
     }
 
@@ -272,6 +330,8 @@ export default function InspectionWizard({
           deposit_status: 'pending',
           guest_ip: ipAddress,
           user_agent: userAgent,
+          condition_comment: conditionComment,
+          condition_image_url: conditionImageUrl,
         })
         .select()
         .single();
@@ -319,6 +379,8 @@ export default function InspectionWizard({
           <p className="text-sm text-gray-600">Please provide the guest information before starting the inspection.</p>
         ) : isWaiverStep ? (
           <p className="text-sm text-gray-600">Please review and agree to the liability terms before continuing.</p>
+        ) : isConditionStep ? (
+          <p className="text-sm text-gray-600">Let us know about any pre-existing damage before the inspection photos.</p>
         ) : (
           <p className="text-sm text-gray-600">
             Please take a clear photo of the {photoLabel.toLowerCase()} of the asset.
@@ -392,6 +454,47 @@ export default function InspectionWizard({
             />
             <span>I have read and agree to the Waiver of Liability.</span>
           </label>
+        </div>
+      ) : isConditionStep ? (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700" htmlFor="condition-comment">
+              Condition Notes
+            </label>
+            <textarea
+              id="condition-comment"
+              value={conditionComment}
+              onChange={(event) => setConditionComment(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-black focus:outline-none"
+              placeholder="Describe any existing damage (optional)..."
+              rows={4}
+            />
+          </div>
+          <div className="space-y-2">
+            <label
+              className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition"
+              htmlFor="condition-photo"
+            >
+              {previewUrl ? (
+                <div className="relative w-full h-full">
+                  <Image src={previewUrl} alt="Damage photo preview" fill className="object-cover rounded-lg" />
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 space-y-2">
+                  <p className="text-lg font-medium">Upload Damage Photo (Optional)</p>
+                  <p className="text-xs">Tap to capture with your camera</p>
+                </div>
+              )}
+            </label>
+            <input
+              id="condition-photo"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
