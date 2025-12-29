@@ -32,7 +32,7 @@ export default function LoginPage() {
             </p>
             <h1 className="text-3xl font-semibold text-white">Welcome Back</h1>
             <p className="text-sm text-slate-400">
-              Sign in to manage your EV fleet dashboard.
+              Sign in to manage your fleet dashboard.
             </p>
           </div>
 
