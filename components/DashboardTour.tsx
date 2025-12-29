@@ -38,13 +38,13 @@ const TOUR_STEPS: TourStep[] = [
   {
     title: "Protection Overview",
     description:
-      "Your Liability Shield. Quickly see if active rentals have signed waivers and uploaded photos. If this is red, take action.",
+      "Your Liability Shield. Monitors signed waivers, evidence photos, and open security deposits. If this section is highlighted, ensure you review and return guest deposits in a timely manner.",
     icon: Shield,
   },
   {
     title: "Business Performance",
     description:
-      "The Bottom Line. Track your revenue against maintenance costs to see your true Net Profit.",
+      "The Bottom Line. Tracks total rides and estimated revenue. Note that revenue figures are based on your fleet's pricing configuration and the guest's self-reported length of stay.",
     icon: TrendingUp,
   },
   {
