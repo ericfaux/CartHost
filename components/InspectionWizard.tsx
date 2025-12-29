@@ -344,11 +344,11 @@ export default function InspectionWizard({
         return;
       }
 
-      try {
-        await sendWelcomeSms(data.id);
-      } catch (err) {
-        console.error('Failed to send welcome SMS:', err);
-      }
+      // try {
+      //   await sendWelcomeSms(data.id);
+      // } catch (err) {
+      //   console.error('Failed to send welcome SMS:', err);
+      // }
 
       onComplete(data.id);
       return;
