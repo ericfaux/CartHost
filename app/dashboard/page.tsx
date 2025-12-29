@@ -2,14 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CarFront,
-  CheckCircle,
-  Circle,
-  History,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
+import DashboardTour from "../../components/DashboardTour";
 import FinancialSection from "../../components/FinancialSection";
 import ProtectionOverview from "../../components/ProtectionOverview";
 import DashboardDateFilter from "../../components/DashboardDateFilter";
@@ -42,12 +36,6 @@ type Rental = {
 
 type ServiceLog = {
   cost: number | null;
-};
-
-type HostProfile = {
-  show_financial_tiles?: boolean | null;
-  phone_number?: string | null;
-  full_name?: string | null;
 };
 
 type CartHealth = {
@@ -130,103 +118,6 @@ function getPeriodStartDate(period: DashboardPeriod) {
   const start = new Date(today);
   start.setDate(start.getDate() - 30);
   return start;
-}
-
-function OnboardingGuide({
-  carts,
-  rentals,
-  profile,
-}: {
-  carts: Cart[];
-  rentals: Rental[];
-  profile: HostProfile | null;
-}) {
-  const step1Assets = carts.length > 0;
-  const step2Profile = Boolean(profile?.phone_number?.trim());
-  const step3Rental = rentals.length > 0;
-
-  const completedSteps = [step1Assets, step2Profile, step3Rental].filter(Boolean)
-    .length;
-
-  if (completedSteps === 3) return null;
-
-  const progress = Math.round((completedSteps / 3) * 100);
-
-  const steps = [
-    {
-      title: "Add your first vehicle",
-      description: "",
-      href: "/dashboard/fleet",
-      completed: step1Assets,
-    },
-    {
-      title: "Set up support contact info",
-      description: "",
-      href: "/dashboard/settings",
-      completed: step2Profile,
-    },
-    {
-      title: "Complete your first rental",
-      description: "Print a QR code and scan it to test the flow.",
-      href: null,
-      completed: step3Rental,
-    },
-  ];
-
-  return (
-    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-lg font-bold text-gray-900">
-            Welcome to CartHost! Let's get your fleet running.
-          </p>
-          <p className="mt-1 text-sm text-blue-900/80">
-            Knock out these steps to bring your dashboard to life.
-          </p>
-        </div>
-        <div className="text-sm font-semibold text-blue-900">{progress}% Complete</div>
-      </div>
-
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white shadow-inner">
-        <div
-          className="h-full bg-blue-600 transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="mt-5 space-y-3">
-        {steps.map((step) => (
-          <div
-            key={step.title}
-            className="flex items-start gap-3 rounded-xl bg-white/60 px-4 py-3"
-          >
-            <div className="pt-0.5">
-              {step.completed ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-gray-300" />
-              )}
-            </div>
-            <div className="flex-1">
-              {step.href ? (
-                <Link
-                  href={step.href}
-                  className="text-sm font-semibold text-blue-900 underline-offset-2 hover:underline"
-                >
-                  {step.title}
-                </Link>
-              ) : (
-                <p className="text-sm font-semibold text-blue-900">{step.title}</p>
-              )}
-              {step.description ? (
-                <p className="text-xs text-blue-900/80">{step.description}</p>
-              ) : null}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export default async function DashboardHome(props: {
@@ -408,11 +299,7 @@ export default async function DashboardHome(props: {
         <p className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</p>
       </div>
 
-      <OnboardingGuide
-        carts={typedCarts}
-        rentals={typedRentals}
-        profile={profile as HostProfile | null}
-      />
+      <DashboardTour carts={typedCarts} rentals={typedRentals} profile={profile} />
 
       <div className="space-y-3">
         <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
