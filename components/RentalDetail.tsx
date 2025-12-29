@@ -18,6 +18,8 @@ type Rental = {
   carts?: {
     name?: string | null;
   } | null;
+  condition_comment?: string | null;
+  condition_image_url?: string | null;
 };
 
 const WAIVER_TEXT = `GOLF CART RENTAL AGREEMENT AND WAIVER OF LIABILITY
@@ -118,35 +120,6 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
           <div className="space-y-6">
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Pre-Ride</h2>
-                <p className="text-sm text-gray-500">First four photos</p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {preRidePhotos.map((photo, index) => (
-                  <button
-                    key={`${photo}-${index}`}
-                    type="button"
-                    onClick={() => setSelectedImage(photo)}
-                    className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:opacity-90 cursor-pointer"
-                    aria-label={`Open pre-ride photo ${index + 1}`}
-                  >
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={photo}
-                        alt={`Pre-ride photo ${index + 1}`}
-                        fill
-                        unoptimized
-                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover"
-                      />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Legal Agreement
                 </h2>
@@ -231,6 +204,72 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                     Not Signed
                   </span>
                 )}
+              </div>
+            </section>
+
+            {(rental.condition_comment || rental.condition_image_url) && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Guest-Reported Issues</h2>
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                    Pre-Existing Damage
+                  </span>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-amber-50/50 p-4 shadow-sm">
+                  {rental.condition_comment && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Guest Note</p>
+                      <p className="mt-1 text-sm text-gray-900">{rental.condition_comment}</p>
+                    </div>
+                  )}
+
+                  {rental.condition_image_url && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Evidence Photo</p>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImage(rental.condition_image_url!)}
+                        className="group relative h-48 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition hover:opacity-90 sm:w-64"
+                      >
+                        <Image
+                          src={rental.condition_image_url}
+                          alt="Guest reported damage"
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Pre-Ride</h2>
+                <p className="text-sm text-gray-500">First four photos</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {preRidePhotos.map((photo, index) => (
+                  <button
+                    key={`${photo}-${index}`}
+                    type="button"
+                    onClick={() => setSelectedImage(photo)}
+                    className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:opacity-90 cursor-pointer"
+                    aria-label={`Open pre-ride photo ${index + 1}`}
+                  >
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={photo}
+                        alt={`Pre-ride photo ${index + 1}`}
+                        fill
+                        unoptimized
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  </button>
+                ))}
               </div>
             </section>
 
