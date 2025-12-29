@@ -235,6 +235,8 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                           src={rental.condition_image_url}
                           alt="Guest reported damage"
                           fill
+                          unoptimized
+                          sizes="(min-width: 640px) 50vw, 25vw"
                           className="object-cover"
                         />
                       </button>
