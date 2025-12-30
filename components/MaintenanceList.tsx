@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Search, Filter, Calendar, Check, X, Edit2 } from "lucide-react";
+import { Search, Calendar, Check, X, Edit2, Wrench } from "lucide-react";
 import { updateServiceCost } from "../app/dashboard/maintenance/actions";
+import { SearchInput, Select } from "./ui/Input";
+import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "./ui/Table";
+import { Badge } from "./ui/Badge";
+import { IconButton } from "./ui/Button";
+import { EmptyState } from "./ui/EmptyState";
 
 type ServiceLog = {
   id?: string;
@@ -44,7 +49,7 @@ function formatCost(cost?: number | null) {
 }
 
 const SERVICE_TYPES = [
-  { value: "all", label: "All" },
+  { value: "all", label: "All Types" },
   { value: "tire_rotation", label: "Tire Rotation" },
   { value: "battery_check", label: "Battery Check" },
   { value: "oil_change", label: "Oil Change" },
@@ -52,6 +57,19 @@ const SERVICE_TYPES = [
   { value: "general", label: "General" },
   { value: "repair", label: "Repair" },
 ];
+
+const getServiceTypeBadge = (type?: string | null) => {
+  switch (type) {
+    case "repair":
+      return <Badge variant="danger">{formatType(type)}</Badge>;
+    case "battery_check":
+      return <Badge variant="warning">{formatType(type)}</Badge>;
+    case "general":
+      return <Badge variant="neutral">{formatType(type)}</Badge>;
+    default:
+      return <Badge variant="active">{formatType(type)}</Badge>;
+  }
+};
 
 export default function MaintenanceList({ logs }: MaintenanceListProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,147 +120,132 @@ export default function MaintenanceList({ logs }: MaintenanceListProps) {
 
   if (!logs || logs.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
-        No maintenance records found.
-      </div>
+      <EmptyState
+        icon={<Wrench className="h-6 w-6" />}
+        title="No maintenance records found"
+        description="Start logging service records to track your fleet's maintenance history and costs."
+      />
     );
   }
 
   return (
     <div className="space-y-4">
       {/* Filters Header */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search cart or notes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+      <div className="dossier-panel p-4">
+        <div className="flex flex-wrap items-end gap-4">
+          {/* Search Input */}
+          <div className="flex-1 min-w-[200px]">
+            <SearchInput
+              placeholder="Search cart or notes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        {/* Date Input */}
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+          {/* Date Input */}
+          <div className="w-auto">
+            <label className="dossier-label">Date</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted pointer-events-none" />
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="dossier-input pl-10 w-auto"
+              />
+            </div>
+          </div>
 
-        {/* Type Select */}
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-gray-50 py-2 pl-4 pr-8 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          {SERVICE_TYPES.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
+          {/* Type Select */}
+          <div className="w-auto min-w-[160px]">
+            <Select
+              label="Service Type"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              options={SERVICE_TYPES}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        {filteredLogs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            No records match your filters.
-          </div>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Cart Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Service Type
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Cost
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Notes
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredLogs.map((log) => (
-                <tr
-                  key={log.id || `${log.service_date}-${log.carts?.name}`}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {formatDate(log.service_date ?? undefined)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
-                    {log.carts?.name || "-"}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                    {formatType(log.service_type)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
-                    {editingId === log.id ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-24 rounded border border-gray-300 px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          disabled={isPending}
+      {filteredLogs.length === 0 ? (
+        <div className="dossier-panel p-8 text-center">
+          <p className="text-sm text-ink-subtle">No records match your filters.</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHead>
+            <tr>
+              <TableHeaderCell>Date</TableHeaderCell>
+              <TableHeaderCell>Asset</TableHeaderCell>
+              <TableHeaderCell>Service Type</TableHeaderCell>
+              <TableHeaderCell align="right">Cost</TableHeaderCell>
+              <TableHeaderCell>Notes</TableHeaderCell>
+            </tr>
+          </TableHead>
+          <TableBody>
+            {filteredLogs.map((log) => (
+              <TableRow key={log.id || `${log.service_date}-${log.carts?.name}`}>
+                <TableCell mono>
+                  {formatDate(log.service_date ?? undefined)}
+                </TableCell>
+                <TableCell bold>
+                  {log.carts?.name || "-"}
+                </TableCell>
+                <TableCell>
+                  {getServiceTypeBadge(log.service_type)}
+                </TableCell>
+                <TableCell align="right">
+                  {editingId === log.id ? (
+                    <div className="flex items-center justify-end gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-24 dossier-input text-right py-1"
+                        disabled={isPending}
+                      />
+                      <IconButton
+                        icon={<Check className="h-4 w-4" />}
+                        label="Save"
+                        onClick={() => handleSave(log.id!)}
+                        disabled={isPending}
+                      />
+                      <IconButton
+                        icon={<X className="h-4 w-4" />}
+                        label="Cancel"
+                        onClick={handleCancelEdit}
+                        disabled={isPending}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-mono font-semibold">{formatCost(log.cost ?? undefined)}</span>
+                      {log.id && (
+                        <IconButton
+                          icon={<Edit2 className="h-3.5 w-3.5" />}
+                          label="Edit cost"
+                          size="sm"
+                          onClick={() => handleStartEdit(log)}
                         />
-                        <button
-                          onClick={() => handleSave(log.id!)}
-                          disabled={isPending}
-                          className="rounded p-1 text-green-600 hover:bg-green-50 disabled:opacity-50"
-                          title="Save"
-                        >
-                          <Check className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          disabled={isPending}
-                          className="rounded p-1 text-gray-400 hover:bg-gray-100"
-                          title="Cancel"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-end gap-2">
-                        <span>{formatCost(log.cost ?? undefined)}</span>
-                        {log.id && (
-                          <button
-                            onClick={() => handleStartEdit(log)}
-                            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            title="Edit cost"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {log.notes?.length ? log.notes : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                      )}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell muted>
+                  {log.notes?.length ? (
+                    <span className="line-clamp-2">{log.notes}</span>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

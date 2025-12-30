@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { AlertCircle, FileCheck, Shield, ShieldCheck, UserCog } from "lucide-react";
+import { AlertCircle, FileCheck, Shield, ShieldCheck, UserCog, ArrowRight } from "lucide-react";
 import type { DashboardPeriod } from "./DashboardCharts";
+import { SectionHeader } from "./ui/Panel";
+import { Badge } from "./ui/Badge";
+import { ProgressRing } from "./ui/Meters";
 
 export type ProtectionOverviewProps = {
   period: DashboardPeriod;
@@ -35,12 +38,6 @@ export default function ProtectionOverview({
     currency: "USD",
   });
 
-  const depositTileStyles = hasDepositsHeld
-    ? "border-amber-200 bg-amber-50"
-    : "border-gray-200 bg-white";
-  const depositHeadingColor = hasDepositsHeld ? "text-amber-900" : "text-gray-900";
-  const depositTextColor = hasDepositsHeld ? "text-amber-700" : "text-gray-500";
-
   const periodLabel =
     period === "90d"
       ? "Last 3 months"
@@ -48,113 +45,134 @@ export default function ProtectionOverview({
         ? "Year to Date"
         : "Last 30 days";
 
+  const hasOpenSessions = activeCount > 0 || reviewCount > 0;
+
   return (
-    <section className="space-y-3">
-      <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-        Protection Overview
-      </h2>
+    <section className="space-y-4">
+      <SectionHeader
+        title="Protection Overview"
+        subtitle="Liability monitoring and compliance status"
+      />
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Open Sessions Tile */}
         <Link
           href="/dashboard/history?filter=open"
-          className="block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+          className={`
+            group stat-tile transition-all hover:-translate-y-0.5 hover:shadow-dossier-elevated
+            ${hasOpenSessions ? "border-accent-warning/30 bg-amber-50/50" : ""}
+          `}
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className="stat-tile-header">
             <div>
-              <p className="text-sm font-medium text-gray-500">Open Sessions</p>
+              <p className="stat-tile-label">Open Sessions</p>
               <div className="mt-2 flex items-baseline gap-x-2">
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-ink tabular-nums">
                   {activeCount}
                 </span>
-                <span className="text-sm font-medium text-gray-500">Active</span>
-                <span className="text-gray-300">|</span>
-                <span className="text-2xl font-bold text-amber-600">
+                <span className="text-sm font-medium text-ink-subtle">Active</span>
+                <span className="text-rule">|</span>
+                <span className="text-2xl font-bold text-accent-warning tabular-nums">
                   {reviewCount}
                 </span>
-                <span className="text-sm font-medium text-amber-600">
+                <span className="text-sm font-medium text-accent-warning">
                   Review
                 </span>
               </div>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
-              <AlertCircle className="h-6 w-6 text-amber-600" />
+            <div className={`stat-tile-icon ${hasOpenSessions ? "bg-amber-100" : "bg-paper"}`}>
+              <AlertCircle className={`h-5 w-5 ${hasOpenSessions ? "text-accent-warning" : "text-ink-muted"}`} />
             </div>
           </div>
-          <p className="mt-2 text-sm text-gray-500">Click to view details.</p>
+          <div className="mt-2 flex items-center gap-1 text-dossier-caption text-ink-muted group-hover:text-accent-info">
+            <span>View details</span>
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </Link>
 
-        <div className={`rounded-2xl border p-6 shadow-sm ${depositTileStyles}`}>
-          <div className="flex items-start justify-between gap-4">
+        {/* Deposits Held Tile */}
+        <div
+          className={`
+            stat-tile
+            ${hasDepositsHeld ? "border-accent-warning/30 bg-amber-50/50" : ""}
+          `}
+        >
+          <div className="stat-tile-header">
             <div>
-              <p className={`text-sm font-medium ${depositHeadingColor}`}>Deposits Held</p>
-              <p className={`mt-2 text-3xl font-bold tracking-tight ${depositHeadingColor}`}>
+              <p className={`stat-tile-label ${hasDepositsHeld ? "text-amber-800" : ""}`}>
+                Deposits Held
+              </p>
+              <p className={`stat-tile-value ${hasDepositsHeld ? "text-amber-900" : ""}`}>
                 {currencyFormatter.format(totalDepositsHeld)}
               </p>
             </div>
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-xl ${hasDepositsHeld ? "bg-amber-100" : "bg-gray-50"}`}
-            >
-              <Shield className={`h-6 w-6 ${hasDepositsHeld ? "text-amber-700" : "text-gray-600"}`} />
+            <div className={`stat-tile-icon ${hasDepositsHeld ? "bg-amber-100" : "bg-paper"}`}>
+              <Shield className={`h-5 w-5 ${hasDepositsHeld ? "text-amber-700" : "text-ink-muted"}`} />
             </div>
           </div>
           {hasDepositsHeld ? (
-            <p className={`mt-2 text-sm ${depositTextColor}`}>
-              Action Required: <Link href="/dashboard/history" className="font-semibold underline">Manage in History</Link>
-            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <Badge variant="warning">Action Required</Badge>
+              <Link
+                href="/dashboard/history"
+                className="text-xs font-semibold text-accent-warning hover:underline"
+              >
+                Manage
+              </Link>
+            </div>
           ) : (
-            <p className={`mt-2 text-sm ${depositTextColor}`}>No funds currently held.</p>
+            <p className="stat-tile-footer">No funds currently held.</p>
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
+        {/* Fully Documented Tile */}
+        <div className="stat-tile">
+          <div className="stat-tile-header">
             <div>
-              <p className="text-sm font-medium text-gray-500">
-                Fully Documented
-              </p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">
-                {safeRate}%
-              </p>
+              <p className="stat-tile-label">Fully Documented</p>
+              <p className="stat-tile-value">{safeRate}%</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-              <FileCheck className="h-6 w-6 text-blue-600" />
-            </div>
+            <ProgressRing
+              percentage={safeRate}
+              size={44}
+              strokeWidth={4}
+              className="flex-shrink-0"
+            />
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            {documentedGuest} of {documentedTotal} completed rides ({periodLabel})
+          <p className="stat-tile-footer">
+            <span className="font-mono text-xs">{documentedGuest}/{documentedTotal}</span> rides ({periodLabel})
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
+        {/* Protected Rides Tile */}
+        <div className="stat-tile">
+          <div className="stat-tile-header">
             <div>
-              <p className="text-sm font-medium text-gray-500">Protected Rides</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">
-                {protectedCount}
-              </p>
+              <p className="stat-tile-label">Protected Rides</p>
+              <p className="stat-tile-value">{protectedCount}</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50">
-              <ShieldCheck className="h-6 w-6 text-green-600" />
+            <div className="stat-tile-icon bg-accent-ops/10">
+              <ShieldCheck className="h-5 w-5 text-accent-ops" />
             </div>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Sessions started in the {periodLabel.toLowerCase()}.
+          <p className="stat-tile-footer">
+            Sessions in the {periodLabel.toLowerCase()}.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
+        {/* Manual Closures Tile */}
+        <div className="stat-tile">
+          <div className="stat-tile-header">
             <div>
-              <p className="text-sm font-medium text-gray-500">Manual Closures</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 tracking-tight">
-                {manualCount}
-              </p>
+              <p className="stat-tile-label">Manual Closures</p>
+              <p className="stat-tile-value">{manualCount}</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50">
-              <UserCog className="h-6 w-6 text-gray-600" />
+            <div className="stat-tile-icon bg-paper">
+              <UserCog className="h-5 w-5 text-ink-muted" />
             </div>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Trips force-closed by host ({periodLabel}).
+          <p className="stat-tile-footer">
+            Force-closed by host ({periodLabel}).
           </p>
         </div>
       </div>

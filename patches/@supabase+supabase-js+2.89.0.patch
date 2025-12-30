@@ -1,0 +1,15 @@
+diff --git a/node_modules/@supabase/supabase-js/dist/index.mjs b/node_modules/@supabase/supabase-js/dist/index.mjs
+index 05b3b97..9e53c44 100644
+--- a/node_modules/@supabase/supabase-js/dist/index.mjs
++++ b/node_modules/@supabase/supabase-js/dist/index.mjs
+@@ -391,8 +391,8 @@ const createClient = (supabaseUrl, supabaseKey, options) => {
+ };
+ function shouldShowDeprecationWarning() {
+ 	if (typeof window !== "undefined") return false;
+-	if (typeof process === "undefined") return false;
+-	const processVersion = process["version"];
++	const _proc = globalThis["process"]; if (typeof _proc === "undefined") return false;
++	const processVersion = _proc["version"];
+ 	if (processVersion === void 0 || processVersion === null) return false;
+ 	const versionMatch = processVersion.match(/^v(\d+)\./);
+ 	if (!versionMatch) return false;

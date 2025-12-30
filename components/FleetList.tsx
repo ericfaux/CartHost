@@ -16,10 +16,16 @@ import {
   Shield,
   QrCode,
   Square,
+  Activity,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart, forceEndRental } from "../app/dashboard/actions";
 import QrCodeModal from "./QrCodeModal";
+import { PageHeader } from "./ui/Panel";
+import { Button, IconButton } from "./ui/Button";
+import { Badge } from "./ui/Badge";
+import { HealthIndicator, ServiceMeter } from "./ui/Meters";
+import { EmptyState } from "./ui/EmptyState";
 
 type Cart = {
   id: string;
@@ -91,62 +97,66 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
     }
   };
 
+  const getCartTypeConfig = (type?: string | null) => {
+    switch (type) {
+      case "gas":
+        return { icon: Fuel, bg: "bg-accent-warning/10", color: "text-accent-warning" };
+      case "bike":
+        return { icon: Bike, bg: "bg-purple-50", color: "text-purple-600" };
+      case "hot_tub":
+        return { icon: Bath, bg: "bg-cyan-50", color: "text-cyan-600" };
+      default:
+        return { icon: Zap, bg: "bg-accent-info/10", color: "text-accent-info" };
+    }
+  };
+
+  const getHealthStatus = (trips: number): "healthy" | "due_soon" | "overdue" => {
+    if (trips >= 30) return "overdue";
+    if (trips >= 20) return "due_soon";
+    return "healthy";
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Fleet</h1>
-          <p className="text-sm text-gray-500">Manage your vehicles and access codes.</p>
-        </div>
-        
-        {/* We pass a custom trigger button to the modal to make it look nice */}
-        <AddCartModal 
-          trigger={(open) => (
-            <button
-              onClick={open}
-              className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-all active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              Add Asset
-            </button>
-          )}
-        />
-      </div>
+      <PageHeader
+        title="My Fleet"
+        subtitle="Manage your vehicles, access codes, and track status"
+        actions={
+          <AddCartModal
+            trigger={(open) => (
+              <Button variant="primary" onClick={open} icon={<Plus className="h-4 w-4" />}>
+                Add Asset
+              </Button>
+            )}
+          />
+        }
+      />
 
       {carts.length === 0 ? (
-        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
-            <CarFront className="h-6 w-6 text-gray-400" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold text-gray-900">No vehicles yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by adding your first golf cart.</p>
-        </div>
+        <EmptyState
+          icon={<CarFront className="h-6 w-6" />}
+          title="No vehicles yet"
+          description="Get started by adding your first golf cart, e-bike, or other rentable asset."
+          action={
+            <AddCartModal
+              trigger={(open) => (
+                <Button variant="ops" onClick={open} icon={<Plus className="h-4 w-4" />}>
+                  Add Your First Asset
+                </Button>
+              )}
+            />
+          }
+        />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {carts.map((cart) => {
-            const iconWrapperClass =
-              cart.type === "gas"
-                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
-                : cart.type === "bike"
-                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600"
-                : cart.type === "hot_tub"
-                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600"
-                : "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600";
+            const typeConfig = getCartTypeConfig(cart.type);
+            const TypeIcon = typeConfig.icon;
+            const tripsCount = typeof cart.tripsSinceService === "number" ? cart.tripsSinceService : 0;
+            const healthStatus = getHealthStatus(tripsCount);
 
-            const cartIcon =
-              cart.type === "gas" ? (
-                <Fuel className="h-6 w-6" />
-              ) : cart.type === "bike" ? (
-                <Bike className="h-6 w-6" />
-              ) : cart.type === "hot_tub" ? (
-                <Bath className="h-6 w-6" />
-              ) : (
-                <Zap className="h-6 w-6" />
-              );
-
-            const depositAmount =
-              typeof cart.deposit_amount === "number" ? cart.deposit_amount : 0;
+            const depositAmount = typeof cart.deposit_amount === "number" ? cart.deposit_amount : 0;
             const showDepositBadge = depositAmount > 0;
             const formattedDeposit = showDepositBadge
               ? depositAmount.toLocaleString("en-US", {
@@ -155,165 +165,136 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 })
               : null;
 
-            const tripsCount =
-              typeof cart.tripsSinceService === "number" ? cart.tripsSinceService : 0;
-            const isOverdue = tripsCount >= 30;
-            const isDueSoon = tripsCount >= 20 && tripsCount < 30;
-            const tripsTextClass = isOverdue
-              ? "text-red-600"
-              : isDueSoon
-              ? "text-amber-600"
-              : "text-gray-500";
-            const tripsStatusSuffix = isOverdue
-              ? " • Overdue"
-              : isDueSoon
-              ? " • Due Soon"
-              : "";
+            return (
+              <div
+                key={cart.id}
+                className="group dossier-panel p-5 flex flex-col transition-all hover:shadow-dossier-elevated"
+              >
+                {/* Header Row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-dossier-control ${typeConfig.bg}`}>
+                    <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
+                  </div>
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <IconButton
+                      icon={<QrCode className="h-4 w-4" />}
+                      label="Generate QR Code"
+                      onClick={() => setQrAsset(cart)}
+                    />
+                    <IconButton
+                      icon={<Edit2 className="h-4 w-4" />}
+                      label="Edit"
+                      onClick={() => handleEdit(cart)}
+                    />
+                    <IconButton
+                      icon={<Trash2 className="h-4 w-4" />}
+                      label="Delete"
+                      variant="danger"
+                      onClick={() => handleDelete(cart.id)}
+                      disabled={deletingId === cart.id}
+                    />
+                  </div>
+                </div>
 
-              return (
-                <div
-                  key={cart.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
-                >
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <div className={iconWrapperClass}>{cartIcon}</div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => setQrAsset(cart)}
-                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-blue-50 hover:text-blue-600 group-hover:opacity-100"
-                        >
-                          <QrCode className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(cart)}
-                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-gray-50 hover:text-gray-900 group-hover:opacity-100"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(cart.id)}
-                          disabled={deletingId === cart.id}
-                          className="rounded-md p-2 text-gray-400 opacity-0 transition-colors transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
+                {/* Name & Status */}
+                <h3 className="mt-4 font-heading text-lg font-bold text-ink truncate">
+                  {cart.name}
+                </h3>
 
-                    <h3 className="mt-4 text-lg font-bold text-gray-900 truncate">
-                      {cart.name}
-                    </h3>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {/* Status Badge */}
+                  {cart.status === "inactive" ? (
+                    <Badge variant="neutral">Inactive</Badge>
+                  ) : cart.is_currently_rented ? (
+                    <Badge variant="active" pulse>In Use</Badge>
+                  ) : (
+                    <Badge variant="success">Available</Badge>
+                  )}
+
+                  {/* Upsell Price */}
                   {cart.access_type === "upsell" && cart.upsell_price !== null && (
-                    <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                      <Banknote className="h-3.5 w-3.5" />
-                      <span>
-                        ${cart.upsell_price}
-                        {cart.upsell_unit ? ` / ${cart.upsell_unit}` : ""}
-                      </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-dossier-chip bg-accent-success/10 text-accent-success text-xs font-semibold">
+                      <Banknote className="h-3 w-3" />
+                      ${cart.upsell_price}
+                      {cart.upsell_unit ? ` / ${cart.upsell_unit}` : ""}
+                    </span>
+                  )}
+
+                  {/* Deposit Badge */}
+                  {showDepositBadge && formattedDeposit && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-dossier-chip bg-ink/5 text-ink-subtle text-xs font-semibold">
+                      <Shield className="h-3 w-3" />
+                      ${formattedDeposit}
+                    </span>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="mt-4 flex-1 space-y-3">
+                  {/* Force End Button */}
+                  {cart.is_currently_rented && cart.active_rental_id && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleForceEnd(cart.active_rental_id!)}
+                      disabled={endingId === cart.active_rental_id}
+                      loading={endingId === cart.active_rental_id}
+                      icon={<Square className="h-3.5 w-3.5 fill-current" />}
+                    >
+                      Manually End Session
+                    </Button>
+                  )}
+
+                  {/* Access Codes */}
+                  {(cart.key_code || cart.access_code) && (
+                    <div className="flex flex-wrap gap-3 p-3 bg-paper rounded-dossier-control border border-rule">
+                      {cart.key_code && (
+                        <div className="flex items-center gap-2">
+                          <Key className="h-4 w-4 text-ink-muted" />
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Key</p>
+                            <p className="font-mono text-sm font-semibold text-ink">{cart.key_code}</p>
+                          </div>
+                        </div>
+                      )}
+                      {cart.access_code && (
+                        <div className="flex items-center gap-2">
+                          <Lock className="h-4 w-4 text-ink-muted" />
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Lock</p>
+                            <p className="font-mono text-sm font-semibold text-ink">{cart.access_code}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
-                  <div className="mt-2 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
-                    style={{
-                      borderColor:
-                        cart.status === "inactive"
-                          ? "#e5e7eb"
-                          : cart.is_currently_rented
-                          ? "#bfdbfe"
-                          : "#bbf7d0",
-                      backgroundColor:
-                        cart.status === "inactive"
-                          ? "#f9fafb"
-                          : cart.is_currently_rented
-                          ? "#eff6ff"
-                          : "#f0fdf4",
-                      color:
-                        cart.status === "inactive"
-                          ? "#4b5563"
-                          : cart.is_currently_rented
-                          ? "#1d4ed8"
-                          : "#15803d",
-                    }}
-                  >
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${cart.is_currently_rented ? "animate-pulse" : ""}`}
-                      style={{
-                        backgroundColor:
-                          cart.status === "inactive"
-                            ? "#9ca3af"
-                            : cart.is_currently_rented
-                            ? "#3b82f6"
-                            : "#22c55e",
-                      }}
-                    />
-                    {cart.status === "inactive"
-                      ? "Inactive"
-                      : cart.is_currently_rented
-                      ? "In Use"
-                      : "Not in Use"}
-                  </div>
-                  {showDepositBadge && formattedDeposit && (
-                    <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      <Shield className="h-3.5 w-3.5 text-slate-600" />
-                      <span>{`Dep: $${formattedDeposit}`}</span>
+
+                  {/* Access Instructions */}
+                  {cart.access_instructions && (
+                    <div className="p-3 bg-paper rounded-dossier-control border border-rule">
+                      <p className="text-xs text-ink-subtle">{cart.access_instructions}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6">
-                  {cart.is_currently_rented && cart.active_rental_id && (
-                    <button
-                      onClick={() => handleForceEnd(cart.active_rental_id!)}
-                      disabled={endingId === cart.active_rental_id}
-                      className="w-full mt-4 flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 border border-red-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {endingId === cart.active_rental_id ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-                      ) : (
-                        <Square className="h-4 w-4 fill-current" />
-                      )}
-                      <span>Manually End Session</span>
-                    </button>
-                  )}
-                  {(cart.key_code || cart.access_code) && (
-                    <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-                      <div className="flex flex-col gap-2 text-gray-500 sm:flex-row sm:items-center sm:gap-4">
-                        {cart.key_code && (
-                          <div className="flex items-center gap-2">
-                            <Key className="h-4 w-4" />
-                            <div className="flex flex-col text-xs font-semibold uppercase tracking-wider text-gray-600">
-                              <span>Key Code</span>
-                              <span className="font-mono text-base normal-case text-gray-900">{cart.key_code}</span>
-                            </div>
-                          </div>
-                        )}
-                        {cart.access_code && (
-                          <div className="flex items-center gap-2">
-                            <Lock className="h-4 w-4" />
-                            <div className="flex flex-col text-xs font-semibold uppercase tracking-wider text-gray-600">
-                              <span>Access Code</span>
-                              <span className="font-mono text-base normal-case text-gray-900">{cart.access_code}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  <p className="mt-2 text-xs text-gray-500">
-                    Last Service:{" "}
-                    {cart.last_serviced_at
-                      ? new Date(cart.last_serviced_at).toLocaleDateString()
-                      : "Not recorded"}
-                  </p>
-                  <p className={`mt-1 text-xs ${tripsTextClass}`}>
-                    Trips since service: {tripsCount}
-                    {tripsStatusSuffix}
-                  </p>
-                  {cart.access_instructions && (
-                    <div className="mt-3 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700 border border-gray-100">
-                      {cart.access_instructions}
-                    </div>
-                  )}
+                {/* Footer - Service Info */}
+                <div className="mt-4 pt-4 border-t border-rule">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+                      Service Status
+                    </span>
+                    <HealthIndicator status={healthStatus} />
+                  </div>
+                  <ServiceMeter current={tripsCount} threshold={30} showStatus={false} />
+                  <div className="mt-2 flex items-center justify-between text-xs text-ink-muted">
+                    <span>
+                      Last: {cart.last_serviced_at
+                        ? new Date(cart.last_serviced_at).toLocaleDateString()
+                        : "Never"}
+                    </span>
+                    <span className="font-mono">{tripsCount}/30 trips</span>
+                  </div>
                 </div>
               </div>
             );

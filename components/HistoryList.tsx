@@ -9,9 +9,17 @@ import {
   X,
   Edit2,
   Loader2,
+  FileSearch,
+  ExternalLink,
 } from "lucide-react";
 import { updateRentalRevenue, updateDepositStatus } from "../app/dashboard/history/actions";
 import { forceEndRental } from "../app/dashboard/actions";
+import { PageHeader } from "./ui/Panel";
+import { SearchInput } from "./ui/Input";
+import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "./ui/Table";
+import { Badge } from "./ui/Badge";
+import { Button, IconButton } from "./ui/Button";
+import { EmptyState } from "./ui/EmptyState";
 
 const revenueFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -85,35 +93,19 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     const normalized = (rental.status || "").toLowerCase();
 
     if (normalized === "active") {
-      return (
-        <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-100">
-          Active
-        </span>
-      );
+      return <Badge variant="active" pulse>Active</Badge>;
     }
 
     if (normalized === "needs_review") {
-      return (
-        <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-100">
-          Needs Review
-        </span>
-      );
+      return <Badge variant="warning" pulse>Needs Review</Badge>;
     }
 
     const closure = (rental.closure_source || "").toLowerCase();
     if (closure === "host") {
-      return (
-        <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
-          Host Override
-        </span>
-      );
+      return <Badge variant="neutral">Host Override</Badge>;
     }
 
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-100">
-        Completed
-      </span>
-    );
+    return <Badge variant="success">Completed</Badge>;
   };
 
   const handleSave = (rentalId: string) => {
@@ -214,33 +206,23 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
             type="number"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-24 dossier-input text-right py-1"
             step="0.01"
             min="0"
             disabled={isPending}
           />
-          <button
-            type="button"
+          <IconButton
+            icon={isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            label="Save"
             onClick={() => handleSave(rental.id)}
             disabled={isPending}
-            className="rounded p-1 text-green-600 hover:bg-green-50 disabled:opacity-50"
-            title="Save"
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            type="button"
+          />
+          <IconButton
+            icon={<X className="h-4 w-4" />}
+            label="Cancel"
             onClick={handleCancelEdit}
             disabled={isPending}
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-50"
-            title="Cancel"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          />
         </div>
       );
     }
@@ -248,27 +230,26 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
     return (
       <div className="flex items-center gap-2">
         {typeof rental.revenue === "number" && rental.revenue > 0 ? (
-          <span className="font-medium text-emerald-600">
+          <span className="font-mono font-semibold text-accent-success">
             +{revenueFormatter.format(rental.revenue)}
           </span>
         ) : (
-          <span className="text-gray-400">-</span>
+          <span className="text-ink-muted">-</span>
         )}
-        <button
-          type="button"
+        <IconButton
+          icon={<Edit2 className="h-3.5 w-3.5" />}
+          label="Edit revenue"
+          size="sm"
           onClick={() => handleStartEdit(rental)}
-          className="rounded p-1 text-gray-400 opacity-0 transition hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
-          title="Edit revenue"
-        >
-          <Edit2 className="h-3.5 w-3.5" />
-        </button>
+          className="opacity-0 group-hover:opacity-100"
+        />
       </div>
     );
   };
 
   const handleDepositChange = (rentalId: string, newStatus: string) => {
     setUpdatingDepositId(rentalId);
-    
+
     startDepositTransition(async () => {
       try {
         const result = await updateDepositStatus(rentalId, newStatus);
@@ -286,86 +267,58 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
   const renderDepositActions = (rental: Rental) => {
     // Condition 1: No deposit or deposit <= 0
     if (!rental.deposit_amount || rental.deposit_amount <= 0) {
-      return (
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">
-          Not Required
-        </span>
-      );
+      return <Badge variant="neutral">Not Required</Badge>;
     }
 
     // Condition 2: Has a deposit - render dropdown
-    const status = rental.deposit_status?.toLowerCase() || 'pending';
+    const status = rental.deposit_status?.toLowerCase() || "pending";
     const isUpdating = isDepositPending && updatingDepositId === rental.id;
-
-    // Color logic based on status
-    let bgColor = '';
-    let textColor = '';
-
-    switch (status) {
-      case 'pending':
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-700';
-        break;
-      case 'collected':
-        bgColor = 'bg-blue-100';
-        textColor = 'text-blue-700';
-        break;
-      case 'refunded':
-        bgColor = 'bg-green-100';
-        textColor = 'text-green-700';
-        break;
-      case 'withheld':
-        bgColor = 'bg-red-100';
-        textColor = 'text-red-700';
-        break;
-      default:
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-700';
-    }
 
     return (
       <div className="inline-flex items-center gap-1.5">
         <select
-          value={rental.deposit_status || 'pending'}
+          value={rental.deposit_status || "pending"}
           onChange={(e) => handleDepositChange(rental.id, e.target.value)}
           disabled={isUpdating}
-          className={`cursor-pointer appearance-none rounded-full border-0 px-3 py-1 pr-6 text-xs font-semibold ${bgColor} ${textColor} focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50`}
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.25rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
+          className="dossier-select py-1 pr-8 text-xs font-semibold"
         >
           <option value="pending">Pending</option>
           <option value="collected">Collected</option>
           <option value="refunded">Refunded</option>
           <option value="withheld">Applied to Damage</option>
         </select>
-        {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-gray-500" />}
+        {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-ink-muted" />}
       </div>
     );
   };
 
   if (rentals.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
-        No rental history yet.
-      </div>
+      <EmptyState
+        icon={<FileSearch className="h-6 w-6" />}
+        title="No rental history yet"
+        description="When guests complete rentals, their evidence records will appear here."
+      />
     );
   }
 
+  const tabs = [
+    { key: "all" as const, label: "All" },
+    { key: "open" as const, label: "Open" },
+    { key: "completed" as const, label: "Completed" },
+  ];
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Rental History</h1>
-        <p className="text-sm text-gray-500">Review past and active rentals.</p>
-      </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Evidence Locker"
+        subtitle="Review rental evidence, signed waivers, and damage documentation"
+      />
 
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2">
-        {(
-          [
-            { key: "all", label: "All" },
-            { key: "open", label: "Open" },
-            { key: "completed", label: "Completed" },
-          ] as const
-        ).map((tab) => {
+        {tabs.map((tab) => {
           const isActive =
             statusFilter === tab.key ||
             (tab.key === "open" &&
@@ -375,11 +328,13 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
               key={tab.key}
               type="button"
               onClick={() => handleTabClick(tab.key)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                isActive
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 ring-1 ring-inset ring-gray-200 hover:bg-gray-50"
-              }`}
+              className={`
+                px-4 py-2 text-sm font-semibold rounded-dossier-chip transition-colors
+                ${isActive
+                  ? "bg-ink text-surface"
+                  : "bg-surface text-ink border border-rule hover:bg-paper"
+                }
+              `}
             >
               {tab.label}
             </button>
@@ -388,110 +343,97 @@ export default function HistoryList({ rentals }: { rentals: Rental[] }) {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search guest or cart..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <div className="relative w-full lg:w-56">
-          <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+      <div className="dossier-panel p-4">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="flex-1">
+            <SearchInput
+              placeholder="Search guest or cart..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-full lg:w-56">
+            <label className="dossier-label">Date</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted pointer-events-none" />
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="dossier-input pl-10"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-100">
-          <thead className="bg-gray-50">
+      {/* Table */}
+      {filteredRentals.length === 0 ? (
+        <div className="dossier-panel p-8 text-center">
+          <p className="text-sm text-ink-subtle">No rentals match your filters.</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Cart Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Guest Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Revenue
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Deposit
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Action
-              </th>
+              <TableHeaderCell>Date</TableHeaderCell>
+              <TableHeaderCell>Asset</TableHeaderCell>
+              <TableHeaderCell>Guest</TableHeaderCell>
+              <TableHeaderCell align="right">Revenue</TableHeaderCell>
+              <TableHeaderCell>Deposit</TableHeaderCell>
+              <TableHeaderCell>Status</TableHeaderCell>
+              <TableHeaderCell align="right">Action</TableHeaderCell>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredRentals.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
-                  No rentals match your filters.
-                </td>
-              </tr>
-            ) : (
-              filteredRentals.map((rental) => (
-                <tr key={rental.id} className="group hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {formatDate(rental.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
-                    {rental.carts?.name || "-"}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                    {rental.guest_name || "Unknown"}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {renderRevenue(rental)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    {renderDepositActions(rental)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    {renderStatus(rental)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                    <div className="flex items-center justify-end gap-2">
-                      {(rental.status || "").toLowerCase() === "needs_review" && (
-                        <button
-                          type="button"
-                          onClick={() => handleClose(rental.id)}
-                          disabled={isClosingPending && closingId === rental.id}
-                          className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
-                        >
-                          {isClosingPending && closingId === rental.id ? "Closing..." : "Close"}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/dashboard/history/${rental.id}`)}
-                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+          </TableHead>
+          <TableBody>
+            {filteredRentals.map((rental) => (
+              <TableRow key={rental.id}>
+                <TableCell mono>
+                  {formatDate(rental.created_at)}
+                </TableCell>
+                <TableCell bold>
+                  {rental.carts?.name || "-"}
+                </TableCell>
+                <TableCell>
+                  {rental.guest_name || "Unknown"}
+                </TableCell>
+                <TableCell align="right">
+                  {renderRevenue(rental)}
+                </TableCell>
+                <TableCell>
+                  {renderDepositActions(rental)}
+                </TableCell>
+                <TableCell>
+                  {renderStatus(rental)}
+                </TableCell>
+                <TableCell align="right">
+                  <div className="flex items-center justify-end gap-2">
+                    {(rental.status || "").toLowerCase() === "needs_review" && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleClose(rental.id)}
+                        disabled={isClosingPending && closingId === rental.id}
+                        loading={isClosingPending && closingId === rental.id}
                       >
-                        View
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                        Close
+                      </Button>
+                    )}
+                    <Button
+                      variant="ops"
+                      size="sm"
+                      onClick={() => router.push(`/dashboard/history/${rental.id}`)}
+                      icon={<ExternalLink className="h-3.5 w-3.5" />}
+                    >
+                      View Evidence
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

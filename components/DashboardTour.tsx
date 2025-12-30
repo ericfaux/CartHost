@@ -10,7 +10,13 @@ import {
   LayoutGrid,
   Shield,
   TrendingUp,
+  Stamp,
+  ClipboardCheck,
+  ArrowRight,
+  X,
 } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Badge } from "./ui/Badge";
 
 export type DashboardTourProps = {
   carts: { id: string }[];
@@ -26,7 +32,7 @@ type TourStep = {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    title: "Welcome", 
+    title: "Welcome",
     description: "Your dashboard is ready. Let's show you how to protect your business.",
   },
   {
@@ -123,55 +129,88 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
     setCurrentStep(0);
   };
 
+  // Setup Docket (incomplete state)
   if (completedSteps < 3) {
     return (
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-lg font-bold text-gray-900">
-              Welcome to CartHost! Let's get your fleet running.
-            </p>
-            <p className="mt-1 text-sm text-blue-900/80">
-              Knock out these steps to bring your dashboard to life.
-            </p>
+      <div className="dossier-panel overflow-hidden">
+        {/* Docket Header Strip */}
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-rule bg-accent-info/5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-dossier-control bg-accent-info/10">
+              <ClipboardCheck className="h-5 w-5 text-accent-info" />
+            </div>
+            <div>
+              <h2 className="font-heading text-lg font-bold text-ink">Setup Docket</h2>
+              <p className="text-dossier-caption text-ink-subtle">
+                Complete these steps to activate your console
+              </p>
+            </div>
           </div>
-          <div className="text-sm font-semibold text-blue-900">{progress}% Complete</div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-sm font-semibold text-accent-info tabular-nums">
+              {progress}%
+            </span>
+            <Badge variant="active" style="chip">
+              {completedSteps}/3 Complete
+            </Badge>
+          </div>
         </div>
 
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white shadow-inner">
+        {/* Progress Bar */}
+        <div className="h-1 bg-rule">
           <div
-            className="h-full bg-blue-600 transition-all"
+            className="h-full bg-accent-info transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="mt-5 space-y-3">
-          {steps.map((step) => (
+        {/* Checklist Items */}
+        <div className="divide-y divide-rule">
+          {steps.map((step, index) => (
             <div
               key={step.title}
-              className="flex items-start gap-3 rounded-xl bg-white/60 px-4 py-3"
+              className={`flex items-start gap-4 px-6 py-4 transition-colors ${
+                step.completed ? "bg-accent-ops/5" : "hover:bg-paper"
+              }`}
             >
-              <div className="pt-0.5">
+              {/* Step Number / Check */}
+              <div className="flex-shrink-0 pt-0.5">
                 {step.completed ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-ops">
+                    <CheckCircle className="h-4 w-4 text-white" />
+                  </div>
                 ) : (
-                  <Circle className="h-5 w-5 text-gray-300" />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-rule bg-surface">
+                    <span className="font-mono text-xs font-bold text-ink-subtle">{index + 1}</span>
+                  </div>
                 )}
               </div>
-              <div className="flex-1">
-                {step.href ? (
-                  <Link
-                    href={step.href}
-                    className="text-sm font-semibold text-blue-900 underline-offset-2 hover:underline"
-                  >
-                    {step.title}
-                  </Link>
-                ) : (
-                  <p className="text-sm font-semibold text-blue-900">{step.title}</p>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  {step.href && !step.completed ? (
+                    <Link
+                      href={step.href}
+                      className="text-sm font-semibold text-ink hover:text-accent-info transition-colors group flex items-center gap-1"
+                    >
+                      {step.title}
+                      <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    </Link>
+                  ) : (
+                    <p className={`text-sm font-semibold ${step.completed ? "text-accent-ops" : "text-ink"}`}>
+                      {step.title}
+                    </p>
+                  )}
+                  {step.completed && (
+                    <Badge variant="verified" style="stamp" className="scale-75 origin-left">
+                      SEALED
+                    </Badge>
+                  )}
+                </div>
+                {step.description && (
+                  <p className="mt-0.5 text-xs text-ink-muted">{step.description}</p>
                 )}
-                {step.description ? (
-                  <p className="text-xs text-blue-900/80">{step.description}</p>
-                ) : null}
               </div>
             </div>
           ))}
@@ -180,72 +219,128 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
     );
   }
 
+  // Setup Complete State
   const step = TOUR_STEPS[currentStep];
   const Icon = step.icon;
 
   return (
-    <div className="rounded-2xl border border-green-100 bg-green-50 p-6 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-lg font-bold text-gray-900">Setup Complete</p>
-          <p className="text-sm text-green-900/80">
-            Great work. Start a quick tour to learn where everything lives.
-          </p>
+    <div className="dossier-panel overflow-hidden">
+      {/* Complete Header Strip */}
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-rule bg-accent-ops/5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-dossier-control bg-accent-ops/10">
+            <Stamp className="h-5 w-5 text-accent-ops" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-heading text-lg font-bold text-ink">Setup Complete</h2>
+              <Badge variant="verified" style="stamp">
+                SEALED
+              </Badge>
+            </div>
+            <p className="text-dossier-caption text-ink-subtle">
+              Your operations console is ready for action
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleStartTour}
-          className="inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-        >
+        <Button variant="ops" onClick={handleStartTour}>
           Start Dashboard Tour
-        </button>
+        </Button>
       </div>
 
-      {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-green-700">Step {currentStep + 1} of {TOUR_STEPS.length}</p>
-                <h3 className="text-xl font-bold text-gray-900">{step.title}</h3>
-                <p className="text-sm text-gray-600">{step.description}</p>
-              </div>
-              {Icon ? (
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50">
-                  <Icon className="h-6 w-6 text-green-700" />
-                </div>
-              ) : null}
-            </div>
+      {/* Tour Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div
+            className="dossier-overlay"
+            onClick={handleDismiss}
+            aria-hidden="true"
+          />
 
-            <div className="mt-6 flex items-center justify-between">
+          {/* Modal */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-lg dossier-panel-elevated overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-rule bg-paper">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-semibold text-accent-ops uppercase tracking-wider">
+                  Tour Step
+                </span>
+                <span className="font-mono text-xs font-bold text-ink bg-accent-ops/10 px-2 py-0.5 rounded">
+                  {currentStep + 1} / {TOUR_STEPS.length}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                className="p-1.5 rounded-dossier-sm text-ink-subtle hover:text-ink hover:bg-surface transition-colors"
+                aria-label="Close tour"
               >
-                Dismiss
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-6 py-6">
+              <div className="flex items-start gap-4">
+                {Icon && (
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-dossier-control bg-accent-ops/10">
+                    <Icon className="h-7 w-7 text-accent-ops" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl font-bold text-ink">{step.title}</h3>
+                  <p className="text-sm text-ink-subtle leading-relaxed">{step.description}</p>
+                </div>
+              </div>
+
+              {/* Progress Dots */}
+              <div className="flex items-center justify-center gap-1.5 mt-6">
+                {TOUR_STEPS.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === currentStep
+                        ? "w-4 bg-accent-ops"
+                        : index < currentStep
+                        ? "w-1.5 bg-accent-ops/50"
+                        : "w-1.5 bg-rule"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-rule bg-paper">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="text-sm font-medium text-ink-subtle hover:text-ink transition-colors"
+              >
+                Skip Tour
               </button>
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleBack}
                   disabled={currentStep === 0}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-                >
+                </Button>
+                <Button variant="ops" size="sm" onClick={handleNext}>
                   {currentStep === TOUR_STEPS.length - 1 ? "Finish" : "Next"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

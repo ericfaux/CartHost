@@ -2,11 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CarFront, History, Wrench } from "lucide-react";
+import { ArrowRight, CarFront, History, Wrench, Activity } from "lucide-react";
 import DashboardTour from "../../components/DashboardTour";
 import FinancialSection from "../../components/FinancialSection";
 import ProtectionOverview from "../../components/ProtectionOverview";
 import DashboardDateFilter from "../../components/DashboardDateFilter";
+import { PageHeader, SectionHeader } from "../../components/ui/Panel";
+import { Badge, StatusBadge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
+import { HealthIndicator } from "../../components/ui/Meters";
 import type { DashboardPeriod } from "../../components/DashboardCharts";
 
 const GREEN = "healthy" as const;
@@ -270,67 +274,70 @@ export default async function DashboardHome(props: {
       description: "Manage vehicles, update key codes, and track status.",
       href: "/dashboard/fleet",
       icon: CarFront,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      border: "group-hover:border-blue-200",
+      iconBg: "bg-accent-info/10",
+      iconColor: "text-accent-info",
     },
     {
-      title: "Rental History",
+      title: "Evidence Locker",
       description: "View past rentals, evidence photos, and signed waivers.",
       href: "/dashboard/history",
       icon: History,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-      border: "group-hover:border-purple-200",
+      iconBg: "bg-accent-ops/10",
+      iconColor: "text-accent-ops",
     },
     {
       title: "Maintenance Logs",
       description: "Log repairs, track service costs, and monitor health.",
       href: "/dashboard/maintenance",
       icon: Wrench,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-      border: "group-hover:border-orange-200",
+      iconBg: "bg-accent-warning/10",
+      iconColor: "text-accent-warning",
     },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <p className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</p>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Dashboard"
+        subtitle="Operations overview and quick access"
+      />
 
+      {/* Onboarding / Tour */}
       <DashboardTour carts={typedCarts} rentals={typedRentals} profile={profile} />
 
-      <div className="space-y-3">
-        <p className="text-2xl font-bold tracking-tight text-gray-900">Quick Access</p>
+      {/* Quick Access Cards */}
+      <section className="space-y-4">
+        <SectionHeader title="Quick Access" subtitle="Jump to key areas" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickLinks.map((link) => (
             <Link
               key={link.title}
               href={link.href}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${link.border}`}
+              className="group dossier-panel p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-dossier-elevated"
             >
-              <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${link.bg} ${link.color}`}>
-                <link.icon className="h-6 w-6" />
+              <div className={`h-11 w-11 rounded-dossier-control flex items-center justify-center ${link.iconBg}`}>
+                <link.icon className={`h-5 w-5 ${link.iconColor}`} />
               </div>
-              <div>
-                <p className="mt-4 text-lg font-bold text-gray-900">{link.title}</p>
-                <p className="mt-1 text-sm text-gray-500">{link.description}</p>
+              <div className="mt-4">
+                <p className="font-heading text-lg font-bold text-ink">{link.title}</p>
+                <p className="mt-1 text-dossier-caption text-ink-subtle">{link.description}</p>
               </div>
-              <div className={`mt-6 flex items-center gap-2 text-sm font-semibold ${link.color}`}>
-                <span>Open {link.title}</span>
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-accent-info">
+                <span>Open</span>
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="flex justify-end mb-4">
+      {/* Period Filter */}
+      <div className="flex justify-end">
         <DashboardDateFilter />
       </div>
 
+      {/* Protection Overview */}
       <ProtectionOverview
         period={period}
         protectedCount={protectedCount}
@@ -343,77 +350,110 @@ export default async function DashboardHome(props: {
         totalDepositsHeld={totalDepositsHeld}
       />
 
+      {/* Financial Section */}
       {profile?.show_financial_tiles !== false && (
         <FinancialSection rentals={typedRentals} period={period} />
       )}
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Fleet Health</h1>
-        <p className="text-sm text-gray-500">
-          Automated tracking based on usage. Carts are flagged as Due Soon after 20 trips (or 11 months) and Overdue after 30 trips (or 1 year).
-        </p>
-      </div>
+      {/* Fleet Health Section */}
+      <section className="space-y-4">
+        <SectionHeader
+          title="Fleet Health"
+          subtitle="Automated tracking based on usage. Carts are flagged as Due Soon after 20 trips (or 11 months) and Overdue after 30 trips (or 1 year)."
+        />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-green-100 bg-green-50 px-6 py-5 shadow-sm">
-          <p className="text-sm font-semibold text-green-700">Healthy</p>
-          <p className="mt-2 text-3xl font-black text-green-900">{healthyCount}</p>
-          <p className="mt-1 text-xs text-green-700/80">Trips &lt; 20 and &lt; 330 days</p>
-        </div>
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-5 shadow-sm">
-          <p className="text-sm font-semibold text-amber-700">Due Soon</p>
-          <p className="mt-2 text-3xl font-black text-amber-900">{dueSoonCount}</p>
-          <p className="mt-1 text-xs text-amber-700/80">Trips ≥ 20 or ≥ 330 days</p>
-        </div>
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-6 py-5 shadow-sm">
-          <p className="text-sm font-semibold text-red-700">Overdue</p>
-          <p className="mt-2 text-3xl font-black text-red-900">{overdueCount}</p>
-          <p className="mt-1 text-xs text-red-700/80">Trips ≥ 30 or ≥ 365 days</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Needs Attention</p>
-            <p className="text-xs text-gray-500">Carts that are due for service.</p>
-          </div>
-          <Link
-            href="/dashboard/maintenance"
-            className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-800"
-          >
-            Log Service
-          </Link>
-        </div>
-
-        {attentionList.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm font-semibold text-green-700">
-            All systems go! Every cart is healthy.
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {attentionList.map((item) => (
-              <div
-                key={item.cart.id}
-                className="flex flex-col gap-2 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{item.cart.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {item.status === RED ? "Overdue" : "Due soon"} · {item.reason}
-                  </p>
-                </div>
-                <Link
-                  href="/dashboard/maintenance"
-                  className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50"
-                >
-                  Log Service
-                </Link>
+        {/* Health Status Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stat-tile bg-accent-success/5 border-accent-success/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-dossier-control bg-accent-success/10">
+                <Activity className="h-5 w-5 text-accent-success" />
               </div>
-            ))}
+              <div>
+                <p className="text-dossier-label text-accent-success">Healthy</p>
+                <p className="text-2xl font-bold text-accent-success tabular-nums">{healthyCount}</p>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-accent-success/80">Trips &lt; 20 and &lt; 330 days</p>
           </div>
-        )}
-      </div>
+
+          <div className="stat-tile bg-accent-warning/5 border-accent-warning/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-dossier-control bg-accent-warning/10">
+                <Activity className="h-5 w-5 text-accent-warning" />
+              </div>
+              <div>
+                <p className="text-dossier-label text-accent-warning">Due Soon</p>
+                <p className="text-2xl font-bold text-accent-warning tabular-nums">{dueSoonCount}</p>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-accent-warning/80">Trips 20-29 or 330-364 days</p>
+          </div>
+
+          <div className="stat-tile bg-accent-legal/5 border-accent-legal/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-dossier-control bg-accent-legal/10">
+                <Activity className="h-5 w-5 text-accent-legal" />
+              </div>
+              <div>
+                <p className="text-dossier-label text-accent-legal">Overdue</p>
+                <p className="text-2xl font-bold text-accent-legal tabular-nums">{overdueCount}</p>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-accent-legal/80">Trips ≥ 30 or ≥ 365 days</p>
+          </div>
+        </div>
+
+        {/* Needs Attention Panel */}
+        <div className="dossier-panel overflow-hidden">
+          <div className="dossier-header-strip">
+            <div>
+              <p className="text-sm font-semibold text-ink">Needs Attention</p>
+              <p className="text-xs text-ink-subtle">Carts that are due for service</p>
+            </div>
+            <Link href="/dashboard/maintenance">
+              <Button variant="primary" size="sm">
+                Log Service
+              </Button>
+            </Link>
+          </div>
+
+          {attentionList.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-success/10 mb-3">
+                <Activity className="h-6 w-6 text-accent-success" />
+              </div>
+              <p className="text-sm font-semibold text-accent-success">All systems go!</p>
+              <p className="text-xs text-ink-muted mt-1">Every cart is healthy.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-rule">
+              {attentionList.map((item) => (
+                <div
+                  key={item.cart.id}
+                  className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between hover:bg-paper transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <HealthIndicator
+                      status={item.status === RED ? "overdue" : "due_soon"}
+                      showDot={false}
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{item.cart.name}</p>
+                      <p className="font-mono text-xs text-ink-muted">{item.reason}</p>
+                    </div>
+                  </div>
+                  <Link href="/dashboard/maintenance">
+                    <Button variant="secondary" size="sm">
+                      Log Service
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
