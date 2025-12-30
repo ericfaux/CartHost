@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import exifr from "exifr";
-import getSupabaseAdmin from "../../../../server/supabase-admin";
+import supabaseAdmin from "../../../../server/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -35,8 +35,6 @@ export async function POST(request: NextRequest) {
     const url = request.nextUrl;
     const dry = url.searchParams.get("dry") === "true" || url.searchParams.get("dry") === "1";
     const onlyFolder = url.searchParams.get("folder") || null;
-
-    const supabaseAdmin = getSupabaseAdmin();
 
     async function listFolder(path = "") {
       const results: any[] = [];
