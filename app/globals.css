@@ -180,7 +180,7 @@
   }
 
   .ledger-table th.text-right {
-    @apply text-right;
+    text-align: right;
   }
 
   .ledger-table tbody tr {
@@ -204,7 +204,8 @@
   }
 
   .ledger-table td.text-right {
-    @apply text-right tabular-nums;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ----------------------------------------
