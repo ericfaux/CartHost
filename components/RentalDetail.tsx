@@ -190,7 +190,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                   {rental.waiver_agreed ? (
                     <Badge variant="success" style="chip">Protected</Badge>
                   ) : (
-                    <Badge variant="destructive" style="chip">Unsigned</Badge>
+                    <Badge variant="danger" style="chip">Unsigned</Badge>
                   )}
                 </div>
               </div>
