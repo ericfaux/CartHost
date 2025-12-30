@@ -6,7 +6,8 @@ export type BadgeVariant =
   | "verified"
   | "warning"
   | "danger"
-  | "success";
+  | "success"
+  | "info";
 
 export type BadgeStyle = "chip" | "stamp";
 
@@ -26,6 +27,7 @@ const chipVariantClasses: Record<BadgeVariant, string> = {
   warning: "bg-accent-warning/10 text-accent-warning border-accent-warning/30",
   danger: "bg-accent-legal/10 text-accent-legal border-accent-legal/30",
   success: "bg-accent-success/10 text-accent-success border-accent-success/30",
+  info: "bg-accent-info/10 text-accent-info border-accent-info/30",
 };
 
 const stampVariantClasses: Record<BadgeVariant, string> = {
@@ -35,6 +37,7 @@ const stampVariantClasses: Record<BadgeVariant, string> = {
   warning: "border-accent-warning text-accent-warning bg-amber-50",
   danger: "border-accent-legal text-accent-legal bg-red-50",
   success: "border-accent-success text-accent-success bg-green-50",
+  info: "border-accent-info text-accent-info bg-blue-50",
 };
 
 export function Badge({
@@ -83,6 +86,7 @@ export function Badge({
             ${variant === "danger" ? "bg-accent-legal" : ""}
             ${variant === "success" ? "bg-accent-success" : ""}
             ${variant === "neutral" ? "bg-ink-subtle" : ""}
+            ${variant === "info" ? "bg-accent-info" : ""}
           `.trim()}
         />
       )}
