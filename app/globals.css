@@ -1,3 +1,523 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================
+   INCIDENT DOSSIER DESIGN SYSTEM
+   CartHost Admin Console Styles
+   ============================================ */
+
+@layer base {
+  /* Root font smoothing */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: rgba(15, 118, 110, 0.2);
+    color: #0B1220;
+  }
+
+  /* Focus visible for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #1D4ED8;
+    outline-offset: 2px;
+  }
+
+  /* Scrollbar styling for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F4F1EA;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #E6E2D8;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D1CCC0;
+  }
+}
+
+@layer components {
+  /* ----------------------------------------
+     SURFACE COMPONENTS
+     ---------------------------------------- */
+
+  /* Dossier Panel - Primary content container */
+  .dossier-panel {
+    @apply bg-surface rounded-dossier-surface border border-rule shadow-dossier-surface;
+  }
+
+  /* Elevated Panel - For modals/drawers */
+  .dossier-panel-elevated {
+    @apply bg-surface rounded-dossier-surface border border-rule shadow-dossier-elevated;
+  }
+
+  /* Paper background with subtle grain */
+  .dossier-paper {
+    @apply bg-paper relative;
+  }
+
+  .dossier-paper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.015;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+
+  /* ----------------------------------------
+     HEADER STRIP (Dossier Header)
+     ---------------------------------------- */
+
+  .dossier-header-strip {
+    @apply flex items-center justify-between px-6 py-4 border-b border-rule bg-surface;
+  }
+
+  .dossier-header-strip-title {
+    @apply font-heading text-dossier-title text-ink;
+  }
+
+  .dossier-case-label {
+    @apply font-mono text-dossier-mono text-ink-subtle uppercase tracking-wider px-2 py-1 bg-paper rounded-dossier-sm border border-rule;
+  }
+
+  /* ----------------------------------------
+     STAMP & SEAL BADGES
+     ---------------------------------------- */
+
+  /* Stamped badge (legal/signed) */
+  .stamp-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest;
+    @apply border-2 rounded-dossier-sm;
+    @apply animate-stamp-in;
+  }
+
+  .stamp-badge-signed {
+    @apply stamp-badge border-accent-legal text-accent-legal bg-red-50;
+  }
+
+  .stamp-badge-verified {
+    @apply stamp-badge border-accent-ops text-accent-ops bg-teal-50;
+  }
+
+  .stamp-badge-sealed {
+    @apply stamp-badge border-accent-ops text-accent-ops bg-teal-50;
+    @apply shadow-[0_0_0_1px_rgba(15,118,110,0.3)];
+  }
+
+  /* Seal chip - for smaller inline status */
+  .seal-chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-dossier-chip;
+  }
+
+  .seal-chip-active {
+    @apply seal-chip bg-accent-info/10 text-accent-info border border-accent-info/30;
+  }
+
+  .seal-chip-verified {
+    @apply seal-chip bg-accent-ops/10 text-accent-ops border border-accent-ops/30;
+  }
+
+  .seal-chip-warning {
+    @apply seal-chip bg-accent-warning/10 text-accent-warning border border-accent-warning/30;
+  }
+
+  .seal-chip-danger {
+    @apply seal-chip bg-accent-legal/10 text-accent-legal border border-accent-legal/30;
+  }
+
+  .seal-chip-neutral {
+    @apply seal-chip bg-ink/5 text-ink-subtle border border-rule;
+  }
+
+  /* ----------------------------------------
+     EVIDENCE TAGS
+     ---------------------------------------- */
+
+  .evidence-tag {
+    @apply inline-flex items-center gap-2 px-3 py-2 bg-paper border border-rule rounded-dossier-control;
+    @apply font-mono text-xs text-ink-subtle;
+  }
+
+  .evidence-tag-kind {
+    @apply px-1.5 py-0.5 bg-surface text-ink font-semibold uppercase text-[10px] tracking-wider rounded;
+  }
+
+  .evidence-tag-hash {
+    @apply text-ink-muted font-mono;
+  }
+
+  .evidence-tag-timestamp {
+    @apply text-ink-subtle;
+  }
+
+  /* ----------------------------------------
+     LEDGER TABLE
+     ---------------------------------------- */
+
+  .ledger-table {
+    @apply w-full;
+  }
+
+  .ledger-table thead {
+    @apply bg-paper sticky top-0 z-10;
+  }
+
+  .ledger-table th {
+    @apply px-4 py-3 text-left text-dossier-label uppercase text-ink-subtle font-sans border-b-2 border-rule;
+  }
+
+  .ledger-table th.text-right {
+    @apply text-right;
+  }
+
+  .ledger-table tbody tr {
+    @apply border-b border-rule transition-colors;
+  }
+
+  .ledger-table tbody tr:hover {
+    @apply bg-amber-50/30;
+  }
+
+  .ledger-table td {
+    @apply px-4 py-3 text-sm text-ink;
+  }
+
+  .ledger-table td.font-bold {
+    @apply font-semibold;
+  }
+
+  .ledger-table td.font-mono {
+    @apply font-mono text-xs text-ink-subtle;
+  }
+
+  .ledger-table td.text-right {
+    @apply text-right tabular-nums;
+  }
+
+  /* ----------------------------------------
+     FORM CONTROLS
+     ---------------------------------------- */
+
+  .dossier-input {
+    @apply w-full px-3 py-2.5 text-sm text-ink bg-surface border border-rule rounded-dossier-control;
+    @apply placeholder:text-ink-muted;
+    @apply focus:outline-none focus:border-accent-info focus:ring-1 focus:ring-accent-info;
+    @apply transition-colors;
+  }
+
+  .dossier-select {
+    @apply dossier-input appearance-none cursor-pointer;
+    @apply bg-no-repeat bg-right pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-size: 1.25em 1.25em;
+  }
+
+  .dossier-textarea {
+    @apply dossier-input resize-y min-h-[100px];
+  }
+
+  .dossier-label {
+    @apply block text-dossier-label uppercase text-ink-subtle mb-1.5;
+  }
+
+  /* ----------------------------------------
+     BUTTONS
+     ---------------------------------------- */
+
+  .dossier-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-dossier-control;
+    @apply transition-all duration-150 active:scale-[0.98];
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-info focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .dossier-btn-primary {
+    @apply dossier-btn bg-ink text-surface shadow-dossier-bevel;
+    @apply hover:bg-ink/90;
+  }
+
+  .dossier-btn-secondary {
+    @apply dossier-btn bg-surface text-ink border border-rule shadow-dossier-surface;
+    @apply hover:bg-paper hover:border-ink/20;
+  }
+
+  .dossier-btn-ghost {
+    @apply dossier-btn bg-transparent text-ink;
+    @apply hover:bg-paper;
+  }
+
+  .dossier-btn-destructive {
+    @apply dossier-btn bg-accent-legal text-surface shadow-dossier-bevel;
+    @apply hover:bg-accent-legal-dark;
+  }
+
+  .dossier-btn-ops {
+    @apply dossier-btn bg-accent-ops text-surface shadow-dossier-bevel;
+    @apply hover:bg-accent-ops-dark;
+  }
+
+  /* Icon button variant */
+  .dossier-btn-icon {
+    @apply inline-flex items-center justify-center p-2 rounded-dossier-control;
+    @apply text-ink-subtle hover:text-ink hover:bg-paper;
+    @apply transition-colors;
+  }
+
+  /* ----------------------------------------
+     STAT TILES (Instrument style)
+     ---------------------------------------- */
+
+  .stat-tile {
+    @apply dossier-panel p-5;
+  }
+
+  .stat-tile-header {
+    @apply flex items-start justify-between gap-3;
+  }
+
+  .stat-tile-label {
+    @apply text-dossier-caption text-ink-subtle font-medium;
+  }
+
+  .stat-tile-value {
+    @apply mt-2 text-3xl font-bold text-ink tracking-tight tabular-nums;
+  }
+
+  .stat-tile-footer {
+    @apply mt-2 text-dossier-caption text-ink-muted;
+  }
+
+  .stat-tile-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-dossier-control;
+  }
+
+  /* ----------------------------------------
+     BATTERY BAR
+     ---------------------------------------- */
+
+  .battery-bar {
+    @apply relative w-full h-2 bg-rule rounded-full overflow-hidden;
+  }
+
+  .battery-bar-fill {
+    @apply absolute left-0 top-0 h-full rounded-full transition-all;
+  }
+
+  .battery-bar-fill[data-level="high"] {
+    @apply bg-accent-success;
+  }
+
+  .battery-bar-fill[data-level="medium"] {
+    @apply bg-accent-warning;
+  }
+
+  .battery-bar-fill[data-level="low"] {
+    @apply bg-accent-legal;
+  }
+
+  /* ----------------------------------------
+     SERVICE METER
+     ---------------------------------------- */
+
+  .service-meter {
+    @apply flex items-center gap-2;
+  }
+
+  .service-meter-track {
+    @apply flex-1 h-1.5 bg-rule rounded-full overflow-hidden;
+  }
+
+  .service-meter-fill {
+    @apply h-full rounded-full transition-all;
+  }
+
+  .service-meter-label {
+    @apply text-xs font-mono text-ink-subtle whitespace-nowrap;
+  }
+
+  /* ----------------------------------------
+     NAVIGATION (Sidebar)
+     ---------------------------------------- */
+
+  .dossier-sidebar {
+    @apply flex flex-col h-screen bg-ink border-r border-ink/80;
+  }
+
+  .dossier-sidebar-brand {
+    @apply flex items-center gap-3 px-5 py-5 border-b border-white/10;
+  }
+
+  .dossier-sidebar-nav {
+    @apply flex-1 py-4 px-3 space-y-1;
+  }
+
+  .dossier-nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-dossier-control text-sm font-medium text-white/60;
+    @apply transition-colors;
+    @apply hover:bg-white/5 hover:text-white/90;
+  }
+
+  .dossier-nav-link[data-active="true"] {
+    @apply bg-white/10 text-white border-l-2 border-accent-ops -ml-px;
+  }
+
+  .dossier-sidebar-footer {
+    @apply p-3 border-t border-white/10;
+  }
+
+  /* ----------------------------------------
+     MODAL / DRAWER
+     ---------------------------------------- */
+
+  .dossier-overlay {
+    @apply fixed inset-0 bg-ink/60 backdrop-blur-sm z-50;
+  }
+
+  .dossier-modal {
+    @apply fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto z-50;
+    @apply dossier-panel-elevated overflow-hidden;
+  }
+
+  .dossier-drawer {
+    @apply fixed top-0 right-0 bottom-0 w-full max-w-xl z-50;
+    @apply bg-surface shadow-2xl border-l border-rule;
+    @apply overflow-y-auto;
+  }
+
+  .dossier-drawer-header {
+    @apply sticky top-0 z-10 dossier-header-strip;
+  }
+
+  /* ----------------------------------------
+     CHAIN OF CUSTODY PANEL
+     ---------------------------------------- */
+
+  .custody-panel {
+    @apply bg-paper border border-rule rounded-dossier-control p-4;
+  }
+
+  .custody-panel-title {
+    @apply font-mono text-[10px] font-bold uppercase tracking-widest text-ink-subtle mb-3;
+  }
+
+  .custody-row {
+    @apply flex justify-between py-1.5 text-xs;
+  }
+
+  .custody-row-label {
+    @apply text-ink-muted font-mono;
+  }
+
+  .custody-row-value {
+    @apply text-ink font-mono text-right;
+  }
+
+  /* ----------------------------------------
+     EMPTY STATES
+     ---------------------------------------- */
+
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 px-8 text-center;
+    @apply border-2 border-dashed border-rule rounded-dossier-surface bg-paper/50;
+  }
+
+  .empty-state-icon {
+    @apply flex h-14 w-14 items-center justify-center rounded-full bg-surface border border-rule text-ink-muted mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-sm font-semibold text-ink;
+  }
+
+  .empty-state-description {
+    @apply mt-1 text-sm text-ink-subtle max-w-sm;
+  }
+
+  /* ----------------------------------------
+     UTILITY CLASSES
+     ---------------------------------------- */
+
+  /* Highlighter hover effect for table rows */
+  .highlighter-hover:hover {
+    background-image: linear-gradient(to right, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05));
+  }
+
+  /* Mono text for IDs, hashes, timestamps */
+  .forensic-text {
+    @apply font-mono text-xs text-ink-subtle;
+  }
+
+  /* Section divider with label */
+  .section-divider {
+    @apply flex items-center gap-4 my-6;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: "";
+    @apply flex-1 h-px bg-rule;
+  }
+
+  .section-divider-label {
+    @apply text-dossier-label uppercase text-ink-muted;
+  }
+}
+
+@layer utilities {
+  /* Grain texture overlay (optional) */
+  .with-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+
+  /* Ledger lines background */
+  .with-ledger-lines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 31px,
+      #E6E2D8 31px,
+      #E6E2D8 32px
+    );
+  }
+
+  /* Tab numbers alignment */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-break-before {
+      page-break-before: always;
+    }
+
+    .dossier-panel {
+      box-shadow: none;
+      border: 1px solid #000;
+    }
+  }
+}
