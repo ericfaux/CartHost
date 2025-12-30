@@ -140,6 +140,7 @@ export function ChainOfCustody({
 
 // Forensic banner for evidence pages
 export interface ForensicBannerProps {
+  rentalId?: string;
   signedBy?: string;
   timestamp?: string;
   ip?: string;
@@ -149,6 +150,7 @@ export interface ForensicBannerProps {
 }
 
 export function ForensicBanner({
+  rentalId,
   signedBy,
   timestamp,
   ip,
@@ -156,14 +158,27 @@ export function ForensicBanner({
   hash,
   className = "",
 }: ForensicBannerProps) {
+  // Format timestamp if provided
+  const formattedTimestamp = timestamp
+    ? new Date(timestamp).toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  // Build display items
   const items = [
+    rentalId && `Case #${rentalId.slice(0, 8).toUpperCase()}`,
     signedBy && `Signed by ${signedBy}`,
-    timestamp,
+    formattedTimestamp,
     ip && `IP: ${ip}`,
     hash && `#${hash.slice(0, 8)}`,
   ].filter(Boolean);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !userAgent) return null;
 
   return (
     <div
