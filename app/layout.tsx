@@ -28,8 +28,38 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CartHost",
-  description: "Digital gate for Airbnb golf cart fleets",
+  title: "CartHost — Operations Console for Golf Cart Rentals",
+  description:
+    "Liability-first checkout for golf cart and e-bike rentals. Digital waivers, inspection photos, and evidence-grade case files. No app download for guests.",
+  keywords: [
+    "golf cart rental",
+    "e-bike rental",
+    "vacation rental amenities",
+    "digital waiver",
+    "rental liability",
+    "fleet management",
+    "airbnb golf cart",
+    "vrbo amenities",
+  ],
+  authors: [{ name: "CartHost" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "CartHost",
+    title: "CartHost — Turn every rental into a sealed case file",
+    description:
+      "QR scan → waiver → inspection photos → return proof. Automatically packaged into an evidence-grade case file for dispute protection.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CartHost — Liability-First Checkout for Golf Cart Rentals",
+    description:
+      "Digital waivers, inspection photos, and evidence-grade case files. No app download for guests.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
