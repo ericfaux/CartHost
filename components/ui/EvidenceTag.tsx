@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
-import { Camera, FileText, Clock, Hash } from "lucide-react";
+import { Camera, FileText, Clock, Hash, Tag } from "lucide-react";
 
 export type EvidenceKind = "photo" | "waiver" | "log" | "proof";
 
 export interface EvidenceTagProps {
-  kind: EvidenceKind;
+  kind?: EvidenceKind;
+  label?: string;
+  children?: ReactNode;
   timestamp?: string;
   hash?: string;
   status?: "verified" | "pending" | "missing";
@@ -20,12 +22,35 @@ const kindConfig: Record<EvidenceKind, { label: string; icon: ReactNode }> = {
 
 export function EvidenceTag({
   kind,
+  label,
+  children,
   timestamp,
   hash,
   status = "verified",
   className = "",
 }: EvidenceTagProps) {
-  const { label, icon } = kindConfig[kind];
+  // Support simple label/children usage without kind
+  const content = label ?? children;
+  if (!kind && content) {
+    return (
+      <span
+        className={`
+          inline-flex items-center gap-1 px-2 py-1
+          bg-ink/80 text-white text-xs font-semibold uppercase tracking-wider
+          rounded-dossier-chip backdrop-blur-sm
+          ${className}
+        `.trim()}
+      >
+        <Tag className="h-3 w-3" />
+        {content}
+      </span>
+    );
+  }
+
+  // Original kind-based usage
+  if (!kind) return null;
+
+  const config = kindConfig[kind];
 
   const statusClass =
     status === "verified"
@@ -45,8 +70,8 @@ export function EvidenceTag({
     >
       {/* Kind chip */}
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-surface text-ink font-semibold uppercase text-[10px] tracking-wider rounded">
-        {icon}
-        {label}
+        {config.icon}
+        {config.label}
       </span>
 
       {/* Timestamp */}
