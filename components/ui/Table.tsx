@@ -144,7 +144,7 @@ export function TableCell({
       className={`
         px-4 py-3 text-sm
         ${alignClass}
-        ${mono ? "font-mono text-xs text-ink-subtle" : "text-ink"}
+        ${mono ? "ledger-mono" : "text-ink"}
         ${bold ? "font-semibold" : ""}
         ${muted ? "text-ink-muted" : ""}
         ${className}

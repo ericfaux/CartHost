@@ -199,7 +199,9 @@
     @apply font-semibold;
   }
 
-  .ledger-table td.font-mono {
+  /* Avoid @apply on the .font-mono utility selector (Tailwind circular dependency).
+     Use a dedicated presentational class for mono table cells so @apply can be used safely. */
+  .ledger-table td.ledger-mono {
     @apply font-mono text-xs text-ink-subtle;
   }
 
