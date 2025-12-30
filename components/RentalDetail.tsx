@@ -115,7 +115,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
     { label: "Signed By", value: rental.guest_name || "Unknown" },
     { label: "Timestamp", value: formattedWaiverDate || "Not recorded" },
     { label: "IP Address", value: rental.guest_ip || "Not recorded" },
-    { label: "Device", value: rental.user_agent || "Not recorded", truncate: true },
+    { label: "Device", value: rental.user_agent || "Not recorded" },
     { label: "Waiver Version", value: rental.waiver_version || "1.0" },
   ];
 
@@ -261,7 +261,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                         </div>
 
                         {/* Chain of Custody */}
-                        <ChainOfCustody entries={chainOfCustody} title="Digital Chain of Custody" />
+                        <ChainOfCustody records={chainOfCustody} title="Digital Chain of Custody" />
                       </div>
                     )}
                   </div>
