@@ -38,12 +38,24 @@ export async function verifyAndUpdate(photoId: string, storagePath: string, buck
     gps = null;
   }
 
+  // Defensive altitude extraction:
+  // Different exifr versions or camera metadata may expose altitude under
+  // `altitude` or `alt`. TypeScript typings may not include `altitude`,
+  // so we cast to `any` and probe safely.
+  const gpsAltitude = (() => {
+    if (!gps) return null;
+    const anyGps = gps as any;
+    if (typeof anyGps.altitude === "number") return anyGps.altitude;
+    if (typeof anyGps.alt === "number") return anyGps.alt;
+    return null;
+  })();
+
   // Update photos row
   const update = {
     sha256: hash,
     gps_lat: gps?.latitude ?? null,
     gps_lng: gps?.longitude ?? null,
-    gps_altitude: gps?.altitude ?? null,
+    gps_altitude: gpsAltitude,
     metadata: { ...(gps ? { gps } : {}), verified_by: "service" },
     verified: true,
   };
