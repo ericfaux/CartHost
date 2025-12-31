@@ -69,48 +69,96 @@ export async function POST(request: NextRequest) {
 
     async function inferMapping(folderName: string): Promise<Mapping> {
       const mapping: Mapping = { rental_id: null, cart_id: null, host_id: null };
-      if (!isUuid(folderName)) return mapping;
+      if (!folderName) return mapping;
 
-      // rental lookup
-      const rentalResp = await supabaseAdmin
-        .from("rentals")
-        .select("id,cart_id")
-        .eq("id", folderName)
-        .maybeSingle();
+      // 1) Try to find a UUID anywhere in the folder name
+      const uuidMatch = folderName.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+      let candidate: string | null = uuidMatch ? uuidMatch[0] : null;
 
-      if ((rentalResp as any).error) {
-        console.warn("rental lookup failed", (rentalResp as any).error);
-      }
-      if ((rentalResp as any).data) {
-        const rentalRow = (rentalResp as any).data as { id: string; cart_id: string | null };
-        mapping.rental_id = rentalRow.id;
-        mapping.cart_id = rentalRow.cart_id;
-        if (rentalRow.cart_id) {
-          const cartResp = await supabaseAdmin
-            .from("carts")
-            .select("host_id")
-            .eq("id", rentalRow.cart_id)
-            .maybeSingle();
-          if ((cartResp as any)?.data) {
-            mapping.host_id = ((cartResp as any).data as any).host_id ?? null;
+      // 2) If nothing found, split on common separators and look for a UUID piece
+      if (!candidate) {
+        const pieces = folderName.split(/[_\-.\/]/);
+        for (const p of pieces) {
+          if (isUuid(p)) {
+            candidate = p;
+            break;
           }
         }
-        return mapping;
       }
 
-      // cart lookup
-      const cartResp = await supabaseAdmin.from("carts").select("id,host_id").eq("id", folderName).maybeSingle();
-      if ((cartResp as any)?.data) {
-        const cartRow = (cartResp as any).data as { id: string; host_id: string | null };
-        mapping.cart_id = cartRow.id;
-        mapping.host_id = cartRow.host_id;
-        return mapping;
+      // 3) If we have a candidate UUID, try rental/cart/host lookups with it
+      if (candidate) {
+        try {
+          const rentalResp = await supabaseAdmin
+            .from("rentals")
+            .select("id,cart_id")
+            .eq("id", candidate)
+            .maybeSingle();
+          if ((rentalResp as any).data) {
+            const rentalRow = (rentalResp as any).data as { id: string; cart_id: string | null };
+            mapping.rental_id = rentalRow.id;
+            mapping.cart_id = rentalRow.cart_id;
+            if (rentalRow.cart_id) {
+              const cartResp = await supabaseAdmin
+                .from("carts")
+                .select("host_id")
+                .eq("id", rentalRow.cart_id)
+                .maybeSingle();
+              if ((cartResp as any)?.data) mapping.host_id = ((cartResp as any).data as any).host_id ?? null;
+            }
+            console.info(`[MIGRATE] inferMapping found rental candidate=${candidate} for folder=${folderName}`);
+            return mapping;
+          }
+
+          const cartResp = await supabaseAdmin.from("carts").select("id,host_id").eq("id", candidate).maybeSingle();
+          if ((cartResp as any)?.data) {
+            mapping.cart_id = (cartResp as any).data.id;
+            mapping.host_id = (cartResp as any).data.host_id;
+            console.info(`[MIGRATE] inferMapping found cart candidate=${candidate} for folder=${folderName}`);
+            return mapping;
+          }
+
+          const hostResp = await supabaseAdmin.from("hosts").select("id").eq("id", candidate).maybeSingle();
+          if ((hostResp as any)?.data) {
+            mapping.host_id = (hostResp as any).data.id;
+            console.info(`[MIGRATE] inferMapping found host candidate=${candidate} for folder=${folderName}`);
+            return mapping;
+          }
+        } catch (err: any) {
+          console.warn(`[MIGRATE] inferMapping lookup error for candidate=${candidate} folder=${folderName}:`, err?.message || err);
+          // continue to fallback logic
+        }
       }
 
-      // host lookup
-      const hostResp = await supabaseAdmin.from("hosts").select("id").eq("id", folderName).maybeSingle();
-      if ((hostResp as any)?.data) mapping.host_id = ((hostResp as any).data as any).id ?? null;
+      // 4) Fallback: if folderName is a raw UUID, try the existing exact-match workflow
+      if (isUuid(folderName)) {
+        try {
+          const rentalResp = await supabaseAdmin
+            .from("rentals")
+            .select("id,cart_id")
+            .eq("id", folderName)
+            .maybeSingle();
+          if ((rentalResp as any)?.data) {
+            const rentalRow = (rentalResp as any).data as { id: string; cart_id: string | null };
+            mapping.rental_id = rentalRow.id;
+            mapping.cart_id = rentalRow.cart_id;
+            if (rentalRow.cart_id) {
+              const cartResp = await supabaseAdmin
+                .from("carts")
+                .select("host_id")
+                .eq("id", rentalRow.cart_id)
+                .maybeSingle();
+              if ((cartResp as any)?.data) mapping.host_id = ((cartResp as any).data as any).host_id ?? null;
+            }
+            console.info(`[MIGRATE] inferMapping fallback (exact UUID) for folder=${folderName}`);
+            return mapping;
+          }
+        } catch (err: any) {
+          console.warn(`[MIGRATE] inferMapping fallback error folder=${folderName}:`, err?.message || err);
+        }
+      }
 
+      // nothing found
       return mapping;
     }
 
@@ -223,7 +271,30 @@ export async function POST(request: NextRequest) {
           await processFile(storagePath, item, inferred, summary);
           await delay(WAIT_MS);
         } else {
-          await walkFolder(storagePath, inferredRootMapping, summary);
+          // If we don't have an inferred mapping from the parent, try to infer from this folder's name
+          let childMapping = inferredRootMapping;
+          if (!childMapping || (!childMapping.rental_id && !childMapping.cart_id && !childMapping.host_id)) {
+            try {
+              // Try inferMapping on the folder name (e.g., "rental_<uuid>" or "<uuid>")
+              const inferredForChild = await inferMapping(item.name);
+              // If still empty, try using the last path component (useful for nested folders)
+              if ((!inferredForChild.rental_id && !inferredForChild.cart_id && !inferredForChild.host_id)) {
+                const lastSegment = storagePath.split("/").pop() || item.name;
+                if (lastSegment !== item.name) {
+                  const inferredFromLast = await inferMapping(lastSegment);
+                  childMapping = inferredFromLast;
+                } else {
+                  childMapping = inferredForChild;
+                }
+              } else {
+                childMapping = inferredForChild;
+              }
+            } catch (err: any) {
+              console.warn(`[MIGRATE] inferMapping for child folder ${item.name} failed: ${err?.message || err}`);
+              childMapping = inferredRootMapping ?? { rental_id: null, cart_id: null, host_id: null };
+            }
+          }
+          await walkFolder(storagePath, childMapping, summary);
         }
       }
     }
