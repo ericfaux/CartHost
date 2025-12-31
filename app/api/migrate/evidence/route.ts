@@ -10,6 +10,8 @@ export const runtime = "nodejs";
 const BUCKET = "evidence";
 const PAGE_LIMIT = 100;
 const WAIT_MS = 120;
+const FETCH_RETRIES = 3;
+const RETRY_DELAY_MS = 500;
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -20,6 +22,63 @@ type Summary = {
   dryRuns: number;
   errors: { path: string; message: string; code?: string }[];
 };
+
+/**
+ * Merges a parent mapping with a child mapping.
+ * Only fills in missing IDs from the child - never overwrites existing parent values with null.
+ */
+function mergeMapping(parent: Mapping | null, child: Mapping): Mapping {
+  const base: Mapping = parent
+    ? { ...parent }
+    : { rental_id: null, cart_id: null, host_id: null };
+
+  // Only fill in if parent doesn't have a value and child does
+  if (!base.rental_id && child.rental_id) {
+    base.rental_id = child.rental_id;
+  }
+  if (!base.cart_id && child.cart_id) {
+    base.cart_id = child.cart_id;
+  }
+  if (!base.host_id && child.host_id) {
+    base.host_id = child.host_id;
+  }
+
+  return base;
+}
+
+/**
+ * Fetches a URL with retry logic.
+ * @returns Response on success, or null after all retries exhausted
+ */
+async function fetchWithRetry(
+  url: string,
+  retries: number = FETCH_RETRIES,
+  delayMs: number = RETRY_DELAY_MS
+): Promise<Response | null> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        return res;
+      }
+      // Non-ok response - treat as retriable error
+      lastError = new Error(`HTTP ${res.status}: ${res.statusText}`);
+      console.warn(`[RETRY] Attempt ${attempt}/${retries} failed: ${lastError.message}`);
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[RETRY] Attempt ${attempt}/${retries} network error: ${err?.message || err}`);
+    }
+
+    if (attempt < retries) {
+      await delay(delayMs);
+    }
+  }
+
+  console.error(`[RETRY] All ${retries} attempts exhausted. Last error: ${lastError?.message || "unknown"}`);
+  return null;
+}
 
 function isUuid(value?: string | null) {
   if (!value) return false;
@@ -177,23 +236,23 @@ export async function POST(request: NextRequest) {
         if (sErr || !signed) {
           const message = sErr?.message || "failed to sign URL";
           const code = (sErr as any)?.code || undefined;
-          console.warn(`[ERROR] createSignedUrl failed for ${storagePath}: ${message}${code ? ` (code: ${code})` : ""}`);
-          summary.errors.push({ path: storagePath, message, code });
+          console.error(`[CRITICAL SIGNING ERROR] createSignedUrl failed for ${storagePath}: ${message}${code ? ` (code: ${code})` : ""}`);
+          summary.errors.push({ path: storagePath, message: `Critical Signing Error: ${message}`, code });
           return;
         }
 
         const signedUrl = signed?.signedUrl;
         if (!signedUrl) {
           const message = "createSignedUrl returned no signedUrl";
-          console.warn(`[ERROR] ${message} for ${storagePath}`);
-          summary.errors.push({ path: storagePath, message });
+          console.error(`[CRITICAL SIGNING ERROR] ${message} for ${storagePath}`);
+          summary.errors.push({ path: storagePath, message: `Critical Signing Error: ${message}` });
           return;
         }
 
-        const res = await fetch(signedUrl);
-        if (!res.ok) {
-          const message = `download ${res.status}`;
-          console.warn(`[ERROR] download failed for ${storagePath}: ${message}`);
+        const res = await fetchWithRetry(signedUrl);
+        if (!res) {
+          const message = `download failed after ${FETCH_RETRIES} retries`;
+          console.error(`[ERROR] ${message} for ${storagePath}`);
           summary.errors.push({ path: storagePath, message });
           return;
         }
@@ -271,28 +330,17 @@ export async function POST(request: NextRequest) {
           await processFile(storagePath, item, inferred, summary);
           await delay(WAIT_MS);
         } else {
-          // If we don't have an inferred mapping from the parent, try to infer from this folder's name
-          let childMapping = inferredRootMapping;
-          if (!childMapping || (!childMapping.rental_id && !childMapping.cart_id && !childMapping.host_id)) {
-            try {
-              // Try inferMapping on the folder name (e.g., "rental_<uuid>" or "<uuid>")
-              const inferredForChild = await inferMapping(item.name);
-              // If still empty, try using the last path component (useful for nested folders)
-              if ((!inferredForChild.rental_id && !inferredForChild.cart_id && !inferredForChild.host_id)) {
-                const lastSegment = storagePath.split("/").pop() || item.name;
-                if (lastSegment !== item.name) {
-                  const inferredFromLast = await inferMapping(lastSegment);
-                  childMapping = inferredFromLast;
-                } else {
-                  childMapping = inferredForChild;
-                }
-              } else {
-                childMapping = inferredForChild;
-              }
-            } catch (err: any) {
-              console.warn(`[MIGRATE] inferMapping for child folder ${item.name} failed: ${err?.message || err}`);
-              childMapping = inferredRootMapping ?? { rental_id: null, cart_id: null, host_id: null };
-            }
+          // Always try to infer mapping from the current folder name
+          // Then merge with parent mapping (only filling in missing IDs)
+          let childMapping: Mapping;
+          try {
+            const inferredForChild = await inferMapping(item.name);
+            // Merge: parent mapping + current folder's inferred data
+            // Only fills in missing IDs - never overwrites existing parent values with null
+            childMapping = mergeMapping(inferredRootMapping, inferredForChild);
+          } catch (err: any) {
+            console.warn(`[MIGRATE] inferMapping for child folder ${item.name} failed: ${err?.message || err}`);
+            childMapping = inferredRootMapping ?? { rental_id: null, cart_id: null, host_id: null };
           }
           await walkFolder(storagePath, childMapping, summary);
         }
