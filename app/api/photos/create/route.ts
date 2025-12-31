@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     // Initialize admin client at runtime (lazy)
     const supabaseAdmin = getSupabaseAdmin();
+
     // Ensure this is a JSON request
     const body = await request.json();
     const { storagePath, fileName, mimeType, rentalId, cartId, advisoryHash, advisoryGps } = body;
@@ -23,9 +24,6 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return NextResponse.json({ error: "Missing access token" }, { status: 401 });
     }
-
-    // Get admin client at runtime
-    const supabaseAdmin = getSupabaseAdmin();
 
     // Verify token via supabase admin
     const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);

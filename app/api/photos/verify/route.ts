@@ -17,9 +17,6 @@ export async function POST(request: Request) {
   const token = authHeader.replace("Bearer ", "").trim();
   if (!token) return NextResponse.json({ error: "missing token" }, { status: 401 });
 
-  // Get admin client at runtime
-  const supabaseAdmin = getSupabaseAdmin();
-
   // Very small validation: test token has service permissions by trying an auth call
   const { error } = await supabaseAdmin.auth.getUser(token);
   if (error) {
