@@ -1,3 +1,4 @@
+// app/api/migrate/evidence/route.ts
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
@@ -10,7 +11,7 @@ const BUCKET = "evidence";
 const PAGE_LIMIT = 100;
 const WAIT_MS = 120;
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Mapping = { rental_id: string | null; cart_id: string | null; host_id: string | null };
 type Summary = {
@@ -47,10 +48,10 @@ export async function POST(request: NextRequest) {
       const results: any[] = [];
       let offset = 0;
       while (true) {
-        const { data, error } = await supabaseAdmin.storage
-          .from(BUCKET)
-          .list(path, { limit: PAGE_LIMIT, offset });
-        if (error) throw error;
+        const { data, error } = await supabaseAdmin.storage.from(BUCKET).list(path, { limit: PAGE_LIMIT, offset });
+        if (error) {
+          throw error;
+        }
         if (!data || data.length === 0) break;
         results.push(...data);
         if (data.length < PAGE_LIMIT) break;
@@ -61,55 +62,54 @@ export async function POST(request: NextRequest) {
     }
 
     async function existsPhotoByPath(storagePath: string) {
-      const { data, error } = await supabaseAdmin
-        .from("photos")
-        .select("id")
-        .eq("storage_path", storagePath)
-        .maybeSingle();
-      if (error) throw error;
-      return !!data;
+      const resp = await supabaseAdmin.from("photos").select("id").eq("storage_path", storagePath).maybeSingle();
+      if ((resp as any).error) throw (resp as any).error;
+      return !!(resp as any).data;
     }
 
     async function inferMapping(folderName: string): Promise<Mapping> {
       const mapping: Mapping = { rental_id: null, cart_id: null, host_id: null };
       if (!isUuid(folderName)) return mapping;
 
-      const { data: rental } = await supabaseAdmin
+      // rental lookup
+      const rentalResp = await supabaseAdmin
         .from("rentals")
         .select("id,cart_id")
         .eq("id", folderName)
         .maybeSingle();
-      if (rental) {
-        mapping.rental_id = rental.id;
-        mapping.cart_id = rental.cart_id;
-        if (rental.cart_id) {
-          const { data: cart } = await supabaseAdmin
+
+      if ((rentalResp as any).error) {
+        console.warn("rental lookup failed", (rentalResp as any).error);
+      }
+      if ((rentalResp as any).data) {
+        const rentalRow = (rentalResp as any).data as { id: string; cart_id: string | null };
+        mapping.rental_id = rentalRow.id;
+        mapping.cart_id = rentalRow.cart_id;
+        if (rentalRow.cart_id) {
+          const cartResp = await supabaseAdmin
             .from("carts")
             .select("host_id")
-            .eq("id", rental.cart_id)
+            .eq("id", rentalRow.cart_id)
             .maybeSingle();
-          if (cart) mapping.host_id = cart.host_id;
+          if ((cartResp as any)?.data) {
+            mapping.host_id = ((cartResp as any).data as any).host_id ?? null;
+          }
         }
         return mapping;
       }
 
-      const { data: cart } = await supabaseAdmin
-        .from("carts")
-        .select("id,host_id")
-        .eq("id", folderName)
-        .maybeSingle();
-      if (cart) {
-        mapping.cart_id = cart.id;
-        mapping.host_id = cart.host_id;
+      // cart lookup
+      const cartResp = await supabaseAdmin.from("carts").select("id,host_id").eq("id", folderName).maybeSingle();
+      if ((cartResp as any)?.data) {
+        const cartRow = (cartResp as any).data as { id: string; host_id: string | null };
+        mapping.cart_id = cartRow.id;
+        mapping.host_id = cartRow.host_id;
         return mapping;
       }
 
-      const { data: host } = await supabaseAdmin
-        .from("hosts")
-        .select("id")
-        .eq("id", folderName)
-        .maybeSingle();
-      if (host) mapping.host_id = host.id;
+      // host lookup
+      const hostResp = await supabaseAdmin.from("hosts").select("id").eq("id", folderName).maybeSingle();
+      if ((hostResp as any)?.data) mapping.host_id = ((hostResp as any).data as any).id ?? null;
 
       return mapping;
     }
@@ -134,7 +134,15 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        const res = await fetch(signed.signedUrl);
+        const signedUrl = signed?.signedUrl;
+        if (!signedUrl) {
+          const message = "createSignedUrl returned no signedUrl";
+          console.warn(`[ERROR] ${message} for ${storagePath}`);
+          summary.errors.push({ path: storagePath, message });
+          return;
+        }
+
+        const res = await fetch(signedUrl);
         if (!res.ok) {
           const message = `download ${res.status}`;
           console.warn(`[ERROR] download failed for ${storagePath}: ${message}`);
@@ -150,9 +158,7 @@ export async function POST(request: NextRequest) {
         try {
           gps = await exifr.gps(buffer);
         } catch (e: any) {
-          console.warn(
-            `[WARN] exifr.gps failed for ${storagePath}: ${e && e.message ? e.message : String(e)}`
-          );
+          console.warn(`[WARN] exifr.gps failed for ${storagePath}: ${e?.message ?? String(e)}`);
         }
 
         const row = {
@@ -171,41 +177,33 @@ export async function POST(request: NextRequest) {
             gps && typeof gps.altitude === "number"
               ? gps.altitude
               : gps && typeof (gps as any).alt === "number"
-                ? (gps as any).alt
-                : null,
+              ? (gps as any).alt
+              : null,
           kind: "pre_ride",
           verified: true,
           uploader_ip: null,
           uploader_ua: null,
           metadata: { exif: gps ?? null, storage_meta: storageMeta ?? null },
-          uploaded_at: storageMeta?.created_at
-            ? new Date(storageMeta.created_at).toISOString()
-            : new Date().toISOString(),
+          uploaded_at: storageMeta?.created_at ? new Date(storageMeta.created_at).toISOString() : new Date().toISOString(),
         };
 
         if (dry) {
-          console.log(
-            `[DRY] would insert: ${storagePath} sha=${hash.slice(0, 8)}... inferred=${JSON.stringify(inferred)}`
-          );
+          console.log(`[DRY] would insert: ${storagePath} sha=${hash.slice(0, 8)}... inferred=${JSON.stringify(inferred)}`);
           summary.dryRuns += 1;
           return;
         }
 
-        const { data: inserted, error: insertErr } = await supabaseAdmin
-          .from("photos")
-          .insert(row)
-          .select()
-          .single();
-        if (insertErr || !inserted) {
-          const message = insertErr?.message || "insert failed";
-          const code = insertErr?.code || undefined;
+        const insertResp = await (supabaseAdmin.from("photos") as any).insert(row).select().single();
+        if ((insertResp as any).error || !(insertResp as any).data) {
+          const message = (insertResp as any).error?.message || "insert failed";
+          const code = (insertResp as any).error?.code || undefined;
           console.error(`[ERROR] insert failed for ${storagePath}: ${message}${code ? ` (code: ${code})` : ""}`);
           summary.errors.push({ path: storagePath, message, code });
           return;
         }
 
         summary.inserted += 1;
-        console.log(`[INSERTED] id=${inserted.id} path=${storagePath} sha=${hash.slice(0, 8)}...`);
+        console.log(`[INSERTED] id=${(insertResp as any).data.id} path=${storagePath} sha=${hash.slice(0, 8)}...`);
       } catch (err: any) {
         const message = err?.message || String(err);
         console.error(`[EXCEPTION] processing ${storagePath}: ${message}`);
@@ -254,13 +252,7 @@ export async function POST(request: NextRequest) {
       `[MIGRATE] Completed. inserted=${summary.inserted} skipped=${summary.skipped} dryRuns=${summary.dryRuns} errors=${summary.errors.length}`
     );
 
-    const responseBody = {
-      ok: true,
-      dry,
-      summary,
-    };
-
-    return NextResponse.json(responseBody);
+    return NextResponse.json({ ok: true, dry, summary });
   } catch (e: any) {
     console.error("[MIGRATE] Catastrophic failure:", e?.message || e);
     return NextResponse.json({ error: e?.message || "internal error" }, { status: 500 });

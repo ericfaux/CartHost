@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing access token" }, { status: 401 });
     }
 
+    // Get admin client at runtime
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Verify token via supabase admin
     const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
     if (userErr || !userData?.user) {
@@ -34,31 +37,34 @@ export async function POST(request: NextRequest) {
     // Optional: ensure the user is host for the cart or rental (best practice)
     const hostId = userId; // hosts.id maps to auth user id in your schema
     if (cartId) {
-      const { data: cartRow, error: cartErr } = await supabaseAdmin
+      const cartResp = await supabaseAdmin
         .from("carts")
         .select("host_id")
         .eq("id", cartId)
         .maybeSingle();
-      if (cartErr) {
+      if ((cartResp as any).error) {
         return NextResponse.json({ error: "Failed to verify cart" }, { status: 500 });
       }
-      if (cartRow && cartRow.host_id !== userId) {
+      const cartRow = (cartResp as any).data;
+      if (cartRow && (cartRow as any).host_id !== userId) {
         return NextResponse.json({ error: "Not authorized for this cart" }, { status: 403 });
       }
     } else if (rentalId) {
-      const { data: rentalRow, error: rErr } = await supabaseAdmin
+      const rentalResp = await supabaseAdmin
         .from("rentals")
         .select("cart_id")
         .eq("id", rentalId)
         .maybeSingle();
-      if (rErr) return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
+      if ((rentalResp as any).error) return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
+      const rentalRow = (rentalResp as any).data;
       if (rentalRow) {
-        const { data: cartRow } = await supabaseAdmin
+        const cartResp2 = await supabaseAdmin
           .from("carts")
           .select("host_id")
-          .eq("id", rentalRow.cart_id)
+          .eq("id", (rentalRow as any).cart_id)
           .maybeSingle();
-        if (cartRow && cartRow.host_id !== userId) return NextResponse.json({ error: "Not authorized for this rental" }, { status: 403 });
+        const cartRow2 = (cartResp2 as any).data;
+        if (cartRow2 && (cartRow2 as any).host_id !== userId) return NextResponse.json({ error: "Not authorized for this rental" }, { status: 403 });
       }
     }
 
@@ -83,17 +89,20 @@ export async function POST(request: NextRequest) {
       verified: false,
     };
 
-    const { data: insertData, error: insertErr } = await supabaseAdmin
-      .from("photos")
+    const insertResp = await (supabaseAdmin.from("photos") as any)
       .insert(insertRow)
       .select()
       .single();
-    if (insertErr) {
-      return NextResponse.json({ error: "Insert failed: " + insertErr.message }, { status: 500 });
+    if ((insertResp as any).error) {
+      return NextResponse.json({ error: "Insert failed: " + (insertResp as any).error.message }, { status: 500 });
+    }
+    const insertData = (insertResp as any).data;
+    if (!insertData) {
+      return NextResponse.json({ error: "Insert failed: no data returned" }, { status: 500 });
     }
 
     // Start server verification asynchronously (do not expose service key to client)
-    const photoId = insertData.id;
+    const photoId = (insertData as any).id;
     // Fire-and-forget: try to verify and log; if it errors, it will need manual retry via verify route
     (async () => {
       try {

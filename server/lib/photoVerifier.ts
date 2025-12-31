@@ -63,8 +63,8 @@ export async function verifyAndUpdate(photoId: string, storagePath: string, buck
     verified: true,
   };
 
-  const { error: updErr } = await supabaseAdmin.from("photos").update(update).eq("id", photoId);
-  if (updErr) throw new Error(`Failed to update photos row ${photoId}: ${updErr.message}`);
+  const updateResp = await (supabaseAdmin.from("photos") as any).update(update).eq("id", photoId);
+  if ((updateResp as any).error) throw new Error(`Failed to update photos row ${photoId}: ${(updateResp as any).error.message}`);
   return { photoId, hash, gps };
 }
 
