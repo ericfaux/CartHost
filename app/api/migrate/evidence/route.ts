@@ -326,7 +326,19 @@ export async function POST(request: NextRequest) {
         const isFile = !!item.metadata;
 
         if (isFile) {
-          const inferred = inferredRootMapping ?? { rental_id: null, cart_id: null, host_id: null };
+          // Start with parent folder's inferred mapping
+          let inferred = inferredRootMapping ?? { rental_id: null, cart_id: null, host_id: null };
+
+          // Attempt to infer mapping from the filename itself (e.g., "rental-uuid-front.jpg")
+          // This handles flat file structures where UUID is in filename instead of folder
+          try {
+            const filenameMapping = await inferMapping(item.name);
+            // Merge filename mapping with parent mapping (only fills in missing IDs)
+            inferred = mergeMapping(inferred, filenameMapping);
+          } catch (err: any) {
+            console.warn(`[MIGRATE] inferMapping for filename ${item.name} failed: ${err?.message || err}`);
+          }
+
           await processFile(storagePath, item, inferred, summary);
           await delay(WAIT_MS);
         } else {
