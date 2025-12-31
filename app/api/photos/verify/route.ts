@@ -25,15 +25,16 @@ export async function POST(request: Request) {
   }
 
   // Fetch the photo row to get storage path
-  const { data: photoRow, error: pErr } = await supabaseAdmin
+  const photoResp = await supabaseAdmin
     .from("photos")
     .select("storage_path")
     .eq("id", photoId)
     .maybeSingle();
-  if (pErr || !photoRow) return NextResponse.json({ error: "photo not found" }, { status: 404 });
+  if ((photoResp as any).error || !(photoResp as any).data) return NextResponse.json({ error: "photo not found" }, { status: 404 });
+  const photoRow = (photoResp as any).data;
 
   try {
-    const result = await verifyAndUpdate(photoId, photoRow.storage_path, "evidence");
+    const result = await verifyAndUpdate(photoId, (photoRow as any).storage_path, "evidence");
     return NextResponse.json({ result }, { status: 200 });
   } catch (e) {
     console.error("verify route error", e);
