@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import exifr from "exifr";
-import supabaseAdmin from "../supabase-admin";
+import { getSupabaseAdmin } from "../supabase-admin";
 
 /**
  * Download file via signed URL, compute sha256 hex, extract gps metadata using exifr,
@@ -11,12 +11,15 @@ import supabaseAdmin from "../supabase-admin";
  * @param bucket name of bucket (default 'evidence')
  */
 export async function verifyAndUpdate(photoId: string, storagePath: string, bucket = "evidence") {
+  // Initialize admin client at runtime (lazy)
+  const supabaseAdmin = getSupabaseAdmin();
+
   // Create signed url (short lived)
   const { data: signed, error: sErr } = await supabaseAdmin.storage
     .from(bucket)
     .createSignedUrl(storagePath, 60);
-  if (sErr) {
-    throw new Error(`Failed to create signed url for ${storagePath}: ${sErr.message}`);
+  if (sErr || !signed?.signedUrl) {
+    throw new Error(`Failed to create signed url for ${storagePath}: ${sErr?.message || "no signed URL returned"}`);
   }
 
   // Download file

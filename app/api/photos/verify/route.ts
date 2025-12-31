@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import supabaseAdmin from "../../../../server/supabase-admin";
+import { getSupabaseAdmin } from "../../../../server/supabase-admin";
 import verifyAndUpdate from "../../../../server/lib/photoVerifier";
 
 export const runtime = "nodejs";
 
 // Admin/service endpoint to verify a single photo by id (requires service role or admin)
 export async function POST(request: Request) {
+  // Initialize admin client at runtime (lazy)
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { photoId } = await request.json();
   if (!photoId) return NextResponse.json({ error: "photoId required" }, { status: 400 });
 
