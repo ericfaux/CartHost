@@ -30,7 +30,6 @@ type Rental = {
   created_at: string;
   guest_name?: string | null;
   status?: string | null;
-  photos?: string[] | null;
   waiver_agreed?: boolean | null;
   waiver_agreed_at?: string | null;
   guest_ip?: string | null;
@@ -41,6 +40,14 @@ type Rental = {
   } | null;
   condition_comment?: string | null;
   condition_image_url?: string | null;
+};
+
+export type PhotoRow = {
+  id: string;
+  storage_path: string;
+  sha256: string | null;
+  created_at: string;
+  signedUrl?: string;
 };
 
 const WAIVER_TEXT = `GOLF CART RENTAL AGREEMENT AND WAIVER OF LIABILITY
@@ -76,12 +83,18 @@ I acknowledge that I have inspected the golf cart (including by reviewing and/or
 8. ACKNOWLEDGMENT AND CONSENT
 By clicking "I Agree" or otherwise electronically signing below, I acknowledge that I have read this Agreement in full, understand its terms, and voluntarily agree to be bound by it. I understand that by signing this Agreement, I may be waiving certain legal rights, including the right to sue the Host for ordinary negligence, to the fullest extent permitted by law.`;
 
-export default function RentalDetail({ rental }: { rental: Rental }) {
+export default function RentalDetail({
+  rental,
+  photos = [],
+}: {
+  rental: Rental;
+  photos?: PhotoRow[];
+}) {
   const [showWaiver, setShowWaiver] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const photos = rental.photos ?? [];
+  const [selectedHash, setSelectedHash] = useState<string | null>(null);
   const preRidePhotos = photos.slice(0, 4);
-  const checkoutPhoto = photos[photos.length - 1];
+  const checkoutPhoto = photos.length > 0 ? photos[photos.length - 1] : null;
 
   const formattedDate = useMemo(() => {
     const date = new Date(rental.created_at);
@@ -109,6 +122,13 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleImageClick = (photo: PhotoRow) => {
+    if (photo.signedUrl) {
+      setSelectedImage(photo.signedUrl);
+      setSelectedHash(photo.sha256);
+    }
   };
 
   const chainOfCustody = [
@@ -314,7 +334,10 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                       <p className="text-dossier-label text-ink-muted mb-2">Attached Evidence</p>
                       <button
                         type="button"
-                        onClick={() => setSelectedImage(rental.condition_image_url!)}
+                        onClick={() => {
+                          setSelectedImage(rental.condition_image_url!);
+                          setSelectedHash(null);
+                        }}
                         className="group relative h-48 w-full overflow-hidden rounded-dossier-surface border-2 border-amber-200 bg-white shadow-sm transition hover:border-accent-warning sm:w-64"
                       >
                         <Image
@@ -358,21 +381,28 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {preRidePhotos.map((photo, index) => (
                       <button
-                        key={`${photo}-${index}`}
+                        key={photo.id}
                         type="button"
-                        onClick={() => setSelectedImage(photo)}
+                        onClick={() => handleImageClick(photo)}
                         className="group relative overflow-hidden rounded-dossier-surface border border-rule bg-surface shadow-dossier-recessed transition hover:border-accent-info hover:shadow-dossier"
                         aria-label={`Open pre-ride photo ${index + 1}`}
+                        disabled={!photo.signedUrl}
                       >
                         <div className="relative h-48 w-full">
-                          <Image
-                            src={photo}
-                            alt={`Pre-ride photo ${index + 1}`}
-                            fill
-                            unoptimized
-                            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                            className="object-cover"
-                          />
+                          {photo.signedUrl ? (
+                            <Image
+                              src={photo.signedUrl}
+                              alt={`Pre-ride photo ${index + 1}`}
+                              fill
+                              unoptimized
+                              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-surface">
+                              <ImageIcon className="h-8 w-8 text-ink-muted" />
+                            </div>
+                          )}
                           <div className="absolute inset-0 flex items-center justify-center bg-ink/0 transition group-hover:bg-ink/10">
                             <span className="rounded-dossier-chip bg-ink/80 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
                               Click to enlarge
@@ -384,6 +414,14 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                             PRE-{String(index + 1).padStart(2, "0")}
                           </span>
                         </div>
+                        {photo.sha256 && (
+                          <EvidenceTag
+                            kind="photo"
+                            hash={photo.sha256.slice(0, 8)}
+                            status="verified"
+                            className="absolute top-2 left-2"
+                          />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -410,19 +448,26 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                 {checkoutPhoto ? (
                   <button
                     type="button"
-                    onClick={() => setSelectedImage(checkoutPhoto)}
+                    onClick={() => handleImageClick(checkoutPhoto)}
                     className="group relative w-full overflow-hidden rounded-dossier-surface border border-rule bg-surface shadow-dossier-recessed transition hover:border-accent-success hover:shadow-dossier"
                     aria-label="Open checkout photo"
+                    disabled={!checkoutPhoto.signedUrl}
                   >
                     <div className="relative h-80 w-full">
-                      <Image
-                        src={checkoutPhoto}
-                        alt="Checkout photo"
-                        fill
-                        unoptimized
-                        sizes="100vw"
-                        className="object-cover"
-                      />
+                      {checkoutPhoto.signedUrl ? (
+                        <Image
+                          src={checkoutPhoto.signedUrl}
+                          alt="Checkout photo"
+                          fill
+                          unoptimized
+                          sizes="100vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-surface">
+                          <ImageIcon className="h-12 w-12 text-ink-muted" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 flex items-center justify-center bg-ink/0 transition group-hover:bg-ink/10">
                         <span className="rounded-dossier-chip bg-ink/80 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
                           Click to enlarge
@@ -434,6 +479,14 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
                         Return Photo
                       </span>
                     </div>
+                    {checkoutPhoto.sha256 && (
+                      <EvidenceTag
+                        kind="photo"
+                        hash={checkoutPhoto.sha256.slice(0, 8)}
+                        status="verified"
+                        className="absolute top-2 left-2"
+                      />
+                    )}
                   </button>
                 ) : (
                   <div className="flex flex-col items-center justify-center rounded-dossier-surface border-2 border-dashed border-rule bg-paper py-12 text-center">
@@ -457,14 +510,20 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 dossier-overlay"
-          onClick={() => setSelectedImage(null)}
+          onClick={() => {
+            setSelectedImage(null);
+            setSelectedHash(null);
+          }}
           role="dialog"
           aria-modal="true"
           aria-label="Evidence photo viewer"
         >
           <button
             type="button"
-            onClick={() => setSelectedImage(null)}
+            onClick={() => {
+              setSelectedImage(null);
+              setSelectedHash(null);
+            }}
             className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/60"
             aria-label="Close"
           >
@@ -489,6 +548,7 @@ export default function RentalDetail({ rental }: { rental: Rental }) {
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-dossier-chip bg-ink/80 px-4 py-2 backdrop-blur-sm">
             <p className="font-mono text-xs font-semibold text-white uppercase tracking-wider">
               Evidence Photo • Case #{rental.id.slice(0, 8).toUpperCase()}
+              {selectedHash && ` • SHA256: ${selectedHash.slice(0, 12)}...`}
             </p>
           </div>
         </div>

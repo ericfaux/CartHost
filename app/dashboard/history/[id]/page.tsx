@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { getSupabaseAdmin } from "../../../../server/supabase-admin";
 import RentalDetail from "../../../../components/RentalDetail";
 
 type Rental = {
@@ -8,10 +9,27 @@ type Rental = {
   created_at: string;
   guest_name?: string | null;
   status?: string | null;
-  photos?: string[] | null;
+  waiver_agreed?: boolean | null;
+  waiver_agreed_at?: string | null;
+  guest_ip?: string | null;
+  user_agent?: string | null;
+  waiver_version?: string | null;
+  condition_comment?: string | null;
+  condition_image_url?: string | null;
   carts?: {
     name?: string | null;
   } | null;
+};
+
+type PhotoDbRow = {
+  id: string;
+  storage_path: string;
+  sha256: string | null;
+  created_at: string;
+};
+
+export type PhotoRow = PhotoDbRow & {
+  signedUrl?: string;
 };
 
 export default async function RentalPage({
@@ -69,5 +87,31 @@ export default async function RentalPage({
     notFound();
   }
 
-  return <RentalDetail rental={rental as Rental} />;
+  // Fetch photos for this rental from the photos table
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: photosData } = (await supabaseAdmin
+    .from("photos")
+    .select("id, storage_path, sha256, created_at")
+    .eq("rental_id", id)
+    .order("created_at", { ascending: true })) as { data: PhotoDbRow[] | null };
+
+  // Generate signed URLs for each photo
+  const photos: PhotoRow[] = [];
+  if (photosData && photosData.length > 0) {
+    for (const photo of photosData) {
+      const { data: signedData } = await supabaseAdmin.storage
+        .from("evidence")
+        .createSignedUrl(photo.storage_path, 3600); // 1 hour expiry
+
+      photos.push({
+        id: photo.id,
+        storage_path: photo.storage_path,
+        sha256: photo.sha256,
+        created_at: photo.created_at,
+        signedUrl: signedData?.signedUrl,
+      });
+    }
+  }
+
+  return <RentalDetail rental={rental as Rental} photos={photos} />;
 }
