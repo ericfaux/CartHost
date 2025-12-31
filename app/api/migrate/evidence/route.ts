@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import exifr from "exifr";
-import supabaseAdmin from "../../../../server/supabase-admin";
+import { getSupabaseAdmin } from "../../../../server/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ type Summary = {
   inserted: number;
   skipped: number;
   dryRuns: number;
-  errors: { path: string; message: string }[];
+  errors: { path: string; message: string; code?: string }[];
 };
 
 function isUuid(value?: string | null) {
@@ -29,8 +29,15 @@ export async function POST(request: NextRequest) {
   try {
     const secret = request.headers.get("x-cron-secret");
     if (!secret || secret !== process.env.CRON_SECRET) {
+      if (!process.env.CRON_SECRET) {
+        console.error("[MIGRATE] CRON_SECRET environment variable is not set");
+      }
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
+
+    // Initialize admin client at runtime (lazy)
+    const supabaseAdmin = getSupabaseAdmin();
+    console.info("[MIGRATE] Starting evidence migration...");
 
     const url = request.nextUrl;
     const dry = url.searchParams.get("dry") === "true" || url.searchParams.get("dry") === "1";
@@ -121,8 +128,9 @@ export async function POST(request: NextRequest) {
           .createSignedUrl(storagePath, 60);
         if (sErr || !signed) {
           const message = sErr?.message || "failed to sign URL";
-          console.warn(`[ERROR] createSignedUrl failed for ${storagePath}: ${message}`);
-          summary.errors.push({ path: storagePath, message });
+          const code = (sErr as any)?.code || undefined;
+          console.warn(`[ERROR] createSignedUrl failed for ${storagePath}: ${message}${code ? ` (code: ${code})` : ""}`);
+          summary.errors.push({ path: storagePath, message, code });
           return;
         }
 
@@ -190,8 +198,9 @@ export async function POST(request: NextRequest) {
           .single();
         if (insertErr || !inserted) {
           const message = insertErr?.message || "insert failed";
-          console.warn(`[ERROR] insert failed for ${storagePath}: ${message}`);
-          summary.errors.push({ path: storagePath, message });
+          const code = insertErr?.code || undefined;
+          console.error(`[ERROR] insert failed for ${storagePath}: ${message}${code ? ` (code: ${code})` : ""}`);
+          summary.errors.push({ path: storagePath, message, code });
           return;
         }
 
@@ -241,6 +250,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.info(
+      `[MIGRATE] Completed. inserted=${summary.inserted} skipped=${summary.skipped} dryRuns=${summary.dryRuns} errors=${summary.errors.length}`
+    );
+
     const responseBody = {
       ok: true,
       dry,
@@ -249,7 +262,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responseBody);
   } catch (e: any) {
-    console.error("Migration endpoint failed:", e?.message || e);
+    console.error("[MIGRATE] Catastrophic failure:", e?.message || e);
     return NextResponse.json({ error: e?.message || "internal error" }, { status: 500 });
   }
 }

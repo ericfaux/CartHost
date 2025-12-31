@@ -1,12 +1,14 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import supabaseAdmin from "../../../../server/supabase-admin";
+import { getSupabaseAdmin } from "../../../../server/supabase-admin";
 import verifyAndUpdate from "../../../../server/lib/photoVerifier";
 
 export const runtime = "nodejs"; // ensure Node runtime
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize admin client at runtime (lazy)
+    const supabaseAdmin = getSupabaseAdmin();
     // Ensure this is a JSON request
     const body = await request.json();
     const { storagePath, fileName, mimeType, rentalId, cartId, advisoryHash, advisoryGps } = body;
