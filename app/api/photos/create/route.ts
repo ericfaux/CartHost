@@ -32,38 +32,84 @@ export async function POST(request: NextRequest) {
     }
     const userId = userData.user.id;
 
-    // Optional: ensure the user is host for the cart or rental (best practice)
-    const hostId = userId; // hosts.id maps to auth user id in your schema
+    // Variables to track authorization and resolved IDs
+    let isAuthorized = false;
+    let realHostId: string | null = null;
+    let resolvedCartId: string | null = cartId || null;
+
+    // Dual Authorization: Check if user is Host OR Guest
     if (cartId) {
+      // If cartId is provided directly, check if user is the host
       const cartResp = await supabaseAdmin
         .from("carts")
         .select("host_id")
         .eq("id", cartId)
         .maybeSingle();
+
       if ((cartResp as any).error) {
         return NextResponse.json({ error: "Failed to verify cart" }, { status: 500 });
       }
+
       const cartRow = (cartResp as any).data;
-      if (cartRow && (cartRow as any).host_id !== userId) {
-        return NextResponse.json({ error: "Not authorized for this cart" }, { status: 403 });
+      if (cartRow) {
+        if ((cartRow as any).host_id === userId) {
+          // User is the host
+          isAuthorized = true;
+          realHostId = userId;
+        } else if (rentalId) {
+          // User is not the host, but we have a rentalId - check if they're the guest
+          const rentalResp = await supabaseAdmin
+            .from("rentals")
+            .select("guest_id, cart_id")
+            .eq("id", rentalId)
+            .eq("cart_id", cartId)
+            .maybeSingle();
+
+          if ((rentalResp as any).error) {
+            return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
+          }
+
+          const rentalRow = (rentalResp as any).data;
+          if (rentalRow && (rentalRow as any).guest_id === userId) {
+            // User is the guest for this rental
+            isAuthorized = true;
+            realHostId = (cartRow as any).host_id; // Use the cart's host_id
+          }
+        }
       }
     } else if (rentalId) {
+      // No cartId provided, but we have rentalId - look up rental with cart join
       const rentalResp = await supabaseAdmin
         .from("rentals")
-        .select("cart_id")
+        .select("guest_id, cart_id, carts!inner(host_id)")
         .eq("id", rentalId)
         .maybeSingle();
-      if ((rentalResp as any).error) return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
+
+      if ((rentalResp as any).error) {
+        return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
+      }
+
       const rentalRow = (rentalResp as any).data;
       if (rentalRow) {
-        const cartResp2 = await supabaseAdmin
-          .from("carts")
-          .select("host_id")
-          .eq("id", (rentalRow as any).cart_id)
-          .maybeSingle();
-        const cartRow2 = (cartResp2 as any).data;
-        if (cartRow2 && (cartRow2 as any).host_id !== userId) return NextResponse.json({ error: "Not authorized for this rental" }, { status: 403 });
+        const cartData = (rentalRow as any).carts;
+        const cartHostId = cartData?.host_id;
+        resolvedCartId = (rentalRow as any).cart_id;
+
+        if (cartHostId === userId) {
+          // User is the host
+          isAuthorized = true;
+          realHostId = userId;
+        } else if ((rentalRow as any).guest_id === userId) {
+          // User is the guest for this rental
+          isAuthorized = true;
+          realHostId = cartHostId; // Use the cart's host_id
+        }
       }
+    }
+
+    // If neither host nor guest authorization passed, return 403
+    if (!isAuthorized || !realHostId) {
+      return NextResponse.json({ error: "Not authorized to upload photos for this rental" }, { status: 403 });
     }
 
     // Get uploader metadata from headers: user-agent and client IP
@@ -71,10 +117,11 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
 
     // Insert photos row (verified = false)
+    // Use realHostId (the actual host of the cart) and resolvedCartId (derived from rental if needed)
     const insertRow = {
       rental_id: rentalId || null,
-      cart_id: cartId || null,
-      host_id: hostId,
+      cart_id: resolvedCartId,
+      host_id: realHostId,
       storage_path: storagePath,
       file_name: fileName,
       mime_type: mimeType || null,
