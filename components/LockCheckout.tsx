@@ -17,6 +17,7 @@ export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: Lo
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ingestionError, setIngestionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) return;
@@ -31,6 +32,7 @@ export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: Lo
     const selectedFile = event.target.files?.[0] ?? null;
     setFile(selectedFile);
     setError(null);
+    setIngestionError(null);
   };
 
   const handleCheckout = async () => {
@@ -41,8 +43,10 @@ export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: Lo
 
     setLoading(true);
     setError(null);
+    setIngestionError(null);
 
-    const path = `${cartId}/${userId}/checkout_lock.jpg`;
+    const timestamp = Date.now();
+    const path = `${cartId}/${userId}/${rentalId}/return_lock_${timestamp}.jpg`;
 
     const { error: uploadError } = await supabase.storage.from('evidence').upload(path, file, { upsert: true });
 
@@ -52,32 +56,47 @@ export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: Lo
       return;
     }
 
+    // Fetch the session token for API authorization
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error('Failed to get session:', sessionError);
+    }
+
+    const accessToken = sessionData?.session?.access_token;
+
     // Register the uploaded photo in the database
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (accessToken) {
-      try {
-        const response = await fetch('/api/photos/create', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            rentalId,
-            cartId,
-            storagePath: path,
-            kind: 'lock_photo',
-          }),
-        });
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
 
-        if (!response.ok) {
-          console.error('Photo ingestion failed:', await response.json().catch(() => ({})));
-        }
-      } catch (err) {
-        console.error('Photo ingestion error:', err);
+    try {
+      const ingestionResponse = await fetch('/api/photos/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          rentalId,
+          cartId,
+          storagePath: path,
+          fileName: `return_lock_${timestamp}.jpg`,
+          kind: 'return_proof',
+        }),
+      });
+
+      if (!ingestionResponse.ok) {
+        const errorData = await ingestionResponse.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Photo registration failed (${ingestionResponse.status})`;
+        console.error('Photo ingestion failed:', errorMsg);
+        setIngestionError(errorMsg);
+      } else {
+        const result = await ingestionResponse.json();
+        console.log('Photo ingestion successful:', result);
       }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Photo registration failed';
+      console.error('Photo ingestion crashed:', err);
+      setIngestionError(errorMsg);
     }
 
     onSuccess();
@@ -119,6 +138,14 @@ export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: Lo
           onChange={handleFileChange}
         />
       </div>
+
+      {ingestionError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+          <p className="font-medium">Warning: Photo tracking issue</p>
+          <p className="text-xs mt-1">{ingestionError}</p>
+          <p className="text-xs mt-1 text-amber-600">Your photo was uploaded but may not appear in the dashboard.</p>
+        </div>
+      )}
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
