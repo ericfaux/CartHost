@@ -1,22 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ComponentType } from "react";
+import { useMemo } from "react";
 import {
-  Activity,
   CheckCircle,
-  Circle,
-  History,
-  LayoutGrid,
-  Shield,
-  TrendingUp,
   Stamp,
   ClipboardCheck,
   ArrowRight,
-  X,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
+import { useTour } from "../app/dashboard/tour-context";
 
 export type DashboardTourProps = {
   carts: { id: string }[];
@@ -24,52 +18,8 @@ export type DashboardTourProps = {
   profile: { phone_number?: string | null } | null;
 };
 
-type TourStep = {
-  title: string;
-  description: string;
-  icon?: ComponentType<{ className?: string }>;
-};
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    title: "Welcome",
-    description: "Your dashboard is ready. Let's show you how to protect your business.",
-  },
-  {
-    title: "Quick Access",
-    description:
-      "The Command Center. Manage your fleet, open the history log, or record maintenance in one click.",
-    icon: LayoutGrid,
-  },
-  {
-    title: "Protection Overview",
-    description:
-      "Your Liability Shield. Monitors signed waivers, evidence photos, and open security deposits. If this section is highlighted, ensure you review and return guest deposits in a timely manner.",
-    icon: Shield,
-  },
-  {
-    title: "Business Performance",
-    description:
-      "The Bottom Line. Tracks total rides and estimated revenue. Note that revenue figures are based on your fleet's pricing configuration and the guest's self-reported length of stay.",
-    icon: TrendingUp,
-  },
-  {
-    title: "Fleet Health",
-    description:
-      "The Mechanic. We track every trip. When a cart hits 20 rides, we flag it here so you never miss a service date.",
-    icon: Activity,
-  },
-  {
-    title: "History (The Evidence Locker)",
-    description:
-      "Most Important: This is your 'Vault'. If a guest damages a cart, come here immediately to find their signed waiver, pre-ride photos, and IP logs. It is your first line of defense.",
-    icon: History,
-  },
-];
-
 export default function DashboardTour({ carts, rentals, profile }: DashboardTourProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const { startTour } = useTour();
 
   const { completedSteps, steps, progress } = useMemo(() => {
     const step1Assets = carts.length > 0;
@@ -106,28 +56,6 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
       progress: completionPercent,
     };
   }, [carts.length, profile?.phone_number, rentals.length]);
-
-  const handleStartTour = () => {
-    setCurrentStep(0);
-    setIsOpen(true);
-  };
-
-  const handleNext = () => {
-    if (currentStep < TOUR_STEPS.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    } else {
-      setIsOpen(false);
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(0, prev - 1));
-  };
-
-  const handleDismiss = () => {
-    setIsOpen(false);
-    setCurrentStep(0);
-  };
 
   // Setup Docket (incomplete state)
   if (completedSteps < 3) {
@@ -220,9 +148,6 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
   }
 
   // Setup Complete State
-  const step = TOUR_STEPS[currentStep];
-  const Icon = step.icon;
-
   return (
     <div className="dossier-panel overflow-hidden">
       {/* Complete Header Strip */}
@@ -243,104 +168,10 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
             </p>
           </div>
         </div>
-        <Button variant="ops" onClick={handleStartTour}>
+        <Button variant="ops" onClick={startTour}>
           Start Dashboard Tour
         </Button>
       </div>
-
-      {/* Tour Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay */}
-          <div
-            className="dossier-overlay"
-            onClick={handleDismiss}
-            aria-hidden="true"
-          />
-
-          {/* Modal */}
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="relative w-full max-w-lg dossier-panel-elevated overflow-hidden"
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-rule bg-paper">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-accent-ops uppercase tracking-wider">
-                  Tour Step
-                </span>
-                <span className="font-mono text-xs font-bold text-ink bg-accent-ops/10 px-2 py-0.5 rounded">
-                  {currentStep + 1} / {TOUR_STEPS.length}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleDismiss}
-                className="p-1.5 rounded-dossier-sm text-ink-subtle hover:text-ink hover:bg-surface transition-colors"
-                aria-label="Close tour"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="px-6 py-6">
-              <div className="flex items-start gap-4">
-                {Icon && (
-                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-dossier-control bg-accent-ops/10">
-                    <Icon className="h-7 w-7 text-accent-ops" />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <h3 className="font-heading text-xl font-bold text-ink">{step.title}</h3>
-                  <p className="text-sm text-ink-subtle leading-relaxed">{step.description}</p>
-                </div>
-              </div>
-
-              {/* Progress Dots */}
-              <div className="flex items-center justify-center gap-1.5 mt-6">
-                {TOUR_STEPS.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1.5 rounded-full transition-all ${
-                      index === currentStep
-                        ? "w-4 bg-accent-ops"
-                        : index < currentStep
-                        ? "w-1.5 bg-accent-ops/50"
-                        : "w-1.5 bg-rule"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-rule bg-paper">
-              <button
-                type="button"
-                onClick={handleDismiss}
-                className="text-sm font-medium text-ink-subtle hover:text-ink transition-colors"
-              >
-                Skip Tour
-              </button>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleBack}
-                  disabled={currentStep === 0}
-                >
-                  Back
-                </Button>
-                <Button variant="ops" size="sm" onClick={handleNext}>
-                  {currentStep === TOUR_STEPS.length - 1 ? "Finish" : "Next"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
