@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Failed to verify cart" }, { status: 500 });
       }
 
-      const cartRow = cartResp.data;
+      const cartRow = cartResp.data as { host_id: string } | null;
       if (cartRow) {
         // Capture the realHostId from the cart regardless of who is uploading
         realHostId = cartRow.host_id;
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
           }
 
-          const rentalRow = rentalResp.data;
+          const rentalRow = rentalResp.data as { guest_id: string; cart_id: string } | null;
           if (rentalRow && rentalRow.guest_id === userId) {
             // User is the guest for this rental - authorized
             isAuthorized = true;
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insert failed: " + insertResp.error.message }, { status: 500 });
     }
 
-    const insertData = insertResp.data;
+    const insertData = insertResp.data as { id: string } | null;
     if (!insertData) {
       return NextResponse.json({ error: "Insert failed: no data returned" }, { status: 500 });
     }
