@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
+import { TourProvider } from "./tour-context";
+import GlobalTourOverlay from "../../components/GlobalTourOverlay";
 
 export default async function DashboardLayout({
   children,
@@ -39,14 +41,28 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Fetch the latest rental ID for the tour's "Evidence Packet" step
+  const { data: latestRental } = await supabase
+    .from("rentals")
+    .select("id, carts!inner(host_id)")
+    .eq("carts.host_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  const latestRentalId = latestRental?.id ?? null;
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto dossier-paper">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          {children}
-        </div>
-      </main>
-    </div>
+    <TourProvider latestRentalId={latestRentalId}>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto dossier-paper">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+        <GlobalTourOverlay />
+      </div>
+    </TourProvider>
   );
 }
