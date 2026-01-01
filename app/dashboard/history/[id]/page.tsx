@@ -113,20 +113,25 @@ export default async function RentalPage({
     }
   }
 
-  // Generate signed URL for condition_image_url if it exists (raw storage path)
-  let conditionImageSignedUrl: string | null = null;
-  if (rental.condition_image_url) {
-    const { data: conditionSignedData } = await supabaseAdmin.storage
-      .from("evidence")
-      .createSignedUrl(rental.condition_image_url, 3600); // 1 hour expiry
-    conditionImageSignedUrl = conditionSignedData?.signedUrl ?? null;
+  // Generate signed URL for condition_image_url if it exists and is a storage path
+  let conditionImageUrl: string | null = rental.condition_image_url ?? null;
+  if (conditionImageUrl) {
+    const isStoragePath = !/^https?:\/\//i.test(conditionImageUrl);
+    if (isStoragePath) {
+      const { data: conditionSignedData } = await supabaseAdmin.storage
+        .from("evidence")
+        .createSignedUrl(conditionImageUrl, 3600); // 1 hour expiry
+      conditionImageUrl = conditionSignedData?.signedUrl ?? null;
+    }
   }
 
   // Pass signed URL instead of raw path for condition image
   const rentalWithSignedUrl = {
     ...rental,
-    condition_image_url: conditionImageSignedUrl,
+    condition_image_url: conditionImageUrl,
   };
+
+  console.log("Rental ID:", id, "Photos Found:", photosData?.length ?? 0);
 
   return <RentalDetail rental={rentalWithSignedUrl as Rental} photos={photos} />;
 }

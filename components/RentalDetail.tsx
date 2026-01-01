@@ -161,6 +161,9 @@ export default function RentalDetail({
 
   return (
     <>
+      <div className="bg-black text-white p-2 text-xs font-mono text-center">
+        DEBUG: ID={rental.id} | WAIVER={String(rental.waiver_agreed)} | PHOTOS={photos.length}
+      </div>
       <div className="max-w-4xl mx-auto pb-12">
         {/* Navigation / Breadcrumb */}
         <div className="mb-6 flex items-center gap-4">

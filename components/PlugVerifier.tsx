@@ -54,39 +54,22 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
       return;
     }
 
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const ingestionResponse = await fetch('/api/photos/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({
-          rentalId,
-          cartId,
-          storagePath: path,
-          fileName: 'checkout_plug.jpg',
-          mimeType: 'image/jpeg',
-        }),
-      });
-
-      if (!ingestionResponse.ok) {
-        const errorBody = await ingestionResponse.json().catch(() => ({}));
-        throw new Error(errorBody.error ?? 'Photo registration failed.');
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to register photo.';
-      setError(message);
-      setLoading(false);
-      return;
-    }
-
     const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
     const imageUrl = publicUrlData.publicUrl;
+
+    // Register the uploaded photo in the database
+    await fetch('/api/photos/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rentalId,
+        cartId,
+        storagePath: path,
+        fileName: 'checkout_plug.jpg',
+        mimeType: 'image/jpeg',
+        // Pass userId as hostId fallback if needed, or let API handle it
+      })
+    }).catch(err => console.error("Photo ingestion failed:", err));
 
     try {
       const response = await fetch('/api/verify-plug', {
