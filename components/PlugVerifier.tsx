@@ -57,19 +57,25 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
     const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
     const imageUrl = publicUrlData.publicUrl;
 
-    // Register the uploaded photo in the database
+    // Register the uploaded photo in the database before verification
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     await fetch('/api/photos/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         rentalId,
         cartId,
         storagePath: path,
-        fileName: 'checkout_plug.jpg',
-        mimeType: 'image/jpeg',
-        // Pass userId as hostId fallback if needed, or let API handle it
-      })
-    }).catch(err => console.error("Photo ingestion failed:", err));
+        kind: 'return_proof',
+      }),
+    }).catch((err) => console.error('Photo ingestion failed:', err));
 
     try {
       const response = await fetch('/api/verify-plug', {
