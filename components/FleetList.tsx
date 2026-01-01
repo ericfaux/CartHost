@@ -26,6 +26,7 @@ import { Button, IconButton } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { HealthIndicator, ServiceMeter } from "./ui/Meters";
 import { EmptyState } from "./ui/EmptyState";
+import { useTour } from "../app/dashboard/tour-context";
 
 type Cart = {
   id: string;
@@ -56,6 +57,10 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [endingId, setEndingId] = useState<string | null>(null);
   const [qrAsset, setQrAsset] = useState<Cart | null>(null);
+
+  // Tour context for QR button highlighting
+  const { isOpen: isTourOpen, currentStepData } = useTour();
+  const isQrStepActive = isTourOpen && currentStepData?.id === "qr-step";
 
   const handleEdit = (cart: Cart) => {
     setSelectedCart(cart);
@@ -150,7 +155,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {carts.map((cart) => {
+          {carts.map((cart, index) => {
             const typeConfig = getCartTypeConfig(cart.type);
             const TypeIcon = typeConfig.icon;
             const tripsCount = typeof cart.tripsSinceService === "number" ? cart.tripsSinceService : 0;
@@ -165,6 +170,9 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                 })
               : null;
 
+            // Highlight the QR button only on the first card during the tour step
+            const shouldHighlightQr = isQrStepActive && index === 0;
+
             return (
               <div
                 key={cart.id}
@@ -175,11 +183,12 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                   <div className={`flex h-10 w-10 items-center justify-center rounded-dossier-control ${typeConfig.bg}`}>
                     <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
                   </div>
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`flex gap-0.5 transition-opacity ${shouldHighlightQr ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                     <IconButton
                       icon={<QrCode className="h-4 w-4" />}
                       label="Generate QR Code"
                       onClick={() => setQrAsset(cart)}
+                      className={shouldHighlightQr ? "ring-2 ring-accent-ops ring-offset-2 animate-pulse" : ""}
                     />
                     <IconButton
                       icon={<Edit2 className="h-4 w-4" />}

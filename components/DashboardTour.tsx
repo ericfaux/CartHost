@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import {
   CheckCircle,
   Stamp,
   ClipboardCheck,
   ArrowRight,
+  QrCode,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
@@ -20,6 +22,7 @@ export type DashboardTourProps = {
 
 export default function DashboardTour({ carts, rentals, profile }: DashboardTourProps) {
   const { startTour } = useTour();
+  const router = useRouter();
 
   const { completedSteps, steps, progress } = useMemo(() => {
     const step1Assets = carts.length > 0;
@@ -33,18 +36,21 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
         description: "",
         href: "/dashboard/fleet",
         completed: step1Assets,
+        showTestButton: false,
       },
       {
         title: "Set up support contact info",
         description: "",
         href: "/dashboard/settings",
         completed: step2Profile,
+        showTestButton: false,
       },
       {
         title: "Complete your first rental",
         description: "Print a QR code and scan it to test the flow.",
         href: null,
         completed: step3Rental,
+        showTestButton: !step3Rental && step1Assets, // Only show if has vehicles but no rentals
       },
     ];
 
@@ -138,6 +144,17 @@ export default function DashboardTour({ carts, rentals, profile }: DashboardTour
                 </div>
                 {step.description && (
                   <p className="mt-0.5 text-xs text-ink-muted">{step.description}</p>
+                )}
+                {step.showTestButton && (
+                  <Button
+                    variant="ops"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => router.push("/dashboard/fleet")}
+                    icon={<QrCode className="h-3.5 w-3.5" />}
+                  >
+                    Test the Flow
+                  </Button>
                 )}
               </div>
             </div>
