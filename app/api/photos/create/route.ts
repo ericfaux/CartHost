@@ -146,16 +146,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insert failed: no data returned" }, { status: 500 });
     }
 
-    // Start server verification asynchronously (do not expose service key to client)
+    // Start server verification (do not expose service key to client)
     const photoId = (insertData as any).id;
-    // Fire-and-forget: try to verify and log; if it errors, it will need manual retry via verify route
-    (async () => {
-      try {
-        await verifyAndUpdate(photoId, storagePath, "evidence");
-      } catch (e) {
-        console.error("photo verification failed for", photoId, e);
-      }
-    })();
+    try {
+      await verifyAndUpdate(photoId, storagePath, "evidence");
+    } catch (e) {
+      console.error("Verification failed:", e);
+      // Allow insert to succeed even if verification fails.
+    }
 
     return NextResponse.json({ photoId, status: "verifying" }, { status: 201 });
   } catch (err) {
