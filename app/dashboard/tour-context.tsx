@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 export type TourStep = {
+  id: string;
   title: string;
   description: string;
   icon?: ComponentType<{ className?: string }>;
@@ -27,6 +28,7 @@ export type TourStep = {
 type TourContextValue = {
   isOpen: boolean;
   currentStep: number;
+  currentStepData: TourStep | null;
   steps: TourStep[];
   latestRentalId: string | null;
   startTour: () => void;
@@ -49,12 +51,14 @@ export function useTour() {
 function getTourSteps(latestRentalId: string | null): TourStep[] {
   return [
     {
+      id: "welcome",
       title: "Welcome",
       description:
         "Your dashboard is ready. Let's show you how to protect your business.",
       path: "/dashboard",
     },
     {
+      id: "quick-access",
       title: "Quick Access",
       description:
         "The Command Center. Manage your fleet, open the history log, or record maintenance in one click.",
@@ -62,13 +66,15 @@ function getTourSteps(latestRentalId: string | null): TourStep[] {
       path: "/dashboard",
     },
     {
-      title: "Fleet Management",
+      id: "qr-step",
+      title: "Test Your Flow",
       description:
-        "Your Vehicle Roster. Add, edit, and manage all your carts here. Each cart gets a unique QR code for guest check-in.",
+        "Try it out! Hover over your first vehicle card and click the highlighted QR button to generate a check-in code. Scan it with your phone to see what your guests experience.",
       icon: Activity,
       path: "/dashboard/fleet",
     },
     {
+      id: "protection",
       title: "Protection Overview",
       description:
         "Your Liability Shield. Monitors signed waivers, evidence photos, and open security deposits. If this section is highlighted, ensure you review and return guest deposits in a timely manner.",
@@ -76,6 +82,7 @@ function getTourSteps(latestRentalId: string | null): TourStep[] {
       path: "/dashboard",
     },
     {
+      id: "performance",
       title: "Business Performance",
       description:
         "The Bottom Line. Tracks total rides and estimated revenue. Note that revenue figures are based on your fleet's pricing configuration and the guest's self-reported length of stay.",
@@ -83,6 +90,7 @@ function getTourSteps(latestRentalId: string | null): TourStep[] {
       path: "/dashboard",
     },
     {
+      id: "history",
       title: "History (The Evidence Locker)",
       description:
         "Most Important: This is your 'Vault'. If a guest damages a cart, come here immediately to find their signed waiver, pre-ride photos, and IP logs. It is your first line of defense.",
@@ -90,6 +98,7 @@ function getTourSteps(latestRentalId: string | null): TourStep[] {
       path: "/dashboard/history",
     },
     {
+      id: "evidence-packet",
       title: "Deep Dive: Evidence Packet",
       description:
         "Each rental has a complete evidence packet. View the signed waiver, timestamped photos, IP address, and user agent. This is what you present in a dispute.",
@@ -111,6 +120,7 @@ export function TourProvider({ children, latestRentalId }: TourProviderProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = getTourSteps(latestRentalId);
+  const currentStepData = steps[currentStep] ?? null;
 
   const startTour = useCallback(() => {
     setCurrentStep(0);
@@ -141,6 +151,7 @@ export function TourProvider({ children, latestRentalId }: TourProviderProps) {
       value={{
         isOpen,
         currentStep,
+        currentStepData,
         steps,
         latestRentalId,
         startTour,
