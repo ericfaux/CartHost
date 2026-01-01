@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
-  History,
+  Vault,
   LogOut,
   Zap,
   LayoutDashboard,
@@ -21,7 +21,7 @@ import { signOut } from "../app/auth/actions";
 const navLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
-  { label: "History", href: "/dashboard/history", icon: History },
+  { label: "Evidence Locker", href: "/dashboard/history", icon: Vault },
   { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Support", href: "/dashboard/support", icon: LifeBuoy },
