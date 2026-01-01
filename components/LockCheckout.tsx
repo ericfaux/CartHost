@@ -8,10 +8,11 @@ import { supabase } from '../lib/supabase';
 type LockCheckoutProps = {
   cartId: string;
   userId: string;
+  rentalId: string;
   onSuccess: () => void;
 };
 
-export default function LockCheckout({ cartId, userId, onSuccess }: LockCheckoutProps) {
+export default function LockCheckout({ cartId, userId, rentalId, onSuccess }: LockCheckoutProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +50,34 @@ export default function LockCheckout({ cartId, userId, onSuccess }: LockCheckout
       setError(`Upload failed: ${uploadError.message}`);
       setLoading(false);
       return;
+    }
+
+    // Register the uploaded photo in the database
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (accessToken) {
+      try {
+        const response = await fetch('/api/photos/create', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rentalId,
+            cartId,
+            storagePath: path,
+            kind: 'lock_photo',
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Photo ingestion failed:', await response.json().catch(() => ({})));
+        }
+      } catch (err) {
+        console.error('Photo ingestion error:', err);
+      }
     }
 
     onSuccess();

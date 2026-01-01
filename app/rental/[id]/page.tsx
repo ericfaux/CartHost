@@ -198,7 +198,7 @@ export default function RentalInspectionPage() {
           ) : cart?.type === 'gas' ? (
             <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'bike' && (cart?.requires_lock_photo ?? true) ? (
-            <LockCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+            <LockCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'bike' ? (
             <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
           ) : (
