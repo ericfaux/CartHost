@@ -194,13 +194,13 @@ export default function RentalInspectionPage() {
 
         /* STATE 3: CHECKOUT */
           cart?.type === 'hot_tub' ? (
-            <HotTubCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+            <HotTubCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'gas' ? (
-            <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+            <GasCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'bike' && (cart?.requires_lock_photo ?? true) ? (
             <LockCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
           ) : cart?.type === 'bike' ? (
-            <GasCheckout cartId={resolvedId} userId={userId!} onSuccess={handleCheckoutSuccess} />
+            <GasCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
           ) : (
             (cart?.requires_plug_photo ?? true) ? (
               <PlugVerifier

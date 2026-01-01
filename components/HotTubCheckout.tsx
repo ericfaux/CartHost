@@ -8,14 +8,16 @@ import { supabase } from '../lib/supabase';
 type HotTubCheckoutProps = {
   cartId: string;
   userId: string;
+  rentalId: string;
   onSuccess: () => void;
 };
 
-export default function HotTubCheckout({ cartId, userId, onSuccess }: HotTubCheckoutProps) {
+export default function HotTubCheckout({ cartId, userId, rentalId, onSuccess }: HotTubCheckoutProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ingestionError, setIngestionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) return;
@@ -30,6 +32,7 @@ export default function HotTubCheckout({ cartId, userId, onSuccess }: HotTubChec
     const selectedFile = event.target.files?.[0] ?? null;
     setFile(selectedFile);
     setError(null);
+    setIngestionError(null);
   };
 
   const handleCheckout = async () => {
@@ -40,8 +43,10 @@ export default function HotTubCheckout({ cartId, userId, onSuccess }: HotTubChec
 
     setLoading(true);
     setError(null);
+    setIngestionError(null);
 
-    const path = `${cartId}/${userId}/checkout_hottub.jpg`;
+    const timestamp = Date.now();
+    const path = `${cartId}/${userId}/${rentalId}/return_hottub_${timestamp}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('evidence')
@@ -51,6 +56,49 @@ export default function HotTubCheckout({ cartId, userId, onSuccess }: HotTubChec
       setError(`Upload failed: ${uploadError.message}`);
       setLoading(false);
       return;
+    }
+
+    // Fetch the session token for API authorization
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error('Failed to get session:', sessionError);
+    }
+
+    const accessToken = sessionData?.session?.access_token;
+
+    // Register the uploaded photo in the database
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    try {
+      const ingestionResponse = await fetch('/api/photos/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          rentalId,
+          cartId,
+          storagePath: path,
+          fileName: `return_hottub_${timestamp}.jpg`,
+          kind: 'return_proof',
+        }),
+      });
+
+      if (!ingestionResponse.ok) {
+        const errorData = await ingestionResponse.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Photo registration failed (${ingestionResponse.status})`;
+        console.error('Photo ingestion failed:', errorMsg);
+        setIngestionError(errorMsg);
+      } else {
+        const result = await ingestionResponse.json();
+        console.log('Photo ingestion successful:', result);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Photo registration failed';
+      console.error('Photo ingestion crashed:', err);
+      setIngestionError(errorMsg);
     }
 
     onSuccess();
@@ -92,6 +140,14 @@ export default function HotTubCheckout({ cartId, userId, onSuccess }: HotTubChec
           onChange={handleFileChange}
         />
       </div>
+
+      {ingestionError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+          <p className="font-medium">Warning: Photo tracking issue</p>
+          <p className="text-xs mt-1">{ingestionError}</p>
+          <p className="text-xs mt-1 text-amber-600">Your photo was uploaded but may not appear in the dashboard.</p>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
