@@ -17,6 +17,7 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ingestionError, setIngestionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) return;
@@ -31,6 +32,7 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
     const selectedFile = event.target.files?.[0] ?? null;
     setFile(selectedFile);
     setError(null);
+    setIngestionError(null);
   };
 
   const handleVerify = async () => {
@@ -41,8 +43,11 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
 
     setLoading(true);
     setError(null);
+    setIngestionError(null);
 
-    const path = `${cartId}/${userId}/checkout_plug.jpg`;
+    // Unique path to prevent collisions: include rentalId and timestamp
+    const timestamp = Date.now();
+    const path = `${cartId}/${userId}/${rentalId}/return_${timestamp}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('evidence')
@@ -57,25 +62,52 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
     const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
     const imageUrl = publicUrlData.publicUrl;
 
-    // Register the uploaded photo in the database before verification
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
+    // Fetch the session token for API authorization
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
+    if (sessionError) {
+      console.error('Failed to get session:', sessionError);
+    }
+
+    const accessToken = sessionData?.session?.access_token;
+
+    // Register the uploaded photo in the database immediately after upload success
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    await fetch('/api/photos/create', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        rentalId,
-        cartId,
-        storagePath: path,
-        kind: 'return_proof',
-      }),
-    }).catch((err) => console.error('Photo ingestion failed:', err));
+    try {
+      const ingestionResponse = await fetch('/api/photos/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          rentalId,
+          cartId,
+          storagePath: path,
+          fileName: `return_${timestamp}.jpg`,
+          kind: 'return_proof',
+        }),
+      });
+
+      // Check if ingestion failed and show visible error feedback
+      if (!ingestionResponse.ok) {
+        const errorData = await ingestionResponse.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Photo registration failed (${ingestionResponse.status})`;
+        console.error('Photo ingestion failed:', errorMsg);
+        setIngestionError(errorMsg);
+        // Note: We continue with verification even if ingestion fails
+        // The photo is already in storage, just not tracked in DB
+      } else {
+        const result = await ingestionResponse.json();
+        console.log('Photo ingestion successful:', result);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Photo registration failed';
+      console.error('Photo ingestion crashed:', err);
+      setIngestionError(errorMsg);
+      // Continue with verification even if ingestion fails
+    }
 
     try {
       const response = await fetch('/api/verify-plug', {
@@ -146,6 +178,15 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
           onChange={handleFileChange}
         />
       </div>
+
+      {/* Visible error feedback for photo ingestion failure */}
+      {ingestionError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+          <p className="font-medium">Warning: Photo tracking issue</p>
+          <p className="text-xs mt-1">{ingestionError}</p>
+          <p className="text-xs mt-1 text-amber-600">Your photo was uploaded but may not appear in the dashboard.</p>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
