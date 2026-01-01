@@ -56,6 +56,7 @@ export default function InspectionWizard({
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [departureDate, setDepartureDate] = useState('');
@@ -63,6 +64,7 @@ export default function InspectionWizard({
   const [conditionComment, setConditionComment] = useState('');
   const [conditionImageUrl, setConditionImageUrl] = useState<string | null>(null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploadedPaths, setUploadedPaths] = useState<string[]>([]);
 
   const steps = useMemo<Step[]>(() => {
     const baseSteps: Step[] = [
@@ -118,7 +120,7 @@ export default function InspectionWizard({
   const totalSteps = steps.length;
   const progress = useMemo(() => ((currentStep + 1) / totalSteps) * 100, [currentStep, totalSteps]);
 
-  // 1. Fetch Anonymous User ID
+  // 1. Fetch Anonymous User ID and Session Access Token
   useEffect(() => {
     const fetchUser = async () => {
       const { data, error } = await supabase.auth.getUser();
@@ -134,6 +136,17 @@ export default function InspectionWizard({
       }
       console.log("User authenticated:", data.user.id);
       setUserId(data.user.id);
+
+      // Fetch and store the session access token for API authorization
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session Error:", sessionError);
+        return;
+      }
+      if (sessionData?.session?.access_token) {
+        setAccessToken(sessionData.session.access_token);
+        console.log("Access token retrieved successfully");
+      }
     };
 
     fetchUser();
@@ -233,6 +246,9 @@ export default function InspectionWizard({
         return;
       }
 
+      // Track the uploaded path for post-creation ingestion
+      setUploadedPaths((prev) => [...prev, path]);
+
       setConditionImageUrl(publicUrlData.publicUrl);
       proceedToNextStep();
       return;
@@ -296,6 +312,10 @@ export default function InspectionWizard({
     const updatedPhotoUrls = [...photoUrls, publicUrlData.publicUrl];
     setPhotoUrls(updatedPhotoUrls);
 
+    // Track the uploaded path for post-creation ingestion
+    const updatedPaths = [...uploadedPaths, path];
+    setUploadedPaths(updatedPaths);
+
     const isLastStep = currentStep === steps.length - 1;
 
     if (isLastStep) {
@@ -342,6 +362,50 @@ export default function InspectionWizard({
         console.error('Failed to save rental:', rentalError);
         setError(`Failed to save rental: ${rentalError.message}`);
         return;
+      }
+
+      // Post-Creation Ingestion: Create photo records for all uploaded images
+      if (updatedPaths.length > 0 && accessToken) {
+        console.log(`Creating ${updatedPaths.length} photo records for rental ${data.id}...`);
+
+        const photoPromises = updatedPaths.map(async (storagePath) => {
+          try {
+            const response = await fetch('/api/photos/create', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                rentalId: data.id,
+                cartId: cartId,
+                storagePath: storagePath,
+                fileName: storagePath.split('/').pop(),
+                mimeType: 'image/jpeg',
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              console.error(`Failed to create photo record for ${storagePath}:`, errorData);
+              return { success: false, path: storagePath, error: errorData };
+            }
+
+            const result = await response.json();
+            console.log(`Photo record created for ${storagePath}:`, result);
+            return { success: true, path: storagePath, result };
+          } catch (err) {
+            console.error(`Error creating photo record for ${storagePath}:`, err);
+            return { success: false, path: storagePath, error: err };
+          }
+        });
+
+        // Wait for all photo records to be created (don't block completion on failures)
+        const photoResults = await Promise.all(photoPromises);
+        const successCount = photoResults.filter((r) => r.success).length;
+        console.log(`Photo ingestion complete: ${successCount}/${updatedPaths.length} successful`);
+      } else if (updatedPaths.length > 0 && !accessToken) {
+        console.warn('Skipping photo ingestion: No access token available');
       }
 
       // try {
