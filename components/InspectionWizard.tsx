@@ -38,6 +38,13 @@ type Step = {
   field?: string;
 };
 
+// Track uploaded file with its kind
+type UploadedFile = {
+  path: string;
+  blob: Blob;
+  kind: 'condition' | 'pre_ride';
+};
+
 export default function InspectionWizard({
   cartId,
   onComplete,
@@ -63,9 +70,10 @@ export default function InspectionWizard({
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [conditionComment, setConditionComment] = useState('');
   const [conditionImageUrl, setConditionImageUrl] = useState<string | null>(null);
+  const [conditionPhotoPath, setConditionPhotoPath] = useState<string | null>(null); // Track condition photo path separately
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploadedPaths, setUploadedPaths] = useState<string[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<{ path: string; blob: Blob }[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   const steps = useMemo<Step[]>(() => {
     const baseSteps: Step[] = [
@@ -221,7 +229,7 @@ export default function InspectionWizard({
 
       const stepNumber = currentStep + 1;
       const timestamp = new Date().getTime();
-      const path = `${cartId}/${userId}/step${stepNumber}_${timestamp}.jpg`;
+      const path = `${cartId}/${userId}/condition_${timestamp}.jpg`;
 
       try {
         const { error: uploadError } = await supabase.storage.from('evidence').upload(path, file, { upsert: true });
@@ -247,9 +255,10 @@ export default function InspectionWizard({
         return;
       }
 
-      // Track the uploaded path for post-creation ingestion
+      // Track the condition photo path separately for later ingestion with kind='condition'
+      setConditionPhotoPath(path);
       setUploadedPaths((prev) => [...prev, path]);
-      setUploadedFiles((prev) => [...prev, { path, blob: file }]);
+      setUploadedFiles((prev) => [...prev, { path, blob: file, kind: 'condition' }]);
 
       setConditionImageUrl(publicUrlData.publicUrl);
       proceedToNextStep();
@@ -314,9 +323,9 @@ export default function InspectionWizard({
     const updatedPhotoUrls = [...photoUrls, publicUrlData.publicUrl];
     setPhotoUrls(updatedPhotoUrls);
 
-    // Track the uploaded path for post-creation ingestion
+    // Track the uploaded path for post-creation ingestion (pre_ride photos)
     const updatedPaths = [...uploadedPaths, path];
-    const updatedFilesList = [...uploadedFiles, { path, blob: file }];
+    const updatedFilesList: UploadedFile[] = [...uploadedFiles, { path, blob: file, kind: 'pre_ride' }];
     setUploadedPaths(updatedPaths);
     setUploadedFiles(updatedFilesList);
 
@@ -369,6 +378,7 @@ export default function InspectionWizard({
       }
 
       // Post-Creation Ingestion: Create photo records for all uploaded images
+      // Use Promise.all and catch errors individually so one failure doesn't stop rental creation
       if (updatedFilesList.length > 0) {
         if (!accessToken) {
           console.warn('Skipping photo ingestion: No access token available');
@@ -377,6 +387,9 @@ export default function InspectionWizard({
 
           const photoPromises = updatedFilesList.map(async (fileRecord) => {
             try {
+              // Determine kind: condition photo vs pre_ride
+              const photoKind = fileRecord.kind;
+
               const response = await fetch('/api/photos/create', {
                 method: 'POST',
                 headers: {
@@ -387,7 +400,8 @@ export default function InspectionWizard({
                   rentalId: data.id,
                   cartId,
                   storagePath: fileRecord.path,
-                  kind: 'pre_ride',
+                  fileName: fileRecord.path.split('/').pop(),
+                  kind: photoKind,
                 }),
               });
 
@@ -398,7 +412,7 @@ export default function InspectionWizard({
               }
 
               const result = await response.json();
-              console.log(`Photo record created for ${fileRecord.path}:`, result);
+              console.log(`Photo record created for ${fileRecord.path} (kind: ${photoKind}):`, result);
               return { success: true, path: fileRecord.path, result };
             } catch (err) {
               console.error(`Error creating photo record for ${fileRecord.path}:`, err);

@@ -4,6 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { getSupabaseAdmin } from "../../../../server/supabase-admin";
 import RentalDetail from "../../../../components/RentalDetail";
 
+// Prevent serving stale empty lists - force dynamic rendering
+export const dynamic = "force-dynamic";
+
 type Rental = {
   id: string;
   created_at: string;
@@ -21,15 +24,24 @@ type Rental = {
   } | null;
 };
 
+// Database row uses uploaded_at, UI expects created_at
 type PhotoDbRow = {
   id: string;
   storage_path: string;
   sha256: string | null;
-  created_at: string;
+  uploaded_at: string;
+  kind: string | null;
 };
 
-export type PhotoRow = PhotoDbRow & {
+export type PhotoRow = {
+  id: string;
+  storage_path: string;
+  sha256: string | null;
+  created_at: string; // Mapped from uploaded_at for UI compatibility
+  kind: string | null;
   signedUrl?: string;
+  signedUrlError?: boolean;
+  errorMessage?: string;
 };
 
 export default async function RentalPage({
@@ -87,29 +99,68 @@ export default async function RentalPage({
     notFound();
   }
 
-  // Fetch photos for this rental from the photos table
+  // Fetch photos for this rental from the photos table using Service Role to bypass RLS
   const supabaseAdmin = getSupabaseAdmin();
-  const { data: photosData } = (await supabaseAdmin
-    .from("photos")
-    .select("id, storage_path, sha256, created_at")
-    .eq("rental_id", id)
-    .order("created_at", { ascending: true })) as { data: PhotoDbRow[] | null };
 
-  // Generate signed URLs for each photo
+  // Track any errors during photo fetching
+  let photosError: string | null = null;
+  let photosData: PhotoDbRow[] | null = null;
+
+  try {
+    // Select uploaded_at (the real column) instead of created_at
+    const photoResponse = await supabaseAdmin
+      .from("photos")
+      .select("id, storage_path, sha256, uploaded_at, kind")
+      .eq("rental_id", id)
+      .order("uploaded_at", { ascending: true });
+
+    if (photoResponse.error) {
+      console.error("Failed to fetch photos:", photoResponse.error);
+      photosError = `Failed to fetch photos: ${photoResponse.error.message}`;
+    } else {
+      photosData = photoResponse.data as PhotoDbRow[] | null;
+    }
+  } catch (err) {
+    console.error("Photo fetch crashed:", err);
+    photosError = `Photo fetch error: ${err instanceof Error ? err.message : "Unknown error"}`;
+  }
+
+  // Generate signed URLs for each photo with error handling
   const photos: PhotoRow[] = [];
   if (photosData && photosData.length > 0) {
     for (const photo of photosData) {
-      const { data: signedData } = await supabaseAdmin.storage
-        .from("evidence")
-        .createSignedUrl(photo.storage_path, 3600); // 1 hour expiry
-
-      photos.push({
+      // Map uploaded_at to created_at for UI compatibility
+      const photoRow: PhotoRow = {
         id: photo.id,
         storage_path: photo.storage_path,
         sha256: photo.sha256,
-        created_at: photo.created_at,
-        signedUrl: signedData?.signedUrl,
-      });
+        created_at: photo.uploaded_at, // Map uploaded_at -> created_at
+        kind: photo.kind,
+        signedUrl: undefined,
+        signedUrlError: false,
+        errorMessage: undefined,
+      };
+
+      // Wrap signed URL generation in try/catch
+      try {
+        const { data: signedData, error: signError } = await supabaseAdmin.storage
+          .from("evidence")
+          .createSignedUrl(photo.storage_path, 3600); // 1 hour expiry
+
+        if (signError) {
+          console.error(`Failed to sign URL for ${photo.storage_path}:`, signError);
+          photoRow.signedUrlError = true;
+          photoRow.errorMessage = signError.message;
+        } else {
+          photoRow.signedUrl = signedData?.signedUrl;
+        }
+      } catch (signErr) {
+        console.error(`Signed URL generation crashed for ${photo.storage_path}:`, signErr);
+        photoRow.signedUrlError = true;
+        photoRow.errorMessage = signErr instanceof Error ? signErr.message : "Signing failed";
+      }
+
+      photos.push(photoRow);
     }
   }
 
@@ -118,10 +169,21 @@ export default async function RentalPage({
   if (conditionImageUrl) {
     const isStoragePath = !/^https?:\/\//i.test(conditionImageUrl);
     if (isStoragePath) {
-      const { data: conditionSignedData } = await supabaseAdmin.storage
-        .from("evidence")
-        .createSignedUrl(conditionImageUrl, 3600); // 1 hour expiry
-      conditionImageUrl = conditionSignedData?.signedUrl ?? null;
+      try {
+        const { data: conditionSignedData, error: conditionSignError } = await supabaseAdmin.storage
+          .from("evidence")
+          .createSignedUrl(conditionImageUrl, 3600); // 1 hour expiry
+
+        if (conditionSignError) {
+          console.error("Failed to sign condition image URL:", conditionSignError);
+          conditionImageUrl = null;
+        } else {
+          conditionImageUrl = conditionSignedData?.signedUrl ?? null;
+        }
+      } catch (err) {
+        console.error("Condition image URL signing crashed:", err);
+        conditionImageUrl = null;
+      }
     }
   }
 
@@ -133,5 +195,11 @@ export default async function RentalPage({
 
   console.log("Rental ID:", id, "Photos Found:", photosData?.length ?? 0);
 
-  return <RentalDetail rental={rentalWithSignedUrl as Rental} photos={photos} />;
+  return (
+    <RentalDetail
+      rental={rentalWithSignedUrl as Rental}
+      photos={photos}
+      photosError={photosError}
+    />
+  );
 }

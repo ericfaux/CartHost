@@ -14,8 +14,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { storagePath, fileName, mimeType, rentalId, cartId, advisoryHash, advisoryGps, kind } = body;
 
+    // Validation: Return 400 if storagePath or fileName is missing
     if (!storagePath) {
       return NextResponse.json({ error: "storagePath is required" }, { status: 400 });
+    }
+    if (!fileName && !storagePath.includes("/")) {
+      // If no fileName and storagePath doesn't look like a path, require fileName
+      return NextResponse.json({ error: "fileName is required" }, { status: 400 });
     }
 
     const resolvedFileName = fileName || storagePath.split("/").pop() || storagePath;
@@ -40,6 +45,7 @@ export async function POST(request: NextRequest) {
     let resolvedCartId: string | null = cartId || null;
 
     // Dual Authorization: Check if user is Host OR Guest
+    // IMPORTANT: Do NOT early-return 403 if host check fails - proceed to check guest permissions
     if (cartId) {
       // If cartId is provided directly, check if user is the host
       const cartResp = await supabaseAdmin
@@ -48,18 +54,21 @@ export async function POST(request: NextRequest) {
         .eq("id", cartId)
         .maybeSingle();
 
-      if ((cartResp as any).error) {
+      if (cartResp.error) {
+        console.error("Failed to verify cart:", cartResp.error);
         return NextResponse.json({ error: "Failed to verify cart" }, { status: 500 });
       }
 
-      const cartRow = (cartResp as any).data;
+      const cartRow = cartResp.data as { host_id: string } | null;
       if (cartRow) {
-        if ((cartRow as any).host_id === userId) {
+        // Capture the realHostId from the cart regardless of who is uploading
+        realHostId = cartRow.host_id;
+
+        if (cartRow.host_id === userId) {
           // User is the host
           isAuthorized = true;
-          realHostId = userId;
         } else if (rentalId) {
-          // User is not the host, but we have a rentalId - check if they're the guest
+          // Host check failed - proceed to check if user is the guest for this rental
           const rentalResp = await supabaseAdmin
             .from("rentals")
             .select("guest_id, cart_id")
@@ -67,15 +76,16 @@ export async function POST(request: NextRequest) {
             .eq("cart_id", cartId)
             .maybeSingle();
 
-          if ((rentalResp as any).error) {
+          if (rentalResp.error) {
+            console.error("Failed to verify rental:", rentalResp.error);
             return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
           }
 
-          const rentalRow = (rentalResp as any).data;
-          if (rentalRow && (rentalRow as any).guest_id === userId) {
-            // User is the guest for this rental
+          const rentalRow = rentalResp.data as { guest_id: string; cart_id: string } | null;
+          if (rentalRow && rentalRow.guest_id === userId) {
+            // User is the guest for this rental - authorized
             isAuthorized = true;
-            realHostId = (cartRow as any).host_id; // Use the cart's host_id
+            // realHostId already set from cart lookup above
           }
         }
       }
@@ -87,29 +97,33 @@ export async function POST(request: NextRequest) {
         .eq("id", rentalId)
         .maybeSingle();
 
-      if ((rentalResp as any).error) {
+      if (rentalResp.error) {
+        console.error("Failed to verify rental:", rentalResp.error);
         return NextResponse.json({ error: "Failed to verify rental" }, { status: 500 });
       }
 
-      const rentalRow = (rentalResp as any).data;
+      const rentalRow = rentalResp.data as {
+        guest_id: string;
+        cart_id: string;
+        carts: { host_id: string };
+      } | null;
+
       if (rentalRow) {
-        const cartData = (rentalRow as any).carts;
-        const cartHostId = cartData?.host_id;
-        resolvedCartId = (rentalRow as any).cart_id;
+        const cartHostId = rentalRow.carts?.host_id;
+        resolvedCartId = rentalRow.cart_id;
+        realHostId = cartHostId || null;
 
         if (cartHostId === userId) {
           // User is the host
           isAuthorized = true;
-          realHostId = userId;
-        } else if ((rentalRow as any).guest_id === userId) {
+        } else if (rentalRow.guest_id === userId) {
           // User is the guest for this rental
           isAuthorized = true;
-          realHostId = cartHostId; // Use the cart's host_id
         }
       }
     }
 
-    // If neither host nor guest authorization passed, return 403
+    // Only return 403 if BOTH host and guest checks failed
     if (!isAuthorized || !realHostId) {
       return NextResponse.json({ error: "Not authorized to upload photos for this rental" }, { status: 403 });
     }
@@ -119,7 +133,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
 
     // Insert photos row (verified = false)
-    // Use realHostId (the actual host of the cart) and resolvedCartId (derived from rental if needed)
+    // IMPORTANT: Always use realHostId (the actual host of the cart), never save the guest's ID as host_id
     const insertRow = {
       rental_id: rentalId || null,
       cart_id: resolvedCartId,
@@ -134,28 +148,35 @@ export async function POST(request: NextRequest) {
       uploader_ip: ip,
       uploader_ua: userAgent,
       verified: false,
-      kind: kind || null,
+      kind: kind || "pre_ride", // Default to 'pre_ride' if not specified
     };
 
-    const insertResp = await (supabaseAdmin.from("photos") as any)
+    const insertResp = await supabaseAdmin
+      .from("photos")
       .insert(insertRow)
       .select()
       .single();
-    if ((insertResp as any).error) {
-      return NextResponse.json({ error: "Insert failed: " + (insertResp as any).error.message }, { status: 500 });
+
+    if (insertResp.error) {
+      console.error("Photo insert failed:", insertResp.error);
+      return NextResponse.json({ error: "Insert failed: " + insertResp.error.message }, { status: 500 });
     }
-    const insertData = (insertResp as any).data;
+
+    const insertData = insertResp.data as { id: string } | null;
     if (!insertData) {
       return NextResponse.json({ error: "Insert failed: no data returned" }, { status: 500 });
     }
 
     // Start server verification (do not expose service key to client)
-    const photoId = (insertData as any).id;
+    // IMPORTANT: Wrap in try/catch - if verification fails, log but do NOT fail the request
+    // The photo row must remain in the database
+    const photoId = insertData.id;
     try {
       await verifyAndUpdate(photoId, storagePath, "evidence");
-    } catch (e) {
-      console.error("Verification failed:", e);
-      // Allow insert to succeed even if verification fails.
+    } catch (verifyError) {
+      // Log the verification error but allow the request to succeed
+      console.error("Photo verification failed (non-fatal):", verifyError);
+      // The photo record remains in the database with verified=false
     }
 
     return NextResponse.json({ photoId, status: "verifying" }, { status: 200 });

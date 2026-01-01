@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
   Download,
   Shield,
   Fingerprint,
+  ImageOff,
 } from "lucide-react";
 import { Badge, StampSealed, StampSigned } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -43,8 +43,33 @@ export type PhotoRow = {
   storage_path: string;
   sha256: string | null;
   created_at: string;
+  kind: string | null;
   signedUrl?: string;
+  signedUrlError?: boolean;
+  errorMessage?: string;
 };
+
+// --- HELPER COMPONENT: IMAGE UNAVAILABLE FALLBACK ---
+function ImageUnavailable({
+  path,
+  errorMessage,
+}: {
+  path: string;
+  errorMessage?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-500 p-4">
+      <ImageOff className="h-8 w-8 mb-2 text-gray-400" />
+      <p className="text-xs font-medium text-center">Image Unavailable</p>
+      <p className="text-[10px] text-gray-400 mt-1 text-center break-all max-w-full">
+        {path.split("/").pop()}
+      </p>
+      {errorMessage && (
+        <p className="text-[10px] text-red-400 mt-1 text-center">{errorMessage}</p>
+      )}
+    </div>
+  );
+}
 
 // --- HELPER COMPONENT: CHAIN OF CUSTODY LIST ---
 function ChainOfCustodyList({
@@ -76,17 +101,29 @@ function ChainOfCustodyList({
 export default function RentalDetail({
   rental,
   photos = [],
+  photosError,
 }: {
   rental: Rental;
   photos?: PhotoRow[];
+  photosError?: string | null;
 }) {
   const [showWaiver, setShowWaiver] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
 
-  // Filter Photos: Pre-ride (first 4) and Return (last if > 4 photos)
-  const preRidePhotos = photos.slice(0, 4);
-  const checkoutPhoto = photos.length > 4 ? photos[photos.length - 1] : null;
+  // Filter Photos by kind instead of using slice
+  const conditionPhoto = useMemo(
+    () => photos.find((p) => p.kind === "condition"),
+    [photos]
+  );
+  const returnPhoto = useMemo(
+    () => photos.find((p) => p.kind === "return_proof"),
+    [photos]
+  );
+  const preRidePhotos = useMemo(
+    () => photos.filter((p) => p.kind === "pre_ride" || p.kind === null),
+    [photos]
+  );
 
   // Formatters
   const formatDate = (dateString?: string | null) => {
@@ -115,10 +152,15 @@ export default function RentalDetail({
   };
 
   const handleImageClick = (photo: PhotoRow) => {
-    if (photo.signedUrl) {
+    if (photo.signedUrl && !photo.signedUrlError) {
       setSelectedImage(photo.signedUrl);
       setSelectedHash(photo.sha256);
     }
+  };
+
+  // Check if a photo has a valid signed URL
+  const hasValidUrl = (photo: PhotoRow): boolean => {
+    return !!photo.signedUrl && !photo.signedUrlError;
   };
 
   // Build Chain of Custody Data
@@ -139,6 +181,14 @@ export default function RentalDetail({
       });
     }
 
+    if (conditionPhoto) {
+      records.push({
+        time: formatTimeOnly(conditionPhoto.created_at),
+        event: "Condition Photo",
+        detail: "Pre-existing condition documented",
+      });
+    }
+
     preRidePhotos.forEach((p, i) => {
       records.push({
         time: formatTimeOnly(p.created_at),
@@ -147,9 +197,9 @@ export default function RentalDetail({
       });
     });
 
-    if (checkoutPhoto) {
+    if (returnPhoto) {
       records.push({
-        time: formatTimeOnly(checkoutPhoto.created_at),
+        time: formatTimeOnly(returnPhoto.created_at),
         event: "Return Initiated",
         detail: "Guest submitted return photo",
       });
@@ -157,14 +207,31 @@ export default function RentalDetail({
 
     // Sort by time
     return records.sort((a, b) => (a.time > b.time ? 1 : -1));
-  }, [rental, preRidePhotos, checkoutPhoto]);
+  }, [rental, conditionPhoto, preRidePhotos, returnPhoto]);
 
   return (
     <>
       <div className="bg-black text-white p-2 text-xs font-mono text-center">
         DEBUG: ID={rental.id} | WAIVER={String(rental.waiver_agreed)} | PHOTOS={photos.length}
+        {conditionPhoto && " | CONDITION=1"}
+        {returnPhoto && " | RETURN=1"}
+        | PRE_RIDE={preRidePhotos.length}
       </div>
       <div className="max-w-4xl mx-auto pb-12">
+        {/* Global Warning Alert for Photos Error */}
+        {photosError && (
+          <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-800">Photo Loading Error</p>
+              <p className="text-sm text-red-700 mt-1">{photosError}</p>
+              <p className="text-xs text-red-600 mt-2">
+                Some evidence photos may not be displayed. Please refresh the page or contact support.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation / Breadcrumb */}
         <div className="mb-6 flex items-center gap-4">
           <Link
@@ -285,7 +352,7 @@ export default function RentalDetail({
             </section>
 
             {/* 3. Guest-Reported Issues (Conditional) */}
-            {(rental.condition_comment || rental.condition_image_url) && (
+            {(rental.condition_comment || rental.condition_image_url || conditionPhoto) && (
               <section>
                 <div className="flex items-center gap-2 mb-3 pl-1">
                   <AlertTriangle className="h-3 w-3 text-accent-warning" />
@@ -309,10 +376,47 @@ export default function RentalDetail({
                     </div>
                   )}
 
-                  {rental.condition_image_url && (
+                  {/* Show condition photo from photos table if available */}
+                  {conditionPhoto && (
+                    <div className="relative z-10 mb-4">
+                      <p className="text-[10px] font-mono uppercase text-ink-muted mb-2">
+                        Condition Photo (Tracked)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleImageClick(conditionPhoto)}
+                        disabled={!hasValidUrl(conditionPhoto)}
+                        className="group relative h-48 w-full sm:w-64 overflow-hidden rounded-dossier-surface border border-rule bg-white shadow-sm"
+                      >
+                        {hasValidUrl(conditionPhoto) ? (
+                          <>
+                            {/* Use standard img tag to avoid next/image domain whitelist issues */}
+                            <img
+                              src={conditionPhoto.signedUrl}
+                              alt="Condition photo"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-ink/0 transition group-hover:bg-ink/10">
+                              <span className="rounded-dossier-chip bg-ink/80 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
+                                VIEW
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <ImageUnavailable
+                            path={conditionPhoto.storage_path}
+                            errorMessage={conditionPhoto.errorMessage}
+                          />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Fallback to rental.condition_image_url if no conditionPhoto from photos table */}
+                  {rental.condition_image_url && !conditionPhoto && (
                     <div className="relative z-10">
                       <p className="text-[10px] font-mono uppercase text-ink-muted mb-2">
-                        Attached Evidence
+                        Attached Evidence (Legacy)
                       </p>
                       <button
                         type="button"
@@ -322,11 +426,11 @@ export default function RentalDetail({
                         }}
                         className="group relative h-48 w-full sm:w-64 overflow-hidden rounded-dossier-surface border border-rule bg-white shadow-sm"
                       >
-                        <Image
+                        {/* Use standard img tag */}
+                        <img
                           src={rental.condition_image_url}
                           alt="Damage report"
-                          fill
-                          className="object-cover"
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-ink/0 transition group-hover:bg-ink/10">
                           <span className="rounded-dossier-chip bg-ink/80 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
@@ -354,22 +458,25 @@ export default function RentalDetail({
                     >
                       <button
                         onClick={() => handleImageClick(photo)}
-                        disabled={!photo.signedUrl}
+                        disabled={!hasValidUrl(photo)}
                         className="relative w-full aspect-[4/3] bg-ink/5 block group"
                       >
-                        {photo.signedUrl ? (
-                          <Image
-                            src={photo.signedUrl}
-                            alt={`Evidence ${index + 1}`}
-                            fill
-                            className="object-cover transition group-hover:scale-105 duration-500"
-                          />
+                        {hasValidUrl(photo) ? (
+                          <>
+                            {/* Use standard img tag to avoid domain whitelist issues */}
+                            <img
+                              src={photo.signedUrl}
+                              alt={`Evidence ${index + 1}`}
+                              className="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105 duration-500"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                          </>
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <Camera className="h-6 w-6 text-ink-muted" />
-                          </div>
+                          <ImageUnavailable
+                            path={photo.storage_path}
+                            errorMessage={photo.errorMessage}
+                          />
                         )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                       </button>
                       <div className="p-2 border-t border-rule bg-gray-50/80">
                         <p className="text-xs font-semibold text-ink">Photo {index + 1}</p>
@@ -398,31 +505,39 @@ export default function RentalDetail({
               <h3 className="font-mono text-xs uppercase text-ink-muted tracking-wider mb-3 pl-1">
                 Return Documentation
               </h3>
-              {checkoutPhoto ? (
+              {returnPhoto ? (
                 <div className="bg-gray-50/80 rounded-dossier-control border border-rule overflow-hidden">
                   <button
-                    onClick={() => handleImageClick(checkoutPhoto)}
+                    onClick={() => handleImageClick(returnPhoto)}
+                    disabled={!hasValidUrl(returnPhoto)}
                     className="relative w-full h-48 sm:h-64 bg-ink/5 block group"
                   >
-                    {checkoutPhoto.signedUrl && (
-                      <Image
-                        src={checkoutPhoto.signedUrl}
-                        alt="Return Photo"
-                        fill
-                        className="object-cover transition group-hover:scale-105 duration-500"
+                    {hasValidUrl(returnPhoto) ? (
+                      <>
+                        {/* Use standard img tag */}
+                        <img
+                          src={returnPhoto.signedUrl}
+                          alt="Return Photo"
+                          className="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105 duration-500"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                          <span className="font-mono text-xs font-semibold text-white">
+                            RETURN CONDITION
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <ImageUnavailable
+                        path={returnPhoto.storage_path}
+                        errorMessage={returnPhoto.errorMessage}
                       />
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                      <span className="font-mono text-xs font-semibold text-white">
-                        RETURN CONDITION
-                      </span>
-                    </div>
                   </button>
                   <div className="p-3 border-t border-rule flex justify-between items-center bg-gray-50/80">
                     <div>
                       <p className="text-xs font-semibold text-ink">Plug / Key Return Verified</p>
                       <p className="text-[10px] font-mono text-ink-muted">
-                        #{checkoutPhoto.sha256?.slice(0, 8) || "..."}
+                        #{returnPhoto.sha256?.slice(0, 8) || "..."}
                       </p>
                     </div>
                     <Badge variant="success" style="chip">
@@ -568,10 +683,15 @@ export default function RentalDetail({
           </button>
 
           <div
-            className="relative w-full h-full max-w-6xl max-h-[90vh]"
+            className="relative w-full h-full max-w-6xl max-h-[90vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image src={selectedImage} alt="Evidence Detail" fill className="object-contain" />
+            {/* Use standard img tag for lightbox */}
+            <img
+              src={selectedImage}
+              alt="Evidence Detail"
+              className="max-w-full max-h-full object-contain"
+            />
           </div>
 
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-dossier-chip bg-ink/80 px-4 py-2 backdrop-blur-sm border border-white/10">
