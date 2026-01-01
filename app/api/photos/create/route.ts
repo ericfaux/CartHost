@@ -12,11 +12,13 @@ export async function POST(request: NextRequest) {
 
     // Ensure this is a JSON request
     const body = await request.json();
-    const { storagePath, fileName, mimeType, rentalId, cartId, advisoryHash, advisoryGps } = body;
+    const { storagePath, fileName, mimeType, rentalId, cartId, advisoryHash, advisoryGps, kind } = body;
 
-    if (!storagePath || !fileName) {
-      return NextResponse.json({ error: "storagePath and fileName are required" }, { status: 400 });
+    if (!storagePath) {
+      return NextResponse.json({ error: "storagePath is required" }, { status: 400 });
     }
+
+    const resolvedFileName = fileName || storagePath.split("/").pop() || storagePath;
 
     // Authorize: expect Authorization: Bearer <access_token>
     const authHeader = request.headers.get("authorization") || "";
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
       cart_id: resolvedCartId,
       host_id: realHostId,
       storage_path: storagePath,
-      file_name: fileName,
+      file_name: resolvedFileName,
       mime_type: mimeType || null,
       sha256: advisoryHash || null,
       gps_lat: advisoryGps?.latitude ?? null,
@@ -132,6 +134,7 @@ export async function POST(request: NextRequest) {
       uploader_ip: ip,
       uploader_ua: userAgent,
       verified: false,
+      kind: kind || null,
     };
 
     const insertResp = await (supabaseAdmin.from("photos") as any)
@@ -155,7 +158,7 @@ export async function POST(request: NextRequest) {
       // Allow insert to succeed even if verification fails.
     }
 
-    return NextResponse.json({ photoId, status: "verifying" }, { status: 201 });
+    return NextResponse.json({ photoId, status: "verifying" }, { status: 200 });
   } catch (err) {
     console.error("create photo route error", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

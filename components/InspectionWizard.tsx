@@ -65,6 +65,7 @@ export default function InspectionWizard({
   const [conditionImageUrl, setConditionImageUrl] = useState<string | null>(null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploadedPaths, setUploadedPaths] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<{ path: string; blob: Blob }[]>([]);
 
   const steps = useMemo<Step[]>(() => {
     const baseSteps: Step[] = [
@@ -248,6 +249,7 @@ export default function InspectionWizard({
 
       // Track the uploaded path for post-creation ingestion
       setUploadedPaths((prev) => [...prev, path]);
+      setUploadedFiles((prev) => [...prev, { path, blob: file }]);
 
       setConditionImageUrl(publicUrlData.publicUrl);
       proceedToNextStep();
@@ -314,7 +316,9 @@ export default function InspectionWizard({
 
     // Track the uploaded path for post-creation ingestion
     const updatedPaths = [...uploadedPaths, path];
+    const updatedFilesList = [...uploadedFiles, { path, blob: file }];
     setUploadedPaths(updatedPaths);
+    setUploadedFiles(updatedFilesList);
 
     const isLastStep = currentStep === steps.length - 1;
 
@@ -365,47 +369,48 @@ export default function InspectionWizard({
       }
 
       // Post-Creation Ingestion: Create photo records for all uploaded images
-      if (updatedPaths.length > 0 && accessToken) {
-        console.log(`Creating ${updatedPaths.length} photo records for rental ${data.id}...`);
+      if (updatedFilesList.length > 0) {
+        if (!accessToken) {
+          console.warn('Skipping photo ingestion: No access token available');
+        } else {
+          console.log(`Creating ${updatedFilesList.length} photo records for rental ${data.id}...`);
 
-        const photoPromises = updatedPaths.map(async (storagePath) => {
-          try {
-            const response = await fetch('/api/photos/create', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                rentalId: data.id,
-                cartId: cartId,
-                storagePath: storagePath,
-                fileName: storagePath.split('/').pop(),
-                mimeType: 'image/jpeg',
-              }),
-            });
+          const photoPromises = updatedFilesList.map(async (fileRecord) => {
+            try {
+              const response = await fetch('/api/photos/create', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  rentalId: data.id,
+                  cartId,
+                  storagePath: fileRecord.path,
+                  kind: 'pre_ride',
+                }),
+              });
 
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              console.error(`Failed to create photo record for ${storagePath}:`, errorData);
-              return { success: false, path: storagePath, error: errorData };
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error(`Failed to create photo record for ${fileRecord.path}:`, errorData);
+                return { success: false, path: fileRecord.path, error: errorData };
+              }
+
+              const result = await response.json();
+              console.log(`Photo record created for ${fileRecord.path}:`, result);
+              return { success: true, path: fileRecord.path, result };
+            } catch (err) {
+              console.error(`Error creating photo record for ${fileRecord.path}:`, err);
+              return { success: false, path: fileRecord.path, error: err };
             }
+          });
 
-            const result = await response.json();
-            console.log(`Photo record created for ${storagePath}:`, result);
-            return { success: true, path: storagePath, result };
-          } catch (err) {
-            console.error(`Error creating photo record for ${storagePath}:`, err);
-            return { success: false, path: storagePath, error: err };
-          }
-        });
-
-        // Wait for all photo records to be created (don't block completion on failures)
-        const photoResults = await Promise.all(photoPromises);
-        const successCount = photoResults.filter((r) => r.success).length;
-        console.log(`Photo ingestion complete: ${successCount}/${updatedPaths.length} successful`);
-      } else if (updatedPaths.length > 0 && !accessToken) {
-        console.warn('Skipping photo ingestion: No access token available');
+          // Wait for all photo records to be created (don't block completion on failures)
+          const photoResults = await Promise.all(photoPromises);
+          const successCount = photoResults.filter((r) => r.success).length;
+          console.log(`Photo ingestion complete: ${successCount}/${updatedFilesList.length} successful`);
+        }
       }
 
       // try {
