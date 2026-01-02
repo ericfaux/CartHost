@@ -72,7 +72,7 @@ export async function requestBetaAccess(
     // Send email to admin
     const { data, error } = await resend.emails.send({
       from: "CartHost Beta <onboarding@resend.dev>",
-      to: ["eric@carthost.app"],
+      to: ["eric.faux@carthost.app"],
       subject: `🚀 New Beta Request: ${email}`,
       html: `
         <!DOCTYPE html>
