@@ -9,9 +9,11 @@ import { Button } from "./ui/Button";
 export default function GlobalTourOverlay() {
   const router = useRouter();
   const pathname = usePathname();
-  const { isOpen, currentStep, steps, endTour, nextStep, prevStep } = useTour();
+  const { isOpen, currentStep, steps, currentStepData, endTour, nextStep, prevStep } = useTour();
 
-  const step = steps[currentStep];
+  // Use currentStepData from context (already null-safe) as primary source
+  // Fallback to direct index access for backwards compatibility
+  const step = currentStepData ?? steps[currentStep];
   const Icon = step?.icon;
 
   // Auto-navigate when step changes
@@ -24,7 +26,16 @@ export default function GlobalTourOverlay() {
     }
   }, [isOpen, currentStep, step, pathname, router]);
 
+  // Guard clause: Don't render if tour is closed
   if (!isOpen) return null;
+
+  // Guard clause: Fail gracefully if step is undefined or out of bounds
+  // This prevents white screen crashes during state transitions
+  if (!step || currentStep < 0 || currentStep >= steps.length) {
+    // Auto-close the tour to recover from invalid state
+    endTour();
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

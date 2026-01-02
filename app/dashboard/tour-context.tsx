@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
   type ComponentType,
 } from "react";
@@ -23,6 +24,11 @@ export type TourStep = {
   description: string;
   icon?: ComponentType<{ className?: string }>;
   path: string;
+};
+
+type TourState = {
+  isOpen: boolean;
+  currentStep: number;
 };
 
 type TourContextValue = {
@@ -116,50 +122,102 @@ type TourProviderProps = {
 };
 
 export function TourProvider({ children, latestRentalId }: TourProviderProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  // Use a single state object for atomic updates to prevent race conditions
+  // This ensures isOpen and currentStep are always in sync
+  const [tourState, setTourState] = useState<TourState>({
+    isOpen: false,
+    currentStep: 0,
+  });
 
-  const steps = getTourSteps(latestRentalId);
-  const currentStepData = steps[currentStep] ?? null;
+  // Memoize steps to prevent unnecessary re-renders
+  // Steps only change when latestRentalId changes
+  const steps = useMemo(
+    () => getTourSteps(latestRentalId),
+    [latestRentalId]
+  );
 
+  // Derive current step data with bounds checking
+  const currentStepData = useMemo(() => {
+    const { currentStep } = tourState;
+    if (currentStep >= 0 && currentStep < steps.length) {
+      return steps[currentStep];
+    }
+    return null;
+  }, [tourState, steps]);
+
+  // Start tour: Reset to step 0 and open in a single atomic update
   const startTour = useCallback(() => {
-    setCurrentStep(0);
-    setIsOpen(true);
+    setTourState({
+      isOpen: true,
+      currentStep: 0,
+    });
   }, []);
 
+  // End tour: Close and reset in a single atomic update
   const endTour = useCallback(() => {
-    setIsOpen(false);
-    setCurrentStep(0);
+    setTourState({
+      isOpen: false,
+      currentStep: 0,
+    });
   }, []);
 
+  // Move to next step, or close tour if at the end
   const nextStep = useCallback(() => {
-    setCurrentStep((prev) => {
-      if (prev < steps.length - 1) {
-        return prev + 1;
+    setTourState((prev) => {
+      const nextIndex = prev.currentStep + 1;
+
+      // If we've reached beyond the last step, close the tour
+      if (nextIndex >= steps.length) {
+        return {
+          isOpen: false,
+          currentStep: 0,
+        };
       }
-      setIsOpen(false);
-      return 0;
+
+      // Otherwise, advance to the next step
+      return {
+        ...prev,
+        currentStep: nextIndex,
+      };
     });
   }, [steps.length]);
 
+  // Move to previous step (clamped at 0)
   const prevStep = useCallback(() => {
-    setCurrentStep((prev) => Math.max(0, prev - 1));
+    setTourState((prev) => ({
+      ...prev,
+      currentStep: Math.max(0, prev.currentStep - 1),
+    }));
   }, []);
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo<TourContextValue>(
+    () => ({
+      isOpen: tourState.isOpen,
+      currentStep: tourState.currentStep,
+      currentStepData,
+      steps,
+      latestRentalId,
+      startTour,
+      endTour,
+      nextStep,
+      prevStep,
+    }),
+    [
+      tourState.isOpen,
+      tourState.currentStep,
+      currentStepData,
+      steps,
+      latestRentalId,
+      startTour,
+      endTour,
+      nextStep,
+      prevStep,
+    ]
+  );
+
   return (
-    <TourContext.Provider
-      value={{
-        isOpen,
-        currentStep,
-        currentStepData,
-        steps,
-        latestRentalId,
-        startTour,
-        endTour,
-        nextStep,
-        prevStep,
-      }}
-    >
+    <TourContext.Provider value={contextValue}>
       {children}
     </TourContext.Provider>
   );
