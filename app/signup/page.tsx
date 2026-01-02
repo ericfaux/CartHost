@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { MailCheck } from "lucide-react";
 import { signUp } from "../auth/actions";
+import { Badge } from "../../components/ui/Badge";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -11,7 +13,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+      className="dossier-btn-ops w-full"
     >
       {pending ? "Creating..." : "Create Account"}
     </button>
@@ -24,33 +26,26 @@ export default function SignupPage() {
   // Show success state when email verification is required
   if (state?.success) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+      <main className="min-h-screen bg-paper px-4 py-10">
         <div className="mx-auto flex min-h-[80vh] max-w-lg items-center">
-          <div className="w-full rounded-3xl border border-green-500/40 bg-green-500/10 p-10 shadow-2xl backdrop-blur">
+          <div className="w-full rounded-dossier-surface border border-rule bg-surface p-10 shadow-dossier-surface">
             <div className="mb-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
-                <svg
-                  className="h-8 w-8 text-green-400"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-success bg-green-50">
+                <MailCheck className="h-8 w-8 text-accent-success" />
               </div>
-              <h1 className="text-3xl font-semibold text-green-100">
+              <Badge variant="success" style="stamp" className="mb-4">
+                LINK SENT
+              </Badge>
+              <h1 className="font-heading text-3xl font-semibold text-ink">
                 Check your email
               </h1>
-              <p className="mt-4 text-base text-green-200">
+              <p className="mt-4 text-base text-ink-subtle">
                 We have sent a verification link to your email address.
               </p>
             </div>
             <Link
               href="/login"
-              className="mt-6 block w-full rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              className="dossier-btn-secondary mt-6 block w-full text-center"
             >
               Back to Login
             </Link>
@@ -61,17 +56,17 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+    <main className="min-h-screen bg-paper px-4 py-10">
       <div className="mx-auto flex min-h-[80vh] max-w-lg items-center">
-        <div className="w-full rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl backdrop-blur">
+        <div className="w-full rounded-dossier-surface border border-rule bg-surface p-10 shadow-dossier-surface">
           <div className="mb-8 space-y-2 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent-ops">
               CartHost
             </p>
-            <h1 className="text-3xl font-semibold text-white">
+            <h1 className="font-heading text-3xl font-semibold text-ink">
               Create your Host Account
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-ink-subtle">
               Start managing your fleet in minutes.
             </p>
           </div>
@@ -79,7 +74,7 @@ export default function SignupPage() {
           <form action={formAction} className="space-y-5">
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="fullName"
               >
                 Full Name
@@ -90,14 +85,14 @@ export default function SignupPage() {
                 type="text"
                 required
                 autoComplete="name"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="Jordan Doe"
               />
             </div>
 
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="phone"
               >
                 Phone Number
@@ -108,31 +103,31 @@ export default function SignupPage() {
                 type="tel"
                 required
                 autoComplete="tel"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="(555) 000-1234"
               />
             </div>
 
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="companyName"
               >
-                Company Name <span className="text-slate-500">(Optional)</span>
+                Company Name <span className="text-ink-muted">(Optional)</span>
               </label>
               <input
                 id="companyName"
                 name="companyName"
                 type="text"
                 autoComplete="organization"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="CartHost Rentals"
               />
             </div>
 
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="email"
               >
                 Email
@@ -143,14 +138,14 @@ export default function SignupPage() {
                 type="email"
                 required
                 autoComplete="email"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="you@example.com"
               />
             </div>
 
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="password"
               >
                 Password
@@ -162,7 +157,7 @@ export default function SignupPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="••••••••"
               />
             </div>
@@ -170,17 +165,20 @@ export default function SignupPage() {
             <SubmitButton />
 
             {state?.error && (
-              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200" role="alert">
+              <div
+                className="rounded-dossier-control border border-accent-legal/40 bg-accent-legal/10 px-3 py-2 text-sm text-accent-legal"
+                role="alert"
+              >
                 {state.error}
               </div>
             )}
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-400">
+          <p className="mt-8 text-center text-sm text-ink-subtle">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-semibold text-white transition hover:text-slate-200"
+              className="font-semibold text-accent-ops transition hover:text-accent-ops-light"
             >
               Log In
             </Link>
