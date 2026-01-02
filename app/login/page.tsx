@@ -12,7 +12,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+      className="dossier-btn-ops w-full"
     >
       {pending ? "Signing In..." : "Sign In"}
     </button>
@@ -23,15 +23,17 @@ export default function LoginPage() {
   const [state, formAction] = useActionState(signIn, null);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+    <main className="min-h-screen bg-paper px-4 py-10">
       <div className="mx-auto flex min-h-[80vh] max-w-lg items-center">
-        <div className="w-full rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl backdrop-blur">
+        <div className="w-full rounded-dossier-surface border border-rule bg-surface p-10 shadow-dossier-surface">
           <div className="mb-8 space-y-2 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent-ops">
               CartHost
             </p>
-            <h1 className="text-3xl font-semibold text-white">Welcome Back</h1>
-            <p className="text-sm text-slate-400">
+            <h1 className="font-heading text-3xl font-semibold text-ink">
+              Welcome Back
+            </h1>
+            <p className="text-sm text-ink-subtle">
               Sign in to manage your fleet dashboard.
             </p>
           </div>
@@ -39,7 +41,7 @@ export default function LoginPage() {
           <form action={formAction} className="space-y-5">
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="email"
               >
                 Email
@@ -50,14 +52,14 @@ export default function LoginPage() {
                 type="email"
                 required
                 autoComplete="email"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="you@example.com"
               />
             </div>
 
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-200"
+                className="dossier-label"
                 htmlFor="password"
               >
                 Password
@@ -68,12 +70,12 @@ export default function LoginPage() {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-white/40 focus:ring-1 focus:ring-white/30"
+                className="dossier-input"
                 placeholder="••••••••"
               />
               <Link
                 href="/forgot-password"
-                className="text-xs text-blue-400 transition-colors hover:text-blue-300"
+                className="text-xs text-accent-ops transition-colors hover:text-accent-ops-light"
               >
                 Forgot password?
               </Link>
@@ -82,17 +84,20 @@ export default function LoginPage() {
             <SubmitButton />
 
             {state?.error && (
-              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200" role="alert">
+              <div
+                className="rounded-dossier-control border border-accent-legal/40 bg-accent-legal/10 px-3 py-2 text-sm text-accent-legal"
+                role="alert"
+              >
                 {state.error}
               </div>
             )}
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-400">
+          <p className="mt-8 text-center text-sm text-ink-subtle">
             Need an account?{" "}
             <Link
               href="/signup"
-              className="font-semibold text-white transition hover:text-slate-200"
+              className="font-semibold text-accent-ops transition hover:text-accent-ops-light"
             >
               Sign Up
             </Link>
