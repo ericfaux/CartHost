@@ -7,3 +7,4 @@ export { StatsRow } from "./StatsRow";
 export { FAQ } from "./FAQ";
 export { BetaAccessModal } from "./BetaAccessModal";
 export { Footer } from "./Footer";
+export { SupportCTA } from "./SupportCTA";
