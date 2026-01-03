@@ -364,20 +364,31 @@ export default function RentalInspectionPage() {
                 </div>
               )}
 
-              {error && (
-                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 flex items-center gap-2 justify-center">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{error}</span>
-                </div>
-              )}
             </div>
 
-            <button
-              className="w-full bg-black text-white rounded-lg py-3 font-semibold hover:bg-gray-800 transition-all active:scale-95"
-              onClick={() => setIsInspecting(true)}
-            >
-              Start Inspection
-            </button>
+            {error ? (
+              // ERROR STATE: Blocking UI (Button Removed)
+              <div className="rounded-lg bg-red-50 p-6 text-sm text-red-700 flex flex-col items-center gap-3 text-center animate-in fade-in zoom-in-95 duration-300 border border-red-100">
+                <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-1">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-lg text-red-900">Access Denied</p>
+                  <p className="text-red-800 font-medium">{error}</p>
+                </div>
+                <p className="text-xs text-red-500 mt-4 bg-white/50 px-3 py-1 rounded-full border border-red-100">
+                  Refresh the page to check availability again.
+                </p>
+              </div>
+            ) : (
+              // NORMAL STATE: Action Button
+              <button
+                className="w-full bg-black text-white rounded-lg py-4 font-bold text-lg hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-blue-900/5"
+                onClick={() => setIsInspecting(true)}
+              >
+                Start Inspection
+              </button>
+            )}
           </div>
         )}
       </div>
