@@ -5,6 +5,28 @@ import { createClient } from "@supabase/supabase-js";
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+/**
+ * Returns the site URL with priority:
+ * 1. NEXT_PUBLIC_SITE_URL (most reliable for production)
+ * 2. Request origin header (fallback for dynamic environments)
+ * 3. localhost:3000 (development fallback)
+ */
+async function getSiteUrl(): Promise<string> {
+  // Priority 1: Environment variable (most reliable)
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, ''); // Remove trailing slash
+  }
+
+  // Priority 2: Request origin header
+  const origin = (await headers()).get("origin");
+  if (origin) {
+    return origin;
+  }
+
+  // Priority 3: Localhost fallback
+  return "http://localhost:3000";
+}
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -128,20 +150,21 @@ export async function forgotPassword(formData: FormData) {
       return { error: "Email is required." };
     }
 
-    const origin = (await headers()).get("origin");
-
-    if (!origin) {
-      return { error: "Unable to determine request origin." };
-    }
-
+    const siteUrl = await getSiteUrl();
     const supabase = await createSupabaseActionClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
     });
 
     if (error) {
       console.error("Password reset request failed:", error);
+
+      // Explicit handling for rate limit errors
+      if (error.status === 429) {
+        return { error: "Too many requests. Please wait 60 seconds." };
+      }
+
       return { error: error.message };
     }
 
