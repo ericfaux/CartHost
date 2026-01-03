@@ -14,7 +14,7 @@ export function SupportCTA() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <a
-              href="mailto:support@carthost.app"
+              href="mailto:eric.faux@carthost.app"
               className="rounded-md bg-teal-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 flex items-center gap-2"
             >
               <Mail className="h-4 w-4" />
