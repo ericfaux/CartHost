@@ -45,9 +45,16 @@ export default function Sidebar() {
   const NavContent = () => (
     <>
       {/* Brand Header */}
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-white/10">
-        <Logo className="text-xl" />
-        <span className="font-heading font-bold text-lg text-slate-100">Console</span>
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <Logo className="text-3xl" variant="inverted" />
+        <div className="flex flex-col -space-y-0.5">
+          <span className="font-heading font-bold text-base tracking-wide text-white">
+            CartHost
+          </span>
+          <span className="text-[9px] font-mono uppercase tracking-widest text-white/40">
+            Console
+          </span>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -116,7 +123,7 @@ export default function Sidebar() {
 
       {/* Mobile Header Bar */}
       <div className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center justify-between border-b border-rule bg-ink px-4 md:hidden">
-        <Logo className="text-lg" />
+        <Logo className="text-lg" variant="inverted" />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="flex h-10 w-10 items-center justify-center rounded-dossier-control text-white/70 hover:bg-white/10 hover:text-white"
