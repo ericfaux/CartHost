@@ -6,7 +6,7 @@ import { Banknote, Lock, Unlock, Loader2, AlertCircle, CheckCircle, Info } from 
 import { supabase } from '../../../lib/supabase';
 import InspectionWizard from '../../../components/InspectionWizard';
 import PlugVerifier from '../../../components/PlugVerifier';
-import GasCheckout from '../../../components/GasCheckout';
+import StandardCheckout from '../../../components/StandardCheckout';
 import LockCheckout from '../../../components/LockCheckout';
 import HotTubCheckout from '../../../components/HotTubCheckout';
 
@@ -204,37 +204,25 @@ export default function RentalInspectionPage() {
         /* STATE 3: CHECKOUT */
           cart?.type === 'hot_tub' ? (
             <HotTubCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
-          ) : cart?.type === 'gas' ? (
-            <GasCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
-          ) : cart?.type === 'bike' && (cart?.requires_lock_photo ?? true) ? (
+          ) : (cart?.type === 'bike' && (cart?.requires_lock_photo ?? true)) ? (
             <LockCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
-          ) : cart?.type === 'bike' ? (
-            <GasCheckout cartId={resolvedId} userId={userId!} rentalId={activeRentalId!} onSuccess={handleCheckoutSuccess} />
+          ) : (cart?.type === 'electric' && (cart?.requires_plug_photo ?? true)) ? (
+            // Electric WITH Plug Check -> Use AI Verifier
+            <PlugVerifier
+              cartId={resolvedId}
+              userId={userId!}
+              rentalId={activeRentalId!}
+              onSuccess={handleCheckoutSuccess}
+            />
           ) : (
-            (cart?.requires_plug_photo ?? true) ? (
-              <PlugVerifier
-                cartId={resolvedId}
-                userId={userId!}
-                rentalId={activeRentalId!}
-                onSuccess={handleCheckoutSuccess}
-              />
-            ) : (
-              <div className="bg-white shadow-lg rounded-xl p-6 space-y-6 border border-gray-100">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-500">Final Step</p>
-                  <h2 className="text-xl font-semibold text-gray-900">End Rental</h2>
-                  <p className="text-sm text-gray-600">Tap below to end your rental.</p>
-                </div>
-                <div className="flex items-center justify-end">
-                  <button
-                    onClick={handleCheckoutSuccess}
-                    className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 min-w-[180px] flex items-center justify-center"
-                  >
-                    End Rental
-                  </button>
-                </div>
-              </div>
-            )
+            // Catch-All (Gas, Bike-No-Lock, Electric-No-Plug) -> Enforce Photo
+            <StandardCheckout
+              cartId={resolvedId}
+              userId={userId!}
+              rentalId={activeRentalId!}
+              onSuccess={handleCheckoutSuccess}
+              checkoutMode={`return_${cart?.type || 'standard'}`}
+            />
           )
 
         ) : isUnlocked ? (
