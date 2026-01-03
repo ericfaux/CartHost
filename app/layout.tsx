@@ -28,41 +28,48 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
+  metadataBase: new URL('https://www.carthost.app'), // CRITICAL: Fixes image path resolution
+  title: {
+    default: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
+    template: "%s | CartHost",
+  },
   description:
     "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
   keywords: [
     "airbnb golf cart waiver",
     "vrbo liability protection",
     "vacation rental golf cart insurance",
+    "digital waiver for hosts",
+    "golf cart rental software",
     "turo for golf carts",
-    "golf cart rental",
-    "e-bike rental",
-    "vacation rental amenities",
-    "digital waiver",
-    "rental liability",
-    "fleet management",
-    "airbnb golf cart",
-    "vrbo amenities",
   ],
-  authors: [{ name: "CartHost" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "CartHost",
-    title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
+    url: "https://www.carthost.app",
+    title: "CartHost — Turn every rental into a sealed case file",
     description:
-      "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
+      "QR scan → waiver → inspection photos → return proof. Automatically packaged into an evidence-grade case file for dispute protection.",
+    siteName: "CartHost",
+    // images: Automatically handled by adding opengraph-image.png to /app
   },
   twitter: {
     card: "summary_large_image",
-    title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
+    title: "CartHost — Liability-First Checkout for Golf Cart Rentals",
     description:
-      "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
+      "Digital waivers, inspection photos, and evidence-grade case files. No app download for guests.",
+    // images: Automatically handled by adding opengraph-image.png to /app
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
