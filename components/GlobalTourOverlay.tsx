@@ -1,3 +1,4 @@
+// FILE: components/GlobalTourOverlay.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -11,61 +12,73 @@ export default function GlobalTourOverlay() {
   const pathname = usePathname();
   const { isOpen, currentStep, steps, currentStepData, endTour, nextStep, prevStep } = useTour();
 
-  // Use currentStepData from context (already null-safe) as primary source
-  // Fallback to direct index access for backwards compatibility
+  // Robust Step Retrieval
+  // We use currentStepData (memoized in context) or fallback to index access
   const step = currentStepData ?? steps[currentStep];
   const Icon = step?.icon;
 
-  // Auto-navigate when step changes
+  // EFFECT 1: Handle Navigation & Debugging
   useEffect(() => {
+    if (isOpen) {
+      console.log("Tour Active:", { currentStep, stepTitle: step?.title, path: step?.path });
+    }
+
     if (!isOpen || !step) return;
 
+    // Navigate if the step requires a specific path and we aren't there
     const targetPath = step.path;
     if (targetPath && pathname !== targetPath) {
       router.push(targetPath);
     }
   }, [isOpen, currentStep, step, pathname, router]);
 
-  // Guard clause: Don't render if tour is closed
+  // EFFECT 2: Safe "Self-Correction" (Moved out of Render Phase)
+  useEffect(() => {
+    if (isOpen) {
+      // If we are "Open" but have no valid step, close safely
+      if (!step || currentStep < 0 || currentStep >= steps.length) {
+        console.warn("Tour lost state. Auto-closing to prevent crash.");
+        endTour();
+      }
+    }
+  }, [isOpen, step, currentStep, steps.length, endTour]);
+
+  // RENDER GUARD: Strictly visual check
   if (!isOpen) return null;
 
-  // Guard clause: Fail gracefully if step is undefined or out of bounds
-  // This prevents white screen crashes during state transitions
-  if (!step || currentStep < 0 || currentStep >= steps.length) {
-    // Auto-close the tour to recover from invalid state
-    endTour();
-    return null;
-  }
+  // Second guard: If step is missing, render null (Effect 2 will close it shortly)
+  if (!step) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
+    // UPDATED: z-[100] to beat sticky headers/sidebars
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Overlay Backdrop */}
       <div
-        className="dossier-overlay"
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
         onClick={endTour}
         aria-hidden="true"
       />
 
-      {/* Modal */}
+      {/* Modal Panel */}
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-lg dossier-panel-elevated overflow-hidden"
+        className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-rule bg-paper">
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-semibold text-accent-ops uppercase tracking-wider">
+            <span className="font-mono text-xs font-semibold text-blue-600 uppercase tracking-wider">
               Tour Step
             </span>
-            <span className="font-mono text-xs font-bold text-ink bg-accent-ops/10 px-2 py-0.5 rounded">
+            <span className="font-mono text-xs font-bold text-slate-700 bg-blue-100 px-2 py-0.5 rounded">
               {currentStep + 1} / {steps.length}
             </span>
           </div>
           <button
             type="button"
             onClick={endTour}
-            className="p-1.5 rounded-dossier-sm text-ink-subtle hover:text-ink hover:bg-surface transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-200 transition-colors"
             aria-label="Close tour"
           >
             <X className="h-5 w-5" />
@@ -76,15 +89,15 @@ export default function GlobalTourOverlay() {
         <div className="px-6 py-6">
           <div className="flex items-start gap-4">
             {Icon && (
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-dossier-control bg-accent-ops/10">
-                <Icon className="h-7 w-7 text-accent-ops" />
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                <Icon className="h-7 w-7 text-blue-600" />
               </div>
             )}
             <div className="space-y-2">
-              <h3 className="font-heading text-xl font-bold text-ink">
+              <h3 className="font-heading text-xl font-bold text-slate-900">
                 {step.title}
               </h3>
-              <p className="text-sm text-ink-subtle leading-relaxed">
+              <p className="text-sm text-slate-500 leading-relaxed">
                 {step.description}
               </p>
             </div>
@@ -97,10 +110,10 @@ export default function GlobalTourOverlay() {
                 key={index}
                 className={`h-1.5 rounded-full transition-all ${
                   index === currentStep
-                    ? "w-4 bg-accent-ops"
+                    ? "w-4 bg-blue-600"
                     : index < currentStep
-                    ? "w-1.5 bg-accent-ops/50"
-                    : "w-1.5 bg-rule"
+                    ? "w-1.5 bg-blue-200"
+                    : "w-1.5 bg-slate-200"
                 }`}
               />
             ))}
@@ -108,11 +121,11 @@ export default function GlobalTourOverlay() {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-rule bg-paper">
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
           <button
             type="button"
             onClick={endTour}
-            className="text-sm font-medium text-ink-subtle hover:text-ink transition-colors"
+            className="text-sm font-medium text-slate-400 hover:text-slate-900 transition-colors"
           >
             Skip Tour
           </button>
