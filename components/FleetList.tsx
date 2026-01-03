@@ -60,7 +60,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
 
   // Tour context for QR button highlighting
   const { isOpen: isTourOpen, currentStepData } = useTour();
-  const isQrStepActive = isTourOpen && currentStepData?.id === "qr-step";
+  const isQrStepActive = isTourOpen && currentStepData?.id === "qr-button";
 
   const handleEdit = (cart: Cart) => {
     setSelectedCart(cart);
@@ -189,6 +189,7 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                       label="Generate QR Code"
                       onClick={() => setQrAsset(cart)}
                       className={shouldHighlightQr ? "ring-2 ring-accent-ops ring-offset-2 animate-pulse" : ""}
+                      data-tour={shouldHighlightQr ? "tour-qr-button" : undefined}
                     />
                     <IconButton
                       icon={<Edit2 className="h-4 w-4" />}

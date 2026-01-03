@@ -14,13 +14,13 @@ import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { useTour } from "../app/dashboard/tour-context";
 
-export type DashboardTourProps = {
+export type OnboardingWidgetProps = {
   carts: { id: string }[];
   rentals: { id: string }[];
   profile: { phone_number?: string | null } | null;
 };
 
-export default function DashboardTour({ carts, rentals, profile }: DashboardTourProps) {
+export default function OnboardingWidget({ carts, rentals, profile }: OnboardingWidgetProps) {
   const { startTour } = useTour();
   const router = useRouter();
 

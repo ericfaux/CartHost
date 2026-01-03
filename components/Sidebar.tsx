@@ -20,8 +20,8 @@ import { Logo } from "./ui/Logo";
 
 const navLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid },
-  { label: "Evidence Locker", href: "/dashboard/history", icon: Vault },
+  { label: "Fleet", href: "/dashboard/fleet", icon: LayoutGrid, tourId: "tour-fleet-nav" },
+  { label: "Evidence Locker", href: "/dashboard/history", icon: Vault, tourId: "tour-history-nav" },
   { label: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Support", href: "/dashboard/support", icon: LifeBuoy },
@@ -73,6 +73,7 @@ export default function Sidebar() {
               href={link.href}
               onClick={() => setMobileOpen(false)}
               data-active={active}
+              data-tour={link.tourId}
               className={`
                 group relative flex items-center gap-3 px-3 py-2.5 rounded-dossier-control text-sm font-medium
                 transition-all duration-150
