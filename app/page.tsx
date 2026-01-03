@@ -67,9 +67,8 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg text-ink-subtle max-w-xl">
-                QR scan → waiver → inspection photos → return proof.
-                Automatically packaged into an evidence-grade case file for
-                dispute protection.
+                The operating system for <strong>Airbnb, VRBO, and private hosts</strong>.
+                Automate waivers, inspection photos, and handoffs to win disputes and protect your amenities.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -106,6 +105,18 @@ export default function LandingPage() {
                   Photo evidence vault
                 </span>
               </div>
+
+              {/* Platform Trust Strip */}
+              <div className="pt-6 border-t border-rule mt-8">
+                <p className="text-xs font-mono uppercase text-ink-muted mb-3">
+                  Built for hosts on
+                </p>
+                <div className="flex gap-6 opacity-60 grayscale transition-all hover:grayscale-0 hover:opacity-100">
+                  <span className="font-heading font-bold text-ink text-lg">Airbnb</span>
+                  <span className="font-heading font-bold text-ink text-lg">Vrbo</span>
+                  <span className="font-heading font-bold text-ink text-lg">Booking.com</span>
+                </div>
+              </div>
             </div>
 
             {/* Hero Visual */}
@@ -134,9 +145,9 @@ export default function LandingPage() {
                 icon: <FileWarning className="h-5 w-5" />,
                 iconBg: "bg-amber-50",
                 iconColor: "text-accent-warning",
-                title: "Disputes are decided by documentation",
+                title: "Airbnb dispute protection",
                 description:
-                  "When a guest claims damage was pre-existing, the host with better records wins.",
+                  "Airbnb Resolution Center requires proof. When a guest claims pre-existing damage, the host with the 'Evidence Packet' wins.",
               },
               {
                 icon: <FileX className="h-5 w-5" />,
