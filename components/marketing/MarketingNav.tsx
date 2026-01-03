@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "../ui/Button";
+import { Logo } from "../ui/Logo";
 
 interface NavLink {
   label: string;
@@ -30,18 +31,8 @@ export function MarketingNav({ onRequestAccess }: MarketingNavProps) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-ops/10 text-accent-ops ring-1 ring-accent-ops/30">
-              <Zap className="h-5 w-5" aria-hidden />
-            </span>
-            <div className="flex flex-col">
-              <span className="font-heading text-lg font-bold text-ink leading-none">
-                CartHost
-              </span>
-              <span className="text-[10px] font-mono text-ink-muted uppercase tracking-wider">
-                Operations Console
-              </span>
-            </div>
+          <Link href="/" aria-label="CartHost home" className="flex items-center">
+            <Logo className="text-2xl" />
           </Link>
 
           {/* Desktop Nav */}

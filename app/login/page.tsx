@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { signIn } from "../auth/actions";
+import { Logo } from "../../components/ui/Logo";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,16 +27,18 @@ export default function LoginPage() {
     <main className="min-h-screen bg-paper px-4 py-10">
       <div className="mx-auto flex min-h-[80vh] max-w-lg items-center">
         <div className="w-full rounded-dossier-surface border border-rule bg-surface p-10 shadow-dossier-surface">
-          <div className="mb-8 space-y-2 text-center">
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent-ops">
-              CartHost
-            </p>
-            <h1 className="font-heading text-3xl font-semibold text-ink">
-              Welcome Back
-            </h1>
-            <p className="text-sm text-ink-subtle">
-              Sign in to manage your fleet dashboard.
-            </p>
+          <div className="mb-8 space-y-4 text-center">
+            <div className="flex justify-center">
+              <Logo className="text-3xl" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="font-heading text-3xl font-semibold text-ink">
+                Welcome Back
+              </h1>
+              <p className="text-sm text-ink-subtle">
+                Sign in to manage your fleet dashboard.
+              </p>
+            </div>
           </div>
 
           <form action={formAction} className="space-y-5">
