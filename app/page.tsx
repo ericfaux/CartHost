@@ -23,6 +23,7 @@ import {
   FAQ,
   BetaAccessModal,
   Footer,
+  SupportCTA,
 } from "../components/marketing";
 
 export default function LandingPage() {
@@ -349,6 +350,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Support CTA Section */}
+      <SupportCTA />
 
       {/* Footer */}
       <Footer />

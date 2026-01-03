@@ -17,6 +17,7 @@ const navLinks: NavLink[] = [
   { label: "Evidence Packet", href: "#evidence-packet" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
+  { label: "Support", href: "#support" },
 ];
 
 interface MarketingNavProps {
