@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Key,
   Plus,
@@ -17,6 +18,7 @@ import {
   QrCode,
   Square,
   Activity,
+  HelpCircle,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart, forceEndRental } from "../app/dashboard/actions";
@@ -183,7 +185,15 @@ export default function FleetList({ carts }: { carts: Cart[] }) {
                   <div className={`flex h-10 w-10 items-center justify-center rounded-dossier-control ${typeConfig.bg}`}>
                     <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
                   </div>
-                  <div className={`flex gap-0.5 transition-opacity ${shouldHighlightQr ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                  <div className={`flex items-center gap-1 transition-opacity ${shouldHighlightQr ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                    {/* Guide Link */}
+                    <Link
+                      href="/dashboard/support#qr-setup"
+                      className="p-1.5 text-gray-300 hover:text-teal-600 transition-colors"
+                      title="How to use QR Codes?"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </Link>
                     <IconButton
                       icon={<QrCode className="h-4 w-4" />}
                       label="Generate QR Code"
