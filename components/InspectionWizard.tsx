@@ -370,13 +370,18 @@ export default function InspectionWizard({
         .single();
 
       setUploading(false);
-
       if (rentalError) {
+        // 1. NEW: Catch the duplicate session error (Race Condition Fix)
+        if (rentalError.code === '23505') { 
+           setError('This cart currently has an active session. Please contact the host.');
+           return;
+        }
+
+        // 2. Generic Error Handling (CRITICAL: Do not remove this!)
         console.error('Failed to save rental:', rentalError);
         setError(`Failed to save rental: ${rentalError.message}`);
         return;
       }
-
       // Post-Creation Ingestion: Create photo records for all uploaded images
       // Use Promise.all and catch errors individually so one failure doesn't stop rental creation
       if (updatedFilesList.length > 0) {
