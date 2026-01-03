@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, CarFront, History, Wrench, Activity } from "lucide-react";
-import DashboardTour from "../../components/DashboardTour";
+import OnboardingWidget from "../../components/OnboardingWidget";
 import FinancialSection from "../../components/FinancialSection";
 import ProtectionOverview from "../../components/ProtectionOverview";
 import DashboardDateFilter from "../../components/DashboardDateFilter";
@@ -304,7 +304,7 @@ export default async function DashboardHome(props: {
       />
 
       {/* Onboarding / Tour */}
-      <DashboardTour carts={typedCarts} rentals={typedRentals} profile={profile} />
+      <OnboardingWidget carts={typedCarts} rentals={typedRentals} profile={profile} />
 
       {/* Quick Access Cards */}
       <section className="space-y-4">
