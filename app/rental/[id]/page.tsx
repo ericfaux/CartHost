@@ -83,7 +83,7 @@ export default function RentalInspectionPage() {
         } else {
           setIsLocked(false);
         }
-
+        // 1. Check if *I* have an active rental (Restores session)
         const { data: rental, error: rentalError } = await supabase
           .from('rentals')
           .select('id, status, cart_id')
@@ -96,7 +96,16 @@ export default function RentalInspectionPage() {
           setIsUnlocked(true);
           setActiveRentalId(rental.id);
           setIsLocked(false);
+        } else {
+          // 2. If I don't, check if *anyone* has one (Blocks double booking)
+          // Note: This relies on the 'is_cart_active' RPC function we created in Supabase
+          const { data: isTaken } = await supabase.rpc('is_cart_active', { target_cart_id: resolvedId });
+          
+          if (isTaken) {
+            setError("This cart is currently in use by another guest.");
+          }
         }
+        
       } catch (err: any) {
         setError(err.message || 'Failed to load cart.');
       } finally {
