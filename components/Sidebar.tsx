@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   Vault,
   LogOut,
-  Zap,
   LayoutDashboard,
   Wrench,
   LifeBuoy,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "../app/auth/actions";
+import { Logo } from "./ui/Logo";
 
 const navLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -45,18 +45,9 @@ export default function Sidebar() {
   const NavContent = () => (
     <>
       {/* Brand Header */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-        <div className="flex h-9 w-9 items-center justify-center rounded-dossier-control bg-accent-ops">
-          <Zap className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h1 className="font-heading text-lg font-bold tracking-wide text-white">
-            CartHost
-          </h1>
-          <p className="text-[10px] font-mono uppercase tracking-widest text-white/40">
-            Operations Console
-          </p>
-        </div>
+      <div className="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+        <Logo className="text-xl" />
+        <span className="font-heading font-bold text-lg text-slate-100">Console</span>
       </div>
 
       {/* Navigation */}
@@ -125,12 +116,7 @@ export default function Sidebar() {
 
       {/* Mobile Header Bar */}
       <div className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center justify-between border-b border-rule bg-ink px-4 md:hidden">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-dossier-sm bg-accent-ops">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-heading text-base font-bold text-white">CartHost</span>
-        </div>
+        <Logo className="text-lg" />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="flex h-10 w-10 items-center justify-center rounded-dossier-control text-white/70 hover:bg-white/10 hover:text-white"
