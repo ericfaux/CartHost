@@ -28,10 +28,14 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CartHost — Operations Console for Golf Cart Rentals",
+  title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
   description:
-    "Liability-first checkout for golf cart and e-bike rentals. Digital waivers, inspection photos, and evidence-grade case files. No app download for guests.",
+    "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
   keywords: [
+    "airbnb golf cart waiver",
+    "vrbo liability protection",
+    "vacation rental golf cart insurance",
+    "turo for golf carts",
     "golf cart rental",
     "e-bike rental",
     "vacation rental amenities",
@@ -46,15 +50,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "CartHost",
-    title: "CartHost — Turn every rental into a sealed case file",
+    title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
     description:
-      "QR scan → waiver → inspection photos → return proof. Automatically packaged into an evidence-grade case file for dispute protection.",
+      "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CartHost — Liability-First Checkout for Golf Cart Rentals",
+    title: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
     description:
-      "Digital waivers, inspection photos, and evidence-grade case files. No app download for guests.",
+      "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
   },
   robots: {
     index: true,
