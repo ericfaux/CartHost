@@ -249,7 +249,7 @@ export default function RentalDetail({
         </div>
 
         {/* EVIDENCE PACKET CONTAINER — White "sheet" with grey data modules */}
-        <div className="bg-white rounded-dossier-surface border border-rule shadow-dossier-surface overflow-hidden flex flex-col">
+        <div className="bg-white rounded-dossier-surface border border-rule shadow-dossier-surface overflow-hidden flex flex-col" data-tour="tour-packet-row">
           {/* Header Strip */}
           <div className="flex items-center justify-between px-6 py-4 bg-paper border-b border-rule">
             <div className="flex items-center gap-3">
