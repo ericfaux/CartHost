@@ -1,4 +1,5 @@
-'use client';
+// FILE: components/FinancialSection.tsx
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -107,40 +108,36 @@ export default function FinancialSection({ rentals, period }: FinancialSectionPr
       {showNormal ? (
         <DashboardCharts rentals={rentals} period={period} />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
-            {/* Icon Container */}
-            <div className="flex shrink-0 items-start">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                <Wallet className="h-6 w-6 text-gray-600" />
-              </div>
-            </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
+          <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 border border-gray-100">
+            <Wallet className="h-8 w-8 text-gray-400" />
+          </div>
 
-            {/* Content */}
-            <div className="flex-1">
-              <p className="text-lg font-bold text-gray-900">
-                No financial data recorded
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                CartHost calculates revenue and security deposits automatically based on your rental history. Configure your default deposit settings to start tracking value, or hide this section if you don't use it.
-              </p>
+          <div className="flex-1 space-y-2">
+            <p className="text-lg font-bold text-gray-900">
+              No financial data recorded
+            </p>
+            <p className="text-sm text-gray-500 max-w-xl leading-relaxed">
+              CartHost calculates revenue and security deposits automatically based on your rental history. 
+              Configure your default deposit settings to start tracking value, or hide this section if you don&apos;t use it.
+            </p>
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Link
-                  href="/dashboard/settings"
-                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                >
-                  Configure Defaults
-                </Link>
-                <button
-                  type="button"
-                  onClick={onHide}
-                  disabled={isPending}
-                  className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-transparent px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50 disabled:cursor-wait disabled:opacity-70"
-                >
-                  Hide Section
-                </button>
-              </div>
+            <div className="pt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+              {/* UPDATED LINK STYLES BELOW */}
+              <Link
+                href="/dashboard/settings"
+                className="inline-flex items-center justify-center rounded-lg bg-accent-ops px-4 py-2 text-sm font-semibold text-white shadow-dossier-bevel transition hover:bg-accent-ops-dark"
+              >
+                Configure Defaults
+              </Link>
+              <button
+                type="button"
+                onClick={onHide}
+                disabled={isPending}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-transparent px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 disabled:cursor-wait disabled:opacity-70"
+              >
+                Hide Section
+              </button>
             </div>
           </div>
         </div>
