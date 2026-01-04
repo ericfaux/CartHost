@@ -53,7 +53,19 @@ type Cart = {
   custom_photo_label?: string | null;
 };
 
-export default function FleetList({ carts }: { carts: Cart[] }) {
+// NEW: Interface for host branding data used in asset tags
+interface HostBranding {
+  propertyName: string;
+  phone?: string;
+  logoUrl?: string;
+}
+
+type FleetListProps = {
+  carts: Cart[];
+  hostBranding?: HostBranding;
+};
+
+export default function FleetList({ carts, hostBranding }: FleetListProps) {
   const [selectedCart, setSelectedCart] = useState<Cart | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
