@@ -163,6 +163,9 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               placeholder="Lakeside Villas"
             />
+            <p className="text-xs text-gray-500">
+              Appears on asset tags as &quot;Managed by: [Property Name]&quot;
+            </p>
           </div>
 
           <div className="space-y-2">
