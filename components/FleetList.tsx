@@ -93,8 +93,7 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
       if (result?.error) {
         alert(result.error);
       }
-    } catch (error) {
-      console.error("Failed to end rental", error);
+    } catch {
       alert("Failed to end rental. Please try again.");
     } finally {
       setEndingId(null);
@@ -108,8 +107,7 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
     try {
       setDeletingId(cartId);
       await deleteCart(cartId);
-    } catch (error) {
-      console.error("Failed to delete cart", error);
+    } catch {
       alert("Failed to delete cart. Please try again.");
     } finally {
       setDeletingId(null);
