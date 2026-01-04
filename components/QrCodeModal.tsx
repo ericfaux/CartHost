@@ -4,11 +4,19 @@ import QRCode from "react-qr-code";
 import { Copy, Printer, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// NEW: Host branding interface for customized asset tags
+interface HostBranding {
+  propertyName: string;
+  phone?: string;
+  logoUrl?: string;
+}
+
 type QrCodeModalProps = {
   isOpen: boolean;
   onClose: () => void;
   assetId: string;
   assetName: string;
+  hostBranding?: HostBranding; // NEW: Optional branding data for customization
 };
 
 export default function QrCodeModal({
@@ -16,6 +24,7 @@ export default function QrCodeModal({
   onClose,
   assetId,
   assetName,
+  hostBranding, // NEW: Accept branding data (UI implementation pending)
 }: QrCodeModalProps) {
   const [origin, setOrigin] = useState("");
 
