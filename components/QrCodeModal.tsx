@@ -477,7 +477,7 @@ export default function QrCodeModal({
   if (!isOpen) return null;
 
   // Show error state if QR generation failed
-  const hasError = qrError || !assetId;
+  const hasError = Boolean(qrError) || !assetId;
 
   return (
     <>
