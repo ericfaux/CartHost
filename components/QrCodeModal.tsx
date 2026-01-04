@@ -323,8 +323,10 @@ export default function QrCodeModal({
   }, []);
 
   /**
-   * Handles printing the asset tag with proper body class management
-   * Includes debounce to prevent double-clicks
+   * Handles printing the asset tag using a new window approach
+   * This avoids CSS inheritance issues where visibility:hidden on parent
+   * elements prevents children from being visible, even with overrides.
+   * Includes debounce to prevent double-clicks.
    */
   const handlePrint = useCallback(() => {
     // Debounce to prevent double-clicks
@@ -346,33 +348,174 @@ export default function QrCodeModal({
       return;
     }
 
-    // Add print-mode class to body
-    document.body.classList.add("print-mode");
+    // Get the current values
+    const propertyName = hostBranding?.propertyName?.trim() || DEFAULT_PROPERTY_NAME;
+    const phone = hostBranding?.phone?.trim() || "";
+    const shortId = assetId ? `UNIT-${assetId.slice(0, 4).toUpperCase()}` : "UNIT-XXXX";
 
-    // Small delay to ensure styles apply before printing
-    requestAnimationFrame(() => {
-      window.print();
+    // Find the QR code SVG from the current modal
+    const qrWrapper = printContainerRef.current?.querySelector('.asset-tag-qr-wrapper');
+    const qrSvg = qrWrapper?.innerHTML || '';
 
-      // Listen for after print to restore normal view
-      const afterPrint = () => {
-        document.body.classList.remove("print-mode");
-        window.removeEventListener("afterprint", afterPrint);
+    // Open a new print window with standalone content
+    const printWindow = window.open("", "_blank", "width=450,height=650");
 
-        // Reset debounce after print dialog closes
-        printDebounceRef.current = setTimeout(() => {
-          setIsPrintPending(false);
-        }, PRINT_DEBOUNCE_MS);
-      };
+    if (!printWindow) {
+      showToast("Please allow popups to print", "error");
+      setIsPrintPending(false);
+      return;
+    }
 
-      window.addEventListener("afterprint", afterPrint);
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Asset Tag - ${shortId}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
-      // Fallback: remove class after a timeout if afterprint doesn't fire
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+
+            @page { size: 4in 6in; margin: 0; }
+
+            body {
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              color-adjust: exact;
+            }
+
+            .asset-tag {
+              width: 4in;
+              height: 6in;
+              background: #ffffff;
+              border: 2px solid #000000;
+              display: flex;
+              flex-direction: column;
+              font-family: 'Inter', system-ui, sans-serif;
+              overflow: hidden;
+            }
+
+            .header {
+              height: 15%;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0 1rem;
+              background: #1a1a1a;
+              color: #ffffff;
+            }
+
+            .header-label {
+              font-family: 'Space Mono', monospace;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+            }
+
+            .header-brand {
+              font-weight: 700;
+              font-size: 16px;
+            }
+
+            .qr-section {
+              height: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #ffffff;
+            }
+
+            .qr-wrapper {
+              padding: 0.5rem;
+              background: #ffffff;
+            }
+
+            .qr-wrapper svg {
+              width: 160px;
+              height: 160px;
+            }
+
+            .cta {
+              height: 15%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #ffffff;
+            }
+
+            .cta-text {
+              font-weight: 700;
+              font-size: 24px;
+              color: #0F766E;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+
+            .footer {
+              height: 20%;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 0 1rem;
+              background: #f5f5f5;
+            }
+
+            .footer-manager {
+              font-size: 11px;
+              color: #374151;
+              text-align: center;
+            }
+
+            .footer-id {
+              font-size: 11px;
+              color: #6b7280;
+              text-align: center;
+              margin-top: 4px;
+            }
+
+            @media print {
+              body { margin: 0 !important; }
+              .asset-tag { border-radius: 0 !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <article class="asset-tag">
+            <header class="header">
+              <span class="header-label">Operational Asset</span>
+              <span class="header-brand">CartHost</span>
+            </header>
+            <section class="qr-section">
+              <div class="qr-wrapper">${qrSvg}</div>
+            </section>
+            <section class="cta">
+              <h2 class="cta-text">Scan to Start</h2>
+            </section>
+            <footer class="footer">
+              <p class="footer-manager">Managed by: ${propertyName}</p>
+              <p class="footer-id">${shortId}${phone ? ' | Support: ' + phone : ''}</p>
+            </footer>
+          </article>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    // Wait for content to load, then print
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
       setTimeout(() => {
-        document.body.classList.remove("print-mode");
+        printWindow.close();
         setIsPrintPending(false);
-      }, 1000);
-    });
-  }, [fontsLoaded, isPrintPending]);
+      }, 500);
+    }, 800);
+
+  }, [fontsLoaded, isPrintPending, assetId, hostBranding, showToast]);
 
   /**
    * Generates and downloads a PDF of the asset tag at 4x6 inch dimensions
