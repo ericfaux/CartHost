@@ -93,8 +93,8 @@ export async function updateProfile(
       return { error: "Failed to update profile: " + error.message };
     }
 
-    // Revalidate the settings page
-    revalidatePath("/dashboard/settings");
+    // Revalidate the layout page
+    revalidatePath("/dashboard", "layout");
 
     return { success: true };
   } catch (error) {
