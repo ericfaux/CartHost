@@ -67,14 +67,14 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // NEW: Fetch host branding data for asset tags (property_name, phone, logo_url if exists)
+  // UPDATED: Fetch extra fields (company_name, full_name) for the smart fallback logic
   const { data: hostProfile, error: hostProfileError } = await supabase
     .from("hosts")
-    .select("property_name, phone_number, logo_url")
+    .select("property_name, phone_number, logo_url, company_name, full_name")
     .eq("id", user.id)
     .single();
 
-  // DEBUG: Log to server console to help diagnose property_name issues
+  // DEBUG: Log to server console to help diagnose branding issues
   console.log("[Fleet Page] Host Profile Query:", {
     userId: user.id,
     hostProfile,
@@ -82,13 +82,20 @@ export default async function DashboardPage() {
     property_name: hostProfile?.property_name,
   });
 
-  // NEW: Build hostBranding object with fallback values
-  // Handle empty strings properly - trim and check for non-empty values
-  // The issue is that empty string "" is falsy but ?? only catches null/undefined
-  const rawPropertyName = hostProfile?.property_name;
-  const propertyName = (rawPropertyName && rawPropertyName.trim().length > 0)
-    ? rawPropertyName.trim()
-    : "CartHost Property";
+  // SMART FALLBACK LOGIC:
+  // 1. Try Property Name (User specifically set this for tags)
+  // 2. Try Company Name (Business name)
+  // 3. Try Full Name (Individual host name)
+  // 4. Fallback to "CartHost Property"
+  const rawPropertyName = hostProfile?.property_name?.trim();
+  const rawCompanyName = hostProfile?.company_name?.trim();
+  const rawFullName = hostProfile?.full_name?.trim();
+
+  const propertyName =
+    (rawPropertyName && rawPropertyName.length > 0) ? rawPropertyName :
+    (rawCompanyName && rawCompanyName.length > 0) ? rawCompanyName :
+    (rawFullName && rawFullName.length > 0) ? rawFullName :
+    "CartHost Property";
 
   const hostBranding: HostBranding = {
     propertyName: propertyName,
