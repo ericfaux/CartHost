@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import {
   FileWarning,
   FileX,
@@ -34,8 +35,52 @@ export default function LandingPage() {
   const openBetaModal = () => setIsBetaModalOpen(true);
   const closeBetaModal = () => setIsBetaModalOpen(false);
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Do guests need to download an app?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Guests complete the entire checkout flow in their mobile browser. They simply scan the QR code on your cart and follow the on-screen prompts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the waiver legally binding?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CartHost provides the infrastructure for digital waiver capture including timestamp, IP address, and user agent metadata. We recommend having your waiver language reviewed by a local attorney."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does this help with Airbnb disputes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CartHost creates a complete chain of custody for every rental. If a guest disputes damage, you have timestamped photos with hashes proving they haven't been altered."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What evidence is captured for each rental?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Each rental captures: a digitally signed waiver with timestamp, IP address, and user agent; four inspection photos with GPS coordinates and SHA-256 hashes; pre-existing damage notes; and return proof photo."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-paper">
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       {/* Navigation */}
       <MarketingNav onRequestAccess={openBetaModal} />
 
@@ -66,12 +111,12 @@ export default function LandingPage() {
               </Badge>
 
               <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-ink leading-tight">
-                Turn every rental into a sealed case file.
+                The <span className="text-accent-ops">Golf Cart Liability</span> & Waiver System for Airbnb Hosts.
               </h1>
 
               <p className="text-lg text-ink-subtle max-w-xl">
-                The operating system for <strong>Airbnb, VRBO, and private hosts</strong>.
-                Automate waivers, inspection photos, and handoffs to win disputes and protect your amenities.
+                Turn every rental into a sealed case file. The operating system to automate{" "}
+                <strong>liability waivers, inspection photos, and damage evidence</strong>.
               </p>
 
               <div className="flex flex-wrap gap-3">
