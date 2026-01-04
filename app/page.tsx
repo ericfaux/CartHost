@@ -10,6 +10,8 @@ import {
   Smartphone,
   Link2,
   Camera,
+  ShieldCheck,
+  BrainCircuit,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
@@ -105,6 +107,10 @@ export default function LandingPage() {
                   <Camera className="h-4 w-4 text-accent-ops" />
                   Photo evidence vault
                 </span>
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-accent-ops" />
+                  Deters reckless usage
+                </span>
               </div>
 
               {/* Platform Trust Strip */}
@@ -140,8 +146,16 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {[
+              {
+                icon: <BrainCircuit className="h-5 w-5" />,
+                iconBg: "bg-indigo-50",
+                iconColor: "text-indigo-600",
+                title: "Guests treat rentals like toys",
+                description:
+                  "Casual handoffs signal 'vacation mode.' A formal, legal-grade intake process instantly signals that you are a professional who tracks damage.",
+              },
               {
                 icon: <FileWarning className="h-5 w-5" />,
                 iconBg: "bg-amber-50",
