@@ -666,69 +666,92 @@
    ---------------------------------------- */
 
 @media print {
-  /* Hide everything by default when print-mode is active */
-  body.print-mode * {
-    visibility: hidden !important;
+  /* When print-mode is active, hide everything except the asset tag */
+  body.print-mode {
+    /* Reset body */
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
   }
 
-  /* Show only the printable asset tag */
-  body.print-mode .asset-tag-printable,
-  body.print-mode .asset-tag-printable * {
-    visibility: visible !important;
+  /* Hide all body children by default */
+  body.print-mode > * {
+    display: none !important;
   }
 
-  /* Position the tag at top-left for print */
+  /* But the modal needs to be visible so we can see the tag inside it */
+  body.print-mode .modal-backdrop {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  /* Hide modal UI elements */
+  body.print-mode .modal-backdrop > div:not(.asset-tag-preview-container) {
+    display: none !important;
+  }
+
+  body.print-mode .asset-tag-preview-container {
+    display: block !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  body.print-mode .asset-tag-preview-wrapper {
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /* The actual printable tag */
   body.print-mode .asset-tag-printable {
+    display: flex !important;
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
-    /* Exact 4x6 dimensions */
     width: 4in !important;
     height: 6in !important;
-    /* Remove screen styles */
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
-    border: none !important;
-    /* Force background printing */
+    border: 2px solid #000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Hide modal backdrop and UI */
-  body.print-mode .modal-backdrop,
-  body.print-mode .print-hide {
-    display: none !important;
-  }
-
-  /* Page setup for 4x6 label paper */
+  /* Page setup */
   @page {
     size: 4in 6in;
     margin: 0;
   }
 
-  /* Force page break avoidance */
-  body.print-mode .asset-tag-printable {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+  /* Ensure sections display correctly */
+  body.print-mode .asset-tag-header,
+  body.print-mode .asset-tag-qr-section,
+  body.print-mode .asset-tag-cta,
+  body.print-mode .asset-tag-footer {
+    display: flex !important;
   }
 
-  /* Ensure high contrast for B&W printing */
+  /* Force background colors to print */
   body.print-mode .asset-tag-header {
-    background: #000000 !important;
+    background: #1a1a1a !important;
     color: #ffffff !important;
   }
 
-  body.print-mode .asset-tag-cta-text {
-    /* High contrast teal for color, pure black for B&W */
-    color: #000000 !important;
-  }
-
-  /* Remove ink-wasting backgrounds except essential */
   body.print-mode .asset-tag-footer {
     background: #f5f5f5 !important;
+  }
+
+  /* Hide any elements with print-hide class */
+  body.print-mode .print-hide {
+    display: none !important;
   }
 
   /* Ensure QR code prints with maximum contrast */
