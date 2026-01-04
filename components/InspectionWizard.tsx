@@ -69,9 +69,9 @@ export default function InspectionWizard({
   const [departureDate, setDepartureDate] = useState('');
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [conditionComment, setConditionComment] = useState('');
-  const [conditionImageUrl, setConditionImageUrl] = useState<string | null>(null);
-  const [conditionPhotoPath, setConditionPhotoPath] = useState<string | null>(null); // Track condition photo path separately
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  // Store storage paths (not URLs) - private bucket requires signed URLs server-side
+  const [conditionPhotoPath, setConditionPhotoPath] = useState<string | null>(null);
+  const [photoPaths, setPhotoPaths] = useState<string[]>([]);
   const [uploadedPaths, setUploadedPaths] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
@@ -227,7 +227,6 @@ export default function InspectionWizard({
 
       setUploading(true);
 
-      const stepNumber = currentStep + 1;
       const timestamp = new Date().getTime();
       const path = `${cartId}/${userId}/condition_${timestamp}.jpg`;
 
@@ -246,21 +245,11 @@ export default function InspectionWizard({
         return;
       }
 
-      const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
-
-      if (!publicUrlData?.publicUrl) {
-        console.error('Failed to retrieve public URL');
-        setError('Failed to retrieve public URL for uploaded file.');
-        setUploading(false);
-        return;
-      }
-
-      // Track the condition photo path separately for later ingestion with kind='condition'
+      // Store the path (not URL) - private bucket requires server-side signing
       setConditionPhotoPath(path);
       setUploadedPaths((prev) => [...prev, path]);
       setUploadedFiles((prev) => [...prev, { path, blob: file, kind: 'condition' }]);
 
-      setConditionImageUrl(publicUrlData.publicUrl);
       proceedToNextStep();
       return;
     }
@@ -309,19 +298,9 @@ export default function InspectionWizard({
 
     console.log("5. SUCCESS! File uploaded. Moving to next step.");
 
-    const { data: publicUrlData } = supabase.storage
-      .from('evidence')
-      .getPublicUrl(path);
-
-    if (!publicUrlData?.publicUrl) {
-      console.error('Failed to retrieve public URL');
-      setError('Failed to retrieve public URL for uploaded file.');
-      setUploading(false);
-      return;
-    }
-
-    const updatedPhotoUrls = [...photoUrls, publicUrlData.publicUrl];
-    setPhotoUrls(updatedPhotoUrls);
+    // Store the path (not URL) - private bucket requires server-side signing
+    const updatedPhotoPaths = [...photoPaths, path];
+    setPhotoPaths(updatedPhotoPaths);
 
     // Track the uploaded path for post-creation ingestion (pre_ride photos)
     const updatedPaths = [...uploadedPaths, path];
@@ -357,14 +336,14 @@ export default function InspectionWizard({
           waiver_agreed: true,
           waiver_agreed_at: new Date().toISOString(),
           waiver_version: WAIVER_VERSION,
-          photos: updatedPhotoUrls,
+          photos: updatedPhotoPaths, // Store paths, not URLs (private bucket)
           revenue: revenue ?? null,
           deposit_amount: depositAmount,
           deposit_status: 'pending',
           guest_ip: ipAddress,
           user_agent: userAgent,
           condition_comment: conditionComment,
-          condition_image_url: conditionImageUrl,
+          condition_image_url: conditionPhotoPath, // Store path, not URL (private bucket)
         })
         .select()
         .single();
