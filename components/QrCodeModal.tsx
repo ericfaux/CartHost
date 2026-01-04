@@ -1,8 +1,10 @@
 "use client";
 
 import QRCode from "react-qr-code";
-import { Download, Printer, X, Monitor } from "lucide-react";
+import { Download, Printer, X, Monitor, Loader2 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 // Host branding interface for customized asset tags
 interface HostBranding {
@@ -166,22 +168,92 @@ export default function QrCodeModal({
   }, [fontsLoaded]);
 
   /**
-   * Placeholder for PDF download functionality
-   * TODO: Implement PDF generation using html2canvas + jsPDF or similar
+   * Generates and downloads a PDF of the asset tag at 4x6 inch dimensions
+   * Uses html2canvas to capture the element and jsPDF for PDF generation
    */
   const handleDownloadPDF = useCallback(async () => {
     setIsGeneratingPDF(true);
+
     try {
-      // TODO: Implement PDF generation
-      // 1. Use html2canvas to capture the asset tag
-      // 2. Convert to PDF using jsPDF
-      // 3. Trigger download
-      console.log("PDF download not yet implemented");
-      alert("PDF download coming soon!");
+      // Wait for fonts to load before capturing
+      if (typeof document !== "undefined" && document.fonts) {
+        await document.fonts.ready;
+      }
+
+      // Find the printable asset tag element
+      const printableElement = printContainerRef.current?.querySelector(
+        ".asset-tag-printable"
+      ) as HTMLElement | null;
+
+      if (!printableElement) {
+        throw new Error("Asset tag element not found");
+      }
+
+      // PDF dimensions: 4x6 inches at 300 DPI for high quality
+      const DPI = 300;
+      const PDF_WIDTH_INCHES = 4;
+      const PDF_HEIGHT_INCHES = 6;
+      const PDF_WIDTH_PX = PDF_WIDTH_INCHES * DPI;
+      const PDF_HEIGHT_PX = PDF_HEIGHT_INCHES * DPI;
+
+      // Capture the asset tag element as canvas with high resolution
+      const canvas = await html2canvas(printableElement, {
+        scale: DPI / 96, // Scale up from screen DPI (96) to print DPI (300)
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#FFFFFF",
+        logging: false,
+        // Ensure QR code renders clearly
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          // Ensure cloned element has proper sizing for capture
+          const clonedElement = clonedDoc.querySelector(
+            ".asset-tag-printable"
+          ) as HTMLElement | null;
+          if (clonedElement) {
+            clonedElement.style.transform = "none";
+            clonedElement.style.width = "4in";
+            clonedElement.style.height = "6in";
+          }
+        },
+      });
+
+      // Create PDF with exact 4x6 inch dimensions
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "in",
+        format: [PDF_WIDTH_INCHES, PDF_HEIGHT_INCHES],
+        compress: true,
+      });
+
+      // Convert canvas to image and add to PDF
+      const imgData = canvas.toDataURL("image/jpeg", 0.85); // Medium quality JPEG for smaller file size
+
+      // Add image to fill the entire PDF page
+      pdf.addImage(imgData, "JPEG", 0, 0, PDF_WIDTH_INCHES, PDF_HEIGHT_INCHES);
+
+      // Generate filename with sanitized vehicle name and short ID
+      const shortId = generateAssetId(assetId).replace("UNIT-", "");
+      const sanitizedName = assetName
+        .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove special characters
+        .replace(/\s+/g, "-") // Replace spaces with hyphens
+        .toLowerCase()
+        .slice(0, 30); // Truncate long names
+      const filename = `asset-tag-${sanitizedName}-${shortId}.pdf`;
+
+      // Trigger download
+      pdf.save(filename);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+
+      // User-friendly error message
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`Failed to generate PDF: ${errorMessage}\n\nPlease try again or use the Print option instead.`);
     } finally {
       setIsGeneratingPDF(false);
     }
-  }, []);
+  }, [assetId, assetName]);
 
   if (!isOpen) return null;
 
@@ -261,10 +333,14 @@ export default function QrCodeModal({
             <button
               type="button"
               onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF}
+              disabled={isGeneratingPDF || !fontsLoaded}
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 transition hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="h-4 w-4" />
+              {isGeneratingPDF ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
               {isGeneratingPDF ? "Generating..." : "Download PDF"}
             </button>
           </footer>
