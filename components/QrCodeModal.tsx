@@ -135,20 +135,28 @@ function isValidQrUrl(url: string): boolean {
  * Used both for screen preview (scaled via wrapper) and print (full size)
  * @param rentalUrl - URL encoded in QR code
  * @param assetId - Vehicle/asset ID for display
+ * @param assetName - Vehicle/asset name for display
  * @param hostBranding - Optional branding customization
  */
 const AssetTagPrintable = memo(function AssetTagPrintable({
   rentalUrl,
   assetId,
+  assetName,
   hostBranding,
 }: {
   rentalUrl: string;
   assetId: string;
+  assetName?: string;
   hostBranding?: HostBranding;
 }) {
   const shortId = generateAssetId(assetId);
-  const propertyName = sanitizeDisplayText(hostBranding?.propertyName) || DEFAULT_PROPERTY_NAME;
+  // Handle empty strings properly for property name
+  const rawPropertyName = sanitizeDisplayText(hostBranding?.propertyName);
+  const propertyName = (rawPropertyName && rawPropertyName.length > 0)
+    ? rawPropertyName
+    : DEFAULT_PROPERTY_NAME;
   const phone = sanitizeDisplayText(hostBranding?.phone);
+  const vehicleName = truncateText(sanitizeDisplayText(assetName), MAX_VEHICLE_NAME_LENGTH) || "Vehicle";
 
   // Validate QR data
   const isValidUrl = isValidQrUrl(rentalUrl);
@@ -169,7 +177,7 @@ const AssetTagPrintable = memo(function AssetTagPrintable({
         </span>
       </header>
 
-      {/* HERO SECTION - QR Code - 50% height */}
+      {/* HERO SECTION - QR Code - 42% height */}
       <section className="asset-tag-qr-section" aria-label="QR Code">
         <div className="asset-tag-qr-wrapper">
           {isValidUrl ? (
@@ -194,14 +202,19 @@ const AssetTagPrintable = memo(function AssetTagPrintable({
         </div>
       </section>
 
-      {/* CTA SECTION - 15% height */}
+      {/* ASSET NAME SECTION - 8% height */}
+      <section className="asset-tag-asset-name" aria-label="Asset name">
+        <p className="asset-tag-asset-name-text">{vehicleName}</p>
+      </section>
+
+      {/* CTA SECTION - 12% height */}
       <section className="asset-tag-cta" aria-label="Call to action">
         <h2 className="asset-tag-cta-text">
           Scan to Start
         </h2>
       </section>
 
-      {/* FOOTER - 20% height */}
+      {/* FOOTER - 23% height */}
       <footer className="asset-tag-footer">
         <p className="asset-tag-footer-manager">
           Managed by: {propertyName}
@@ -348,10 +361,14 @@ export default function QrCodeModal({
       return;
     }
 
-    // Get the current values
-    const propertyName = hostBranding?.propertyName?.trim() || DEFAULT_PROPERTY_NAME;
+    // Get the current values - handle empty strings properly
+    const rawPropertyName = hostBranding?.propertyName;
+    const propertyName = (rawPropertyName && rawPropertyName.trim().length > 0)
+      ? rawPropertyName.trim()
+      : DEFAULT_PROPERTY_NAME;
     const phone = hostBranding?.phone?.trim() || "";
     const shortId = assetId ? `UNIT-${assetId.slice(0, 4).toUpperCase()}` : "UNIT-XXXX";
+    const vehicleName = assetName?.trim() || "Vehicle";
 
     // Find the QR code SVG from the current modal
     const qrWrapper = printContainerRef.current?.querySelector('.asset-tag-qr-wrapper');
@@ -420,7 +437,7 @@ export default function QrCodeModal({
             }
 
             .qr-section {
-              height: 50%;
+              height: 42%;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -437,8 +454,28 @@ export default function QrCodeModal({
               height: 160px;
             }
 
+            .asset-name {
+              height: 8%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #ffffff;
+              border-top: 1px solid #e5e7eb;
+            }
+
+            .asset-name-text {
+              font-weight: 600;
+              font-size: 14px;
+              color: #374151;
+              text-align: center;
+              max-width: 90%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
             .cta {
-              height: 15%;
+              height: 12%;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -447,14 +484,14 @@ export default function QrCodeModal({
 
             .cta-text {
               font-weight: 700;
-              font-size: 24px;
+              font-size: 22px;
               color: #0F766E;
               text-transform: uppercase;
               letter-spacing: 0.05em;
             }
 
             .footer {
-              height: 20%;
+              height: 23%;
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -464,9 +501,10 @@ export default function QrCodeModal({
             }
 
             .footer-manager {
-              font-size: 11px;
+              font-size: 12px;
               color: #374151;
               text-align: center;
+              font-weight: 500;
             }
 
             .footer-id {
@@ -490,6 +528,9 @@ export default function QrCodeModal({
             </header>
             <section class="qr-section">
               <div class="qr-wrapper">${qrSvg}</div>
+            </section>
+            <section class="asset-name">
+              <p class="asset-name-text">${vehicleName}</p>
             </section>
             <section class="cta">
               <h2 class="cta-text">Scan to Start</h2>
@@ -515,7 +556,7 @@ export default function QrCodeModal({
       }, 500);
     }, 800);
 
-  }, [fontsLoaded, isPrintPending, assetId, hostBranding, showToast]);
+  }, [fontsLoaded, isPrintPending, assetId, assetName, hostBranding, showToast]);
 
   /**
    * Generates and downloads a PDF of the asset tag at 4x6 inch dimensions
@@ -754,6 +795,7 @@ export default function QrCodeModal({
               <AssetTagPrintable
                 rentalUrl={rentalUrl}
                 assetId={assetId}
+                assetName={assetName}
                 hostBranding={hostBranding}
               />
             </div>
