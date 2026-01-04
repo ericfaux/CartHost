@@ -19,10 +19,12 @@ import {
   Square,
   Activity,
   HelpCircle,
+  Printer,
 } from "lucide-react";
 import AddCartModal from "./AddCartModal";
 import { deleteCart, forceEndRental } from "../app/dashboard/actions";
 import QrCodeModal from "./QrCodeModal";
+import BatchAssetTagPrint from "./BatchAssetTagPrint";
 import { PageHeader } from "./ui/Panel";
 import { Button, IconButton } from "./ui/Button";
 import { Badge } from "./ui/Badge";
@@ -71,6 +73,7 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [endingId, setEndingId] = useState<string | null>(null);
   const [qrAsset, setQrAsset] = useState<Cart | null>(null);
+  const [isBatchPrintOpen, setIsBatchPrintOpen] = useState(false);
 
   // Tour context for QR button highlighting
   const { isOpen: isTourOpen, currentStepData } = useTour();
@@ -140,13 +143,25 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
         title="My Fleet"
         subtitle="Manage your vehicles, access codes, and track status"
         actions={
-          <AddCartModal
-            trigger={(open) => (
-              <Button variant="primary" onClick={open} icon={<Plus className="h-4 w-4" />}>
-                Add Asset
+          <div className="flex items-center gap-3">
+            {/* Batch Print Button - only show if 2+ vehicles */}
+            {carts.length >= 2 && (
+              <Button
+                variant="secondary"
+                onClick={() => setIsBatchPrintOpen(true)}
+                icon={<Printer className="h-4 w-4" />}
+              >
+                Print All Asset Tags
               </Button>
             )}
-          />
+            <AddCartModal
+              trigger={(open) => (
+                <Button variant="primary" onClick={open} icon={<Plus className="h-4 w-4" />}>
+                  Add Asset
+                </Button>
+              )}
+            />
+          </div>
         }
       />
 
@@ -348,6 +363,14 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
         onClose={() => setQrAsset(null)}
         assetId={qrAsset?.id ?? ""}
         assetName={qrAsset?.name ?? ""}
+        hostBranding={hostBranding}
+      />
+
+      {/* Batch Asset Tag Print Modal */}
+      <BatchAssetTagPrint
+        isOpen={isBatchPrintOpen}
+        onClose={() => setIsBatchPrintOpen(false)}
+        vehicles={carts.map((cart) => ({ id: cart.id, name: cart.name }))}
         hostBranding={hostBranding}
       />
     </div>
