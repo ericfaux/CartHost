@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Logo } from "../ui/Logo";
@@ -12,20 +13,29 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { label: "Product", href: "#product" },
-  { label: "How it Works", href: "#how-it-works" },
-  { label: "Evidence Packet", href: "#evidence-packet" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
-  { label: "Support", href: "#support" },
+  { label: "Product", href: "/#product" },
+  { label: "How it Works", href: "/#how-it-works" },
+  { label: "Evidence Packet", href: "/#evidence-packet" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Support", href: "/#support" },
 ];
 
 interface MarketingNavProps {
-  onRequestAccess: () => void;
+  onRequestAccess?: () => void;
 }
 
 export function MarketingNav({ onRequestAccess }: MarketingNavProps) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleRequestAccess = () => {
+    if (onRequestAccess) {
+      onRequestAccess();
+    } else {
+      router.push("/signup");
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur border-b border-rule">
@@ -57,7 +67,7 @@ export function MarketingNav({ onRequestAccess }: MarketingNavProps) {
             >
               Log In
             </Link>
-            <Button variant="ops" size="sm" onClick={onRequestAccess}>
+            <Button variant="ops" size="sm" onClick={handleRequestAccess}>
               Request Beta Access
             </Button>
           </div>
@@ -106,7 +116,7 @@ export function MarketingNav({ onRequestAccess }: MarketingNavProps) {
                 className="w-full"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  onRequestAccess();
+                  handleRequestAccess();
                 }}
               >
                 Request Beta Access
