@@ -377,6 +377,9 @@ export default function QrCodeModal({
   /**
    * Generates and downloads a PDF of the asset tag at 4x6 inch dimensions
    * Uses dynamic imports for html2canvas and jspdf to reduce initial bundle size
+   *
+   * CRITICAL: Clones the element to a temporary container OUTSIDE the scaled
+   * wrapper to avoid text cutoff from transform: scale(0.75) applied in preview
    */
   const handleDownloadPDF = useCallback(async () => {
     // Validate inputs before proceeding
@@ -401,40 +404,72 @@ export default function QrCodeModal({
         await document.fonts.ready;
       }
 
-      // Find the printable asset tag element
-      const printableElement = printContainerRef.current?.querySelector(
+      // Find the original printable element
+      const originalElement = printContainerRef.current?.querySelector(
         ".asset-tag-printable"
       ) as HTMLElement | null;
 
-      if (!printableElement) {
+      if (!originalElement) {
         throw new Error("Asset tag element not found");
       }
+
+      // CRITICAL FIX: Clone the element to a temporary container OUTSIDE the scaled wrapper
+      const tempContainer = document.createElement("div");
+      tempContainer.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 4in;
+        height: 6in;
+        background: white;
+        z-index: -9999;
+        overflow: visible;
+      `;
+      document.body.appendChild(tempContainer);
+
+      // Clone the asset tag
+      const clonedElement = originalElement.cloneNode(true) as HTMLElement;
+
+      // CRITICAL: Remove all transforms and set explicit dimensions
+      clonedElement.style.cssText = `
+        width: 4in !important;
+        height: 6in !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border: 2px solid #000 !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        background: #ffffff !important;
+      `;
+
+      tempContainer.appendChild(clonedElement);
+
+      // Small delay to ensure styles are applied
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
       // PDF dimensions: 4x6 inches at 300 DPI for high quality
       const DPI = 300;
       const PDF_WIDTH_INCHES = 4;
       const PDF_HEIGHT_INCHES = 6;
 
-      // Capture the asset tag element as canvas with high resolution
-      const canvas = await html2canvas(printableElement, {
+      // Capture from the CLONED element (not the original)
+      const canvas = await html2canvas(clonedElement, {
         scale: DPI / 96, // Scale up from screen DPI (96) to print DPI (300)
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#FFFFFF",
         logging: false,
         imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-          // Ensure cloned element has proper sizing for capture
-          const clonedElement = clonedDoc.querySelector(
-            ".asset-tag-printable"
-          ) as HTMLElement | null;
-          if (clonedElement) {
-            clonedElement.style.transform = "none";
-            clonedElement.style.width = "4in";
-            clonedElement.style.height = "6in";
-          }
-        },
+        width: 4 * 96, // 4 inches at 96 DPI
+        height: 6 * 96, // 6 inches at 96 DPI
       });
+
+      // Clean up temporary container
+      document.body.removeChild(tempContainer);
 
       // Create PDF with exact 4x6 inch dimensions
       const pdf = new jsPDF({
@@ -445,7 +480,7 @@ export default function QrCodeModal({
       });
 
       // Convert canvas to image and add to PDF
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
 
       // Add image to fill the entire PDF page
       pdf.addImage(imgData, "JPEG", 0, 0, PDF_WIDTH_INCHES, PDF_HEIGHT_INCHES);
