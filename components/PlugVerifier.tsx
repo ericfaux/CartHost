@@ -59,8 +59,8 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
       return;
     }
 
-    const { data: publicUrlData } = supabase.storage.from('evidence').getPublicUrl(path);
-    const imageUrl = publicUrlData.publicUrl;
+    // Private bucket: pass storagePath to API for server-side signing
+    const storagePath = path;
 
     // Fetch the session token for API authorization
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -114,8 +114,9 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ imageUrl, rentalId }),
+        body: JSON.stringify({ storagePath, rentalId }),
       });
 
       if (!response.ok) {

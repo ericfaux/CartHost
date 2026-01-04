@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-// FIX: Correct depth for import
+import { getSupabaseAdmin } from "../../../server/supabase-admin";
 import { sendSms } from "../../../lib/sms";
 
 const SYSTEM_PROMPT =
@@ -21,16 +21,84 @@ export async function POST(req: NextRequest) {
     const openai = new OpenAI({ apiKey });
 
     const body = await req.json();
-    const { imageUrl, rentalId } = body ?? {};
+    const { storagePath, rentalId } = body ?? {};
 
-    if (!imageUrl || typeof imageUrl !== "string") {
+    // Validate storagePath is provided
+    if (!storagePath || typeof storagePath !== "string") {
       return NextResponse.json(
-        { error: "Request body must include an imageUrl string." },
+        { error: "Request body must include a storagePath string." },
         { status: 400 }
       );
     }
 
-    // 1. OpenAI Vision Check
+    // 1. Authenticate the caller
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {}
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (!user || userError) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 }
+      );
+    }
+
+    // 2. Authorize: validate storagePath ownership
+    // Path format: cartId/userId/... or cartId/userId/rentalId/...
+    const segments = storagePath.split("/");
+    if (segments.length < 3) {
+      return NextResponse.json(
+        { error: "Invalid storage path format." },
+        { status: 400 }
+      );
+    }
+
+    // userId must be the 2nd segment (index 1)
+    const pathUserId = segments[1];
+    if (pathUserId !== user.id) {
+      return NextResponse.json(
+        { error: "Access denied: path does not belong to authenticated user." },
+        { status: 403 }
+      );
+    }
+
+    // 3. Generate signed URL using service role client
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: signedData, error: signError } = await supabaseAdmin.storage
+      .from("evidence")
+      .createSignedUrl(storagePath, 300); // 5 minute expiry
+
+    if (signError || !signedData?.signedUrl) {
+      console.error("Failed to create signed URL:", signError);
+      return NextResponse.json(
+        { error: "Failed to generate signed URL for image." },
+        { status: 500 }
+      );
+    }
+
+    // 4. OpenAI Vision Check using signed URL (do NOT log the signed URL)
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
@@ -40,7 +108,7 @@ export async function POST(req: NextRequest) {
           role: "user",
           content: [
             { type: "text", text: "Inspect this image and respond with JSON." },
-            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "image_url", image_url: { url: signedData.signedUrl } },
           ],
         },
       ],
@@ -53,32 +121,17 @@ export async function POST(req: NextRequest) {
 
     const result = JSON.parse(content);
 
-    // 2. If Plugged In, Send SMS
+    // 5. If Plugged In, Send SMS
     if (result.is_plugged_in && rentalId) {
-      const cookieStore = await cookies();
-      
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() { return cookieStore.getAll() },
-            setAll(cookiesToSet) {
-                 try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {}
-            },
-          },
-        }
-      );
-
       const { data: rental } = await supabase
-        .from('rentals')
-        .select('guest_phone')
-        .eq('id', rentalId)
+        .from("rentals")
+        .select("guest_phone")
+        .eq("id", rentalId)
         .single();
-      
+
       if (rental?.guest_phone) {
         await sendSms(
-          rental.guest_phone, 
+          rental.guest_phone,
           "Thanks for plugging in! 🔌 Your rental session is now closed. Safe travels!"
         );
       }
