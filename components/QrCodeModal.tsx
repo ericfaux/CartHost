@@ -1,14 +1,22 @@
 "use client";
 
 import QRCode from "react-qr-code";
-import { Download, Printer, X, Monitor, Loader2 } from "lucide-react";
-import { useEffect, useState, useCallback, useRef } from "react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+import { Download, Printer, X, Monitor, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, useMemo, memo } from "react";
 
-// Host branding interface for customized asset tags
+/**
+ * TESTING CHECKLIST:
+ * - [ ] QR codes scan correctly
+ * - [ ] Print works in Chrome, Safari, Firefox
+ * - [ ] PDF downloads with correct filename
+ * - [ ] Missing data handled gracefully
+ * - [ ] Modal closes properly
+ * - [ ] No console errors
+ */
+
+/** Host branding interface for customized asset tags */
 interface HostBranding {
-  propertyName: string;
+  propertyName?: string;
   phone?: string;
   logoUrl?: string;
 }
@@ -21,21 +29,115 @@ type QrCodeModalProps = {
   hostBranding?: HostBranding;
 };
 
+/** Maximum length for vehicle name display before truncation */
+const MAX_VEHICLE_NAME_LENGTH = 25;
+
+/** Default property name when none is provided */
+const DEFAULT_PROPERTY_NAME = "CartHost Property";
+
+/** Toast notification duration in milliseconds */
+const TOAST_DURATION = 3000;
+
+/** Debounce delay for print button in milliseconds */
+const PRINT_DEBOUNCE_MS = 500;
+
+/**
+ * Toast notification component for user feedback
+ */
+function Toast({
+  message,
+  type,
+  onClose
+}: {
+  message: string;
+  type: "success" | "error";
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, TOAST_DURATION);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      className={`fixed bottom-4 right-4 z-[100] flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg transition-all animate-in slide-in-from-bottom-4 ${
+        type === "success"
+          ? "bg-green-600 text-white"
+          : "bg-red-600 text-white"
+      }`}
+    >
+      {type === "success" ? (
+        <CheckCircle className="h-5 w-5" aria-hidden="true" />
+      ) : (
+        <AlertCircle className="h-5 w-5" aria-hidden="true" />
+      )}
+      <span className="text-sm font-medium">{message}</span>
+    </div>
+  );
+}
+
 /**
  * Generates a short asset identifier from the vehicle ID
  * @param vehicleId - Full vehicle/asset ID
- * @returns Formatted asset ID like "UNIT-A1B2"
+ * @returns Formatted asset ID like "UNIT-A1B2" or empty string if invalid
  */
 function generateAssetId(vehicleId: string): string {
+  if (!vehicleId || typeof vehicleId !== "string") {
+    return "";
+  }
   const shortId = vehicleId.slice(0, 4).toUpperCase();
   return `UNIT-${shortId}`;
 }
 
 /**
+ * Truncates text to specified length with ellipsis
+ * @param text - Text to truncate
+ * @param maxLength - Maximum length before truncation
+ * @returns Truncated text with ellipsis if needed
+ */
+function truncateText(text: string, maxLength: number): string {
+  if (!text || text.length <= maxLength) {
+    return text || "";
+  }
+  return `${text.slice(0, maxLength).trim()}…`;
+}
+
+/**
+ * Sanitizes text for safe display (removes control characters, trims)
+ * @param text - Text to sanitize
+ * @returns Sanitized text safe for display
+ */
+function sanitizeDisplayText(text: string | undefined | null): string {
+  if (!text) return "";
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+    .trim();
+}
+
+/**
+ * Validates that a URL is properly formatted for QR code generation
+ * @param url - URL to validate
+ * @returns True if URL is valid
+ */
+function isValidQrUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * AssetTagPrintable - The 4x6 asset tag component using CSS classes
  * Used both for screen preview (scaled via wrapper) and print (full size)
+ * @param rentalUrl - URL encoded in QR code
+ * @param assetId - Vehicle/asset ID for display
+ * @param hostBranding - Optional branding customization
  */
-function AssetTagPrintable({
+const AssetTagPrintable = memo(function AssetTagPrintable({
   rentalUrl,
   assetId,
   hostBranding,
@@ -45,13 +147,17 @@ function AssetTagPrintable({
   hostBranding?: HostBranding;
 }) {
   const shortId = generateAssetId(assetId);
-  const propertyName = hostBranding?.propertyName || "Property Manager";
-  const phone = hostBranding?.phone;
+  const propertyName = sanitizeDisplayText(hostBranding?.propertyName) || DEFAULT_PROPERTY_NAME;
+  const phone = sanitizeDisplayText(hostBranding?.phone);
+
+  // Validate QR data
+  const isValidUrl = isValidQrUrl(rentalUrl);
 
   return (
     <article
       className="asset-tag-printable"
       aria-label="Vehicle Asset Tag"
+      role="img"
     >
       {/* TOP BAR - 15% height */}
       <header className="asset-tag-header">
@@ -66,13 +172,25 @@ function AssetTagPrintable({
       {/* HERO SECTION - QR Code - 50% height */}
       <section className="asset-tag-qr-section" aria-label="QR Code">
         <div className="asset-tag-qr-wrapper">
-          <QRCode
-            value={rentalUrl}
-            size={160}
-            level="H"
-            bgColor="#FFFFFF"
-            fgColor="#000000"
-          />
+          {isValidUrl ? (
+            <QRCode
+              value={rentalUrl}
+              size={160}
+              level="H"
+              bgColor="#FFFFFF"
+              fgColor="#000000"
+              title={`QR code linking to rental page for ${shortId || "this vehicle"}`}
+              aria-label={`Scannable QR code for vehicle ${shortId || assetId}`}
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center w-40 h-40 bg-slate-100 rounded-lg"
+              role="alert"
+              aria-label="QR code unavailable"
+            >
+              <AlertCircle className="h-8 w-8 text-slate-400" aria-hidden="true" />
+            </div>
+          )}
         </div>
       </section>
 
@@ -89,14 +207,25 @@ function AssetTagPrintable({
           Managed by: {propertyName}
         </p>
         <p className="asset-tag-footer-id">
-          {shortId}
+          {shortId || "UNIT-XXXX"}
           {phone && ` | Support: ${phone}`}
         </p>
       </footer>
     </article>
   );
-}
+});
 
+/**
+ * QrCodeModal - Modal for generating, previewing, printing, and downloading
+ * vehicle asset tags with QR codes.
+ *
+ * Features:
+ * - 4x6 inch asset tag preview with scaling
+ * - Print functionality with proper CSS handling
+ * - PDF download at 300 DPI
+ * - Keyboard accessibility (Escape to close)
+ * - Error handling and user feedback
+ */
 export default function QrCodeModal({
   isOpen,
   onClose,
@@ -107,8 +236,15 @@ export default function QrCodeModal({
   const [origin, setOrigin] = useState("");
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const printContainerRef = useRef<HTMLDivElement>(null);
+  const [isPrintPending, setIsPrintPending] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
+  const printContainerRef = useRef<HTMLDivElement>(null);
+  const printDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Set origin on client side
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
@@ -125,23 +261,88 @@ export default function QrCodeModal({
     }
   }, []);
 
-  const rentalUrl = `${origin}/rental/${assetId}`;
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Focus trap and initial focus
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      // Focus the modal for accessibility
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (printDebounceRef.current) {
+        clearTimeout(printDebounceRef.current);
+      }
+    };
+  }, []);
+
+  // Validate assetId and generate rental URL
+  const rentalUrl = useMemo(() => {
+    if (!origin) return "";
+    if (!assetId || typeof assetId !== "string") {
+      setQrError("Invalid vehicle ID");
+      return "";
+    }
+    return `${origin}/rental/${assetId}`;
+  }, [origin, assetId]);
+
+  // Clear error when valid
+  useEffect(() => {
+    if (rentalUrl && isValidQrUrl(rentalUrl)) {
+      setQrError(null);
+    }
+  }, [rentalUrl]);
+
+  // Memoize truncated asset name for display
+  const displayAssetName = useMemo(() => {
+    return truncateText(sanitizeDisplayText(assetName), MAX_VEHICLE_NAME_LENGTH);
+  }, [assetName]);
+
+  /**
+   * Shows a toast notification to the user
+   */
+  const showToast = useCallback((message: string, type: "success" | "error") => {
+    setToast({ message, type });
+  }, []);
 
   /**
    * Handles printing the asset tag with proper body class management
-   * 1. Adds print-mode class to body
-   * 2. Hides modal backdrop
-   * 3. Shows only printable tag
-   * 4. Triggers window.print()
-   * 5. Restores normal view after print dialog closes
+   * Includes debounce to prevent double-clicks
    */
   const handlePrint = useCallback(() => {
+    // Debounce to prevent double-clicks
+    if (isPrintPending) return;
+
+    setIsPrintPending(true);
+
+    // Clear any existing debounce timer
+    if (printDebounceRef.current) {
+      clearTimeout(printDebounceRef.current);
+    }
+
     // Wait for fonts if not loaded
     if (!fontsLoaded) {
-      console.warn("Fonts not yet loaded, waiting...");
       document.fonts?.ready.then(() => {
         handlePrint();
       });
+      setIsPrintPending(false);
       return;
     }
 
@@ -156,6 +357,11 @@ export default function QrCodeModal({
       const afterPrint = () => {
         document.body.classList.remove("print-mode");
         window.removeEventListener("afterprint", afterPrint);
+
+        // Reset debounce after print dialog closes
+        printDebounceRef.current = setTimeout(() => {
+          setIsPrintPending(false);
+        }, PRINT_DEBOUNCE_MS);
       };
 
       window.addEventListener("afterprint", afterPrint);
@@ -163,18 +369,33 @@ export default function QrCodeModal({
       // Fallback: remove class after a timeout if afterprint doesn't fire
       setTimeout(() => {
         document.body.classList.remove("print-mode");
+        setIsPrintPending(false);
       }, 1000);
     });
-  }, [fontsLoaded]);
+  }, [fontsLoaded, isPrintPending]);
 
   /**
    * Generates and downloads a PDF of the asset tag at 4x6 inch dimensions
-   * Uses html2canvas to capture the element and jsPDF for PDF generation
+   * Uses dynamic imports for html2canvas and jspdf to reduce initial bundle size
    */
   const handleDownloadPDF = useCallback(async () => {
+    // Validate inputs before proceeding
+    if (!assetId) {
+      showToast("Cannot generate PDF: Invalid vehicle ID", "error");
+      return;
+    }
+
     setIsGeneratingPDF(true);
 
     try {
+      // Dynamic imports for better performance (lazy loading)
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const html2canvas = html2canvasModule.default;
+      const { jsPDF } = jsPDFModule;
+
       // Wait for fonts to load before capturing
       if (typeof document !== "undefined" && document.fonts) {
         await document.fonts.ready;
@@ -193,8 +414,6 @@ export default function QrCodeModal({
       const DPI = 300;
       const PDF_WIDTH_INCHES = 4;
       const PDF_HEIGHT_INCHES = 6;
-      const PDF_WIDTH_PX = PDF_WIDTH_INCHES * DPI;
-      const PDF_HEIGHT_PX = PDF_HEIGHT_INCHES * DPI;
 
       // Capture the asset tag element as canvas with high resolution
       const canvas = await html2canvas(printableElement, {
@@ -203,7 +422,6 @@ export default function QrCodeModal({
         allowTaint: true,
         backgroundColor: "#FFFFFF",
         logging: false,
-        // Ensure QR code renders clearly
         imageTimeout: 15000,
         onclone: (clonedDoc) => {
           // Ensure cloned element has proper sizing for capture
@@ -227,46 +445,71 @@ export default function QrCodeModal({
       });
 
       // Convert canvas to image and add to PDF
-      const imgData = canvas.toDataURL("image/jpeg", 0.85); // Medium quality JPEG for smaller file size
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
 
       // Add image to fill the entire PDF page
       pdf.addImage(imgData, "JPEG", 0, 0, PDF_WIDTH_INCHES, PDF_HEIGHT_INCHES);
 
       // Generate filename with sanitized vehicle name and short ID
-      const shortId = generateAssetId(assetId).replace("UNIT-", "");
-      const sanitizedName = assetName
-        .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove special characters
-        .replace(/\s+/g, "-") // Replace spaces with hyphens
+      const shortId = generateAssetId(assetId).replace("UNIT-", "") || "XXXX";
+      const sanitizedName = (assetName || "vehicle")
+        .replace(/[^a-zA-Z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
         .toLowerCase()
-        .slice(0, 30); // Truncate long names
+        .slice(0, 30) || "asset";
       const filename = `asset-tag-${sanitizedName}-${shortId}.pdf`;
 
       // Trigger download
       pdf.save(filename);
-    } catch (error) {
-      console.error("PDF generation failed:", error);
 
-      // User-friendly error message
+      // Show success toast
+      showToast("PDF downloaded successfully!", "success");
+    } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
-      alert(`Failed to generate PDF: ${errorMessage}\n\nPlease try again or use the Print option instead.`);
+      showToast(`Failed to generate PDF: ${errorMessage}`, "error");
     } finally {
       setIsGeneratingPDF(false);
     }
-  }, [assetId, assetName]);
+  }, [assetId, assetName, showToast]);
 
+  // Don't render if not open
   if (!isOpen) return null;
+
+  // Show error state if QR generation failed
+  const hasError = Boolean(qrError) || !assetId;
 
   return (
     <>
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Modal backdrop */}
       <div
         className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 print-hide"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+        onClick={(e) => {
+          // Close on backdrop click
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
       >
-        <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl print-hide">
+        <div
+          ref={modalRef}
+          className="relative w-full max-w-md rounded-xl bg-white shadow-2xl print-hide"
+          tabIndex={-1}
+          role="document"
+        >
           {/* Close button */}
           <button
             type="button"
@@ -274,7 +517,7 @@ export default function QrCodeModal({
             onClick={onClose}
             aria-label="Close modal"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
 
           {/* Header */}
@@ -285,24 +528,50 @@ export default function QrCodeModal({
             >
               Print Vehicle Asset Tag
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p id="modal-description" className="mt-1 text-sm text-slate-500">
               Print this tag on 4×6 label paper and affix to your golf cart
             </p>
-            <p className="mt-2 text-xs text-slate-400 font-mono">
-              {assetName}
+            <p
+              className="mt-2 text-xs text-slate-400 font-mono"
+              title={assetName || "Unknown vehicle"}
+            >
+              {displayAssetName || "Unknown Vehicle"}
             </p>
           </header>
 
+          {/* Error state */}
+          {hasError && (
+            <div
+              className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+              role="alert"
+            >
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                <p className="text-sm font-medium">
+                  {qrError || "Unable to generate QR code: Missing vehicle ID"}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Mobile print warning */}
-          <div className="mobile-print-warning mx-6 mt-4">
-            <span className="mobile-print-warning-icon">
+          <div
+            className="mobile-print-warning mx-6 mt-4"
+            role="note"
+            aria-label="Print recommendation"
+          >
+            <span className="mobile-print-warning-icon" aria-hidden="true">
               <Monitor className="inline h-4 w-4" />
             </span>
             Best printed from a desktop computer for accurate 4×6 sizing
           </div>
 
           {/* Preview area with scaled wrapper */}
-          <div className="asset-tag-preview-container mx-6 my-4" ref={printContainerRef}>
+          <div
+            className="asset-tag-preview-container mx-6 my-4"
+            ref={printContainerRef}
+            aria-label="Asset tag preview"
+          >
             <div className="asset-tag-preview-wrapper">
               <AssetTagPrintable
                 rentalUrl={rentalUrl}
@@ -324,22 +593,42 @@ export default function QrCodeModal({
             <button
               type="button"
               onClick={handlePrint}
-              disabled={!fontsLoaded}
+              disabled={!fontsLoaded || isPrintPending || hasError}
+              aria-label={
+                !fontsLoaded
+                  ? "Loading fonts, please wait"
+                  : isPrintPending
+                    ? "Print in progress"
+                    : "Print asset tag to 4 by 6 inch paper"
+              }
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-lg transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Printer className="h-4 w-4" />
-              {fontsLoaded ? "Print Asset Tag" : "Loading fonts..."}
+              {isPrintPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Printer className="h-4 w-4" aria-hidden="true" />
+              )}
+              {!fontsLoaded
+                ? "Loading fonts..."
+                : isPrintPending
+                  ? "Printing..."
+                  : "Print Asset Tag"}
             </button>
             <button
               type="button"
               onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF || !fontsLoaded}
+              disabled={isGeneratingPDF || !fontsLoaded || hasError}
+              aria-label={
+                isGeneratingPDF
+                  ? "Generating PDF, please wait"
+                  : "Download asset tag as PDF file"
+              }
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 transition hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGeneratingPDF ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4" aria-hidden="true" />
               )}
               {isGeneratingPDF ? "Generating..." : "Download PDF"}
             </button>
