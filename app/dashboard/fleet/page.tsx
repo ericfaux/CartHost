@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import FleetList from "../../../components/FleetList";
 
-// NEW: Interface for host branding data used in asset tags
+// Interface for host branding data used in asset tags
 interface HostBranding {
   propertyName: string;
   phone?: string;
@@ -28,7 +28,6 @@ type Cart = {
   is_currently_rented: boolean;
   active_rental_id?: string | null;
   tripsSinceService: number;
-  // NEW FIELDS ADDED HERE
   custom_photo_required?: boolean | null;
   custom_photo_label?: string | null;
   photo_requirements?: string[] | null;
@@ -67,45 +66,38 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // UPDATED: Fetch extra fields (company_name, full_name) for the smart fallback logic
+  // FIX APPLIED HERE: Removed 'logo_url' from the select string because it does not exist in the DB.
+  // This was causing the entire query to fail (returning null), which broke the property name logic.
   const { data: hostProfile, error: hostProfileError } = await supabase
     .from("hosts")
-    .select("property_name, phone_number, logo_url, company_name, full_name")
+    .select("property_name, phone_number, company_name, full_name") // <--- REMOVED logo_url
     .eq("id", user.id)
     .single();
 
-  // DEBUG: Log to server console to help diagnose branding issues
-  console.log("[Fleet Page] Host Profile Query:", {
-    userId: user.id,
-    hostProfile,
-    hostProfileError,
-    property_name: hostProfile?.property_name,
-  });
+  // Helper function to safely get a string
+  const safeStr = (str: string | null | undefined) => (str || "").trim();
 
   // SMART FALLBACK LOGIC:
-  // 1. Try Property Name (User specifically set this for tags)
-  // 2. Try Company Name (Business name)
-  // 3. Try Full Name (Individual host name)
-  // 4. Fallback to "CartHost Property"
-  const rawPropertyName = hostProfile?.property_name?.trim();
-  const rawCompanyName = hostProfile?.company_name?.trim();
-  const rawFullName = hostProfile?.full_name?.trim();
+  const pName = safeStr(hostProfile?.property_name);
+  const cName = safeStr(hostProfile?.company_name);
+  const fName = safeStr(hostProfile?.full_name);
 
-  const propertyName =
-    (rawPropertyName && rawPropertyName.length > 0) ? rawPropertyName :
-    (rawCompanyName && rawCompanyName.length > 0) ? rawCompanyName :
-    (rawFullName && rawFullName.length > 0) ? rawFullName :
-    "CartHost Property";
+  // Use the first non-empty value found
+  const propertyName = pName || cName || fName || "CartHost Property";
 
   const hostBranding: HostBranding = {
     propertyName: propertyName,
-    phone: hostProfile?.phone_number?.trim() || undefined,
-    logoUrl: hostProfile?.logo_url?.trim() || undefined,
+    phone: safeStr(hostProfile?.phone_number) || undefined,
+    // Explicitly undefined since the column is missing in DB
+    logoUrl: undefined, 
   };
 
-  console.log("[Fleet Page] Final hostBranding:", hostBranding);
+  // DEBUG LOG: This should now show actual data instead of null
+  console.log("------------------------------------------------");
+  console.log("[Fleet Page] User ID:", user.id);
+  console.log("[Fleet Page] Branding Success:", propertyName);
+  console.log("------------------------------------------------");
 
-  // UPDATED: Added custom_photo_required and custom_photo_label to the query
   const cartSelectFields =
     "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, requires_plug_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount, custom_photo_required, custom_photo_label, photo_requirements";
 
@@ -142,7 +134,6 @@ export default async function DashboardPage() {
     completedRentalsByCartId.set(rental.cart_id, existing);
   });
 
-  // UPDATED: Added (carts as any[]) to fix the build error
   const cartsWithRentalStatus = ((carts as any[]) ?? []).map((cart) => ({
     ...cart,
     active_rental_id: activeRentalByCartId.get(cart.id) ?? null,
@@ -158,6 +149,5 @@ export default async function DashboardPage() {
     })(),
   }));
 
-  // NEW: Pass hostBranding prop to FleetList for asset tag generation
   return <FleetList carts={cartsWithRentalStatus as Cart[]} hostBranding={hostBranding} />;
 }
