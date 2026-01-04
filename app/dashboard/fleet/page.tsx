@@ -68,16 +68,25 @@ export default async function DashboardPage() {
   }
 
   // NEW: Fetch host branding data for asset tags (property_name, phone, logo_url if exists)
-  const { data: hostProfile } = await supabase
+  const { data: hostProfile, error: hostProfileError } = await supabase
     .from("hosts")
     .select("property_name, phone_number, logo_url")
     .eq("id", user.id)
     .single();
 
+  // DEBUG: Log to server console to help diagnose property_name issues
+  console.log("[Fleet Page] Host Profile Query:", {
+    userId: user.id,
+    hostProfile,
+    hostProfileError,
+    property_name: hostProfile?.property_name,
+  });
+
   // NEW: Build hostBranding object with fallback values
   // Handle empty strings properly - trim and check for non-empty values
+  // The issue is that empty string "" is falsy but ?? only catches null/undefined
   const rawPropertyName = hostProfile?.property_name;
-  const propertyName = (rawPropertyName && rawPropertyName.trim() !== "")
+  const propertyName = (rawPropertyName && rawPropertyName.trim().length > 0)
     ? rawPropertyName.trim()
     : "CartHost Property";
 
@@ -86,6 +95,8 @@ export default async function DashboardPage() {
     phone: hostProfile?.phone_number?.trim() || undefined,
     logoUrl: hostProfile?.logo_url?.trim() || undefined,
   };
+
+  console.log("[Fleet Page] Final hostBranding:", hostBranding);
 
   // UPDATED: Added custom_photo_required and custom_photo_label to the query
   const cartSelectFields =
