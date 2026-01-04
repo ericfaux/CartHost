@@ -94,25 +94,25 @@ export default function LandingPage() {
               </div>
 
               {/* Trust Bar */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 text-sm text-ink-subtle">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 text-sm leading-none text-ink-subtle">
                 <span className="flex items-center gap-2">
                   <Smartphone className="h-4 w-4 text-accent-ops" />
                   No app download for guests
-                </span>
-                <span className="flex items-center gap-2">
-                  <Link2 className="h-4 w-4 text-accent-ops" />
-                  Chain of custody metadata
-                </span>
-                <span className="flex items-center gap-2">
-                  <Camera className="h-4 w-4 text-accent-ops" />
-                  Photo evidence vault
-                </span>
-                <span className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-accent-ops" />
-                  Deters reckless usage
-                </span>
-              </div>
-
+              </span>
+              <span className="flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-accent-ops" />
+                Chain of custody metadata
+              </span>
+              <span className="flex items-center gap-2">
+                <Camera className="h-4 w-4 text-accent-ops" />
+                Photo evidence vault
+              </span>
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-accent-ops" />
+                Deters reckless usage
+            </span>
+          </div>
+              
               {/* Platform Trust Strip */}
               <div className="pt-6 border-t border-rule mt-8">
                 <p className="text-xs font-mono uppercase text-ink-muted mb-3">
