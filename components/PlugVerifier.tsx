@@ -90,12 +90,11 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
         }),
       });
 
-      // Check if ingestion failed and show visible error feedback
+      // Check if ingestion failed (silently log, don't show UI error)
       if (!ingestionResponse.ok) {
         const errorData = await ingestionResponse.json().catch(() => ({}));
         const errorMsg = errorData.error || `Photo registration failed (${ingestionResponse.status})`;
         console.error('Photo ingestion failed:', errorMsg);
-        setIngestionError(errorMsg);
         // Note: We continue with verification even if ingestion fails
         // The photo is already in storage, just not tracked in DB
       } else {
@@ -103,9 +102,7 @@ export default function PlugVerifier({ cartId, userId, rentalId, onSuccess }: Pl
         console.log('Photo ingestion successful:', result);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Photo registration failed';
       console.error('Photo ingestion crashed:', err);
-      setIngestionError(errorMsg);
       // Continue with verification even if ingestion fails
     }
 
