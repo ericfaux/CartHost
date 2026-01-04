@@ -524,3 +524,288 @@
     }
   }
 }
+
+/* ============================================
+   ASSET TAG PRINT STYLES
+   Optimized for 4x6 thermal/label printing
+   ============================================ */
+
+/*
+ * Google Fonts preload with font-display: swap
+ * Ensures text is visible immediately while fonts load
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+/* ----------------------------------------
+   SCREEN STYLES - Asset Tag Preview
+   ---------------------------------------- */
+
+/* Preview container - 75% scale of actual size */
+.asset-tag-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 0.75rem;
+}
+
+.asset-tag-preview-wrapper {
+  /* 75% scale of actual 4x6 size */
+  transform: scale(0.75);
+  transform-origin: center center;
+  /* Subtle professional shadow */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.07))
+          drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+}
+
+/* The printable asset tag itself */
+.asset-tag-printable {
+  /* Exact 4x6 dimensions */
+  width: 4in;
+  height: 6in;
+  /* High contrast for print */
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  overflow: hidden;
+  /* Flexbox layout for sections */
+  display: flex;
+  flex-direction: column;
+  /* Ensure crisp rendering */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
+}
+
+/* Top bar - dark header */
+.asset-tag-header {
+  height: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.asset-tag-header-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.asset-tag-header-brand {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* QR code section */
+.asset-tag-qr-section {
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.asset-tag-qr-wrapper {
+  padding: 0.5rem;
+  background: #ffffff;
+}
+
+/* CTA section */
+.asset-tag-cta {
+  height: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.asset-tag-cta-text {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: #0F766E;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Footer section */
+.asset-tag-footer {
+  height: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  background: #f5f5f5;
+}
+
+.asset-tag-footer-manager {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  color: #374151;
+  text-align: center;
+}
+
+.asset-tag-footer-id {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ----------------------------------------
+   PRINT MEDIA QUERIES
+   Perfect physical printing at 4x6
+   ---------------------------------------- */
+
+@media print {
+  /* Hide everything by default when print-mode is active */
+  body.print-mode * {
+    visibility: hidden !important;
+  }
+
+  /* Show only the printable asset tag */
+  body.print-mode .asset-tag-printable,
+  body.print-mode .asset-tag-printable * {
+    visibility: visible !important;
+  }
+
+  /* Position the tag at top-left for print */
+  body.print-mode .asset-tag-printable {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    /* Exact 4x6 dimensions */
+    width: 4in !important;
+    height: 6in !important;
+    /* Remove screen styles */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    /* Force background printing */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Hide modal backdrop and UI */
+  body.print-mode .modal-backdrop,
+  body.print-mode .print-hide {
+    display: none !important;
+  }
+
+  /* Page setup for 4x6 label paper */
+  @page {
+    size: 4in 6in;
+    margin: 0;
+  }
+
+  /* Force page break avoidance */
+  body.print-mode .asset-tag-printable {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Ensure high contrast for B&W printing */
+  body.print-mode .asset-tag-header {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  body.print-mode .asset-tag-cta-text {
+    /* High contrast teal for color, pure black for B&W */
+    color: #000000 !important;
+  }
+
+  /* Remove ink-wasting backgrounds except essential */
+  body.print-mode .asset-tag-footer {
+    background: #f5f5f5 !important;
+  }
+
+  /* Ensure QR code prints with maximum contrast */
+  body.print-mode .asset-tag-qr-section {
+    background: #ffffff !important;
+  }
+
+  body.print-mode .asset-tag-qr-wrapper svg {
+    /* Ensure QR code is pure black */
+    fill: #000000 !important;
+  }
+
+  body.print-mode .asset-tag-qr-wrapper svg rect[fill="#000000"],
+  body.print-mode .asset-tag-qr-wrapper svg path[fill="#000000"] {
+    fill: #000000 !important;
+  }
+
+  /* Text crispness */
+  body.print-mode .asset-tag-printable {
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ----------------------------------------
+   RESPONSIVE PREVIEW SCALING
+   ---------------------------------------- */
+
+/* Large screens - show at 75% */
+@media screen and (min-width: 768px) {
+  .asset-tag-preview-wrapper {
+    transform: scale(0.75);
+  }
+}
+
+/* Medium screens - show at 60% */
+@media screen and (min-width: 480px) and (max-width: 767px) {
+  .asset-tag-preview-wrapper {
+    transform: scale(0.6);
+  }
+
+  .asset-tag-preview-container {
+    padding: 1rem;
+  }
+}
+
+/* Small screens - show at 45% */
+@media screen and (max-width: 479px) {
+  .asset-tag-preview-wrapper {
+    transform: scale(0.45);
+  }
+
+  .asset-tag-preview-container {
+    padding: 0.75rem;
+  }
+}
+
+/* Mobile print warning */
+.mobile-print-warning {
+  display: none;
+  padding: 0.75rem 1rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  color: #92400e;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.mobile-print-warning-icon {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+@media screen and (max-width: 767px) {
+  .mobile-print-warning {
+    display: block;
+  }
+}
