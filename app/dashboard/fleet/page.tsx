@@ -3,6 +3,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import FleetList from "../../../components/FleetList";
 
+// NEW: Interface for host branding data used in asset tags
+interface HostBranding {
+  propertyName: string;
+  phone?: string;
+  logoUrl?: string;
+}
+
 type Cart = {
   id: string;
   name: string;
@@ -60,6 +67,20 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // NEW: Fetch host branding data for asset tags (property_name, phone, logo_url if exists)
+  const { data: hostProfile } = await supabase
+    .from("hosts")
+    .select("property_name, phone_number, logo_url")
+    .eq("id", user.id)
+    .single();
+
+  // NEW: Build hostBranding object with fallback values
+  const hostBranding: HostBranding = {
+    propertyName: hostProfile?.property_name ?? "CartHost Property",
+    phone: hostProfile?.phone_number ?? undefined,
+    logoUrl: hostProfile?.logo_url ?? undefined,
+  };
+
   // UPDATED: Added custom_photo_required and custom_photo_label to the query
   const cartSelectFields =
     "id, name, key_code, last_serviced_at, access_instructions, status, type, requires_lock_photo, requires_plug_photo, access_type, upsell_price, upsell_unit, access_code, deposit_amount, custom_photo_required, custom_photo_label, photo_requirements";
@@ -113,5 +134,6 @@ export default async function DashboardPage() {
     })(),
   }));
 
-  return <FleetList carts={cartsWithRentalStatus as Cart[]} />;
+  // NEW: Pass hostBranding prop to FleetList for asset tag generation
+  return <FleetList carts={cartsWithRentalStatus as Cart[]} hostBranding={hostBranding} />;
 }
