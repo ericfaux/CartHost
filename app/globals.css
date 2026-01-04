@@ -662,117 +662,23 @@
 
 /* ----------------------------------------
    PRINT MEDIA QUERIES
-   Perfect physical printing at 4x6
+   Note: Asset tag printing now uses a new window approach
+   for reliability across all browsers. These styles are
+   kept for general print support only.
    ---------------------------------------- */
 
 @media print {
-  /* When print-mode is active, hide everything except the asset tag */
-  body.print-mode {
-    /* Reset body */
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-  }
-
-  /* Hide all body children by default */
-  body.print-mode > * {
+  /* Hide non-printable elements */
+  .print-hide,
+  .modal-backdrop {
     display: none !important;
   }
 
-  /* But the modal needs to be visible so we can see the tag inside it */
-  body.print-mode .modal-backdrop {
-    display: block !important;
-    position: static !important;
-    background: transparent !important;
-    padding: 0 !important;
-  }
-
-  /* Hide modal UI elements */
-  body.print-mode .modal-backdrop > div:not(.asset-tag-preview-container) {
-    display: none !important;
-  }
-
-  body.print-mode .asset-tag-preview-container {
-    display: block !important;
-    position: static !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-  }
-
-  body.print-mode .asset-tag-preview-wrapper {
-    transform: none !important;
-    filter: none !important;
-  }
-
-  /* The actual printable tag */
-  body.print-mode .asset-tag-printable {
-    display: flex !important;
-    position: fixed !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 4in !important;
-    height: 6in !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    border: 2px solid #000 !important;
+  /* Allow standalone asset tag printing (for PDF generation) */
+  .asset-tag-printable {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Page setup */
-  @page {
-    size: 4in 6in;
-    margin: 0;
-  }
-
-  /* Ensure sections display correctly */
-  body.print-mode .asset-tag-header,
-  body.print-mode .asset-tag-qr-section,
-  body.print-mode .asset-tag-cta,
-  body.print-mode .asset-tag-footer {
-    display: flex !important;
-  }
-
-  /* Force background colors to print */
-  body.print-mode .asset-tag-header {
-    background: #1a1a1a !important;
-    color: #ffffff !important;
-  }
-
-  body.print-mode .asset-tag-footer {
-    background: #f5f5f5 !important;
-  }
-
-  /* Hide any elements with print-hide class */
-  body.print-mode .print-hide {
-    display: none !important;
-  }
-
-  /* Ensure QR code prints with maximum contrast */
-  body.print-mode .asset-tag-qr-section {
-    background: #ffffff !important;
-  }
-
-  body.print-mode .asset-tag-qr-wrapper svg {
-    /* Ensure QR code is pure black */
-    fill: #000000 !important;
-  }
-
-  body.print-mode .asset-tag-qr-wrapper svg rect[fill="#000000"],
-  body.print-mode .asset-tag-qr-wrapper svg path[fill="#000000"] {
-    fill: #000000 !important;
-  }
-
-  /* Text crispness */
-  body.print-mode .asset-tag-printable {
-    text-rendering: geometricPrecision;
-    -webkit-font-smoothing: antialiased;
   }
 }
 

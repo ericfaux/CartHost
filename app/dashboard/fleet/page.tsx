@@ -75,10 +75,16 @@ export default async function DashboardPage() {
     .single();
 
   // NEW: Build hostBranding object with fallback values
+  // Handle empty strings properly - trim and check for non-empty values
+  const rawPropertyName = hostProfile?.property_name;
+  const propertyName = (rawPropertyName && rawPropertyName.trim() !== "")
+    ? rawPropertyName.trim()
+    : "CartHost Property";
+
   const hostBranding: HostBranding = {
-    propertyName: hostProfile?.property_name ?? "CartHost Property",
-    phone: hostProfile?.phone_number ?? undefined,
-    logoUrl: hostProfile?.logo_url ?? undefined,
+    propertyName: propertyName,
+    phone: hostProfile?.phone_number?.trim() || undefined,
+    logoUrl: hostProfile?.logo_url?.trim() || undefined,
   };
 
   // UPDATED: Added custom_photo_required and custom_photo_label to the query
