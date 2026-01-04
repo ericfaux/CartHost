@@ -344,11 +344,13 @@ export default function FleetList({ carts, hostBranding }: FleetListProps) {
         }}
         showTrigger={false}
       />
+      {/* QR Code Modal - Now receives host branding data for customized asset tags */}
       <QrCodeModal
         isOpen={!!qrAsset}
         onClose={() => setQrAsset(null)}
         assetId={qrAsset?.id ?? ""}
         assetName={qrAsset?.name ?? ""}
+        hostBranding={hostBranding}
       />
     </div>
   );
