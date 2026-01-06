@@ -174,17 +174,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-/**
- * Helper function to create portal URL with specific flow
- * Can be used client-side to construct the request
- */
-export function getPortalRequestBody(
-  flow: PortalFlow,
-  options?: { subscriptionId?: string; returnUrl?: string }
-): CreatePortalRequest {
-  return {
-    flow,
-    ...options,
-  };
-}
