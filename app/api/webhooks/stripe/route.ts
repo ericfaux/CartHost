@@ -480,7 +480,8 @@ async function handleSubscriptionDeleted(event: Stripe.Event) {
 async function handlePaymentFailed(event: Stripe.Event) {
   const invoice = event.data.object as Stripe.Invoice;
   const customerId = invoice.customer as string;
-  const subscriptionId = invoice.subscription as string | null;
+  // subscription field may be string, Subscription object, or null depending on API version
+  const subscriptionId = (invoice as unknown as { subscription?: string | null }).subscription ?? null;
 
   const { data: host } = await supabaseAdmin
     .from('hosts')
@@ -526,7 +527,8 @@ async function handlePaymentFailed(event: Stripe.Event) {
 async function handlePaymentSucceeded(event: Stripe.Event) {
   const invoice = event.data.object as Stripe.Invoice;
   const customerId = invoice.customer as string;
-  const subscriptionId = invoice.subscription as string | null;
+  // subscription field may be string, Subscription object, or null depending on API version
+  const subscriptionId = (invoice as unknown as { subscription?: string | null }).subscription ?? null;
 
   if (!subscriptionId) {
     // One-time payment, not subscription related
