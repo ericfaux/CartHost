@@ -87,7 +87,6 @@ export function StripePricingTable({
 
       {/* Stripe Pricing Table */}
       <div className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        {/* @ts-expect-error - Stripe custom element */}
         <stripe-pricing-table
           pricing-table-id={pricingTableId}
           publishable-key={publishableKey}
