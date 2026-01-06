@@ -14,6 +14,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "date-fns": "^4.1.0",
     "exifr": "^7.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.0.0",
