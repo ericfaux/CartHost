@@ -57,7 +57,7 @@ export async function createCheckoutSession(priceId: string) {
   // Beta users get no trial (it's free), returning users get no trial
   const subscriptionData: Stripe.Checkout.SessionCreateParams['subscription_data'] = {
     metadata: { supabase_id: user.id },
-    ...((!isBeta && !hasHadSubscription) && { trial_period_days: 7 }),
+    ...((!isBeta && !hasHadSubscription) && { trial_period_days: 30 }),
   };
 
   // Get origin for redirect URLs
