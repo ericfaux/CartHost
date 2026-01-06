@@ -36,6 +36,10 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
@@ -61,6 +65,110 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+/**
+ * Handle checkout.session.completed - links Stripe customer to user
+ * This is the critical handler for new subscriptions from the pricing table
+ */
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  console.log('Processing checkout.session.completed:', {
+    sessionId: session.id,
+    clientReferenceId: session.client_reference_id,
+    customerEmail: session.customer_email,
+    customerId: session.customer,
+    subscriptionId: session.subscription,
+  });
+
+  // client_reference_id is the user ID passed from the pricing table
+  const userId = session.client_reference_id;
+  const customerId = session.customer as string;
+  const subscriptionId = session.subscription as string;
+  const customerEmail = session.customer_email;
+
+  if (!userId && !customerEmail) {
+    console.error('No client_reference_id or customer_email in checkout session');
+    return;
+  }
+
+  // Find host by user ID (preferred) or email (fallback)
+  let host;
+  if (userId) {
+    const { data, error } = await supabaseAdmin
+      .from('hosts')
+      .select('id, email, subscription_status')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Failed to find host by user ID:', userId, error);
+    } else {
+      host = data;
+    }
+  }
+
+  // Fallback: find by email if no user ID match
+  if (!host && customerEmail) {
+    const { data, error } = await supabaseAdmin
+      .from('hosts')
+      .select('id, email, subscription_status')
+      .eq('email', customerEmail)
+      .single();
+
+    if (error) {
+      console.error('Failed to find host by email:', customerEmail, error);
+      return;
+    }
+    host = data;
+  }
+
+  if (!host) {
+    console.error('Could not find host for checkout session');
+    return;
+  }
+
+  // Fetch subscription details to determine status and plan
+  let subscriptionStatus = 'active';
+  let planVariant = null;
+
+  if (subscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      subscriptionStatus = subscription.status; // 'trialing', 'active', etc.
+
+      // Get price ID to determine plan variant
+      const priceId = subscription.items.data[0]?.price.id;
+      if (priceId) {
+        planVariant = priceId;
+      }
+
+      console.log('Subscription details:', {
+        status: subscriptionStatus,
+        priceId,
+        trialEnd: subscription.trial_end,
+      });
+    } catch (err) {
+      console.error('Failed to retrieve subscription:', err);
+    }
+  }
+
+  // Update host record with Stripe customer and subscription info
+  const { error: updateError } = await supabaseAdmin
+    .from('hosts')
+    .update({
+      stripe_customer_id: customerId,
+      subscription_id: subscriptionId,
+      subscription_status: subscriptionStatus,
+      plan_variant: planVariant,
+    })
+    .eq('id', host.id);
+
+  if (updateError) {
+    console.error('Failed to update host with Stripe info:', updateError);
+    throw updateError;
+  }
+
+  console.log(`✅ Host ${host.id} linked to Stripe customer ${customerId}, subscription: ${subscriptionId}, status: ${subscriptionStatus}`);
 }
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
@@ -115,6 +223,20 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   if (upsertError) {
     console.error('Failed to upsert subscription:', upsertError);
     throw upsertError;
+  }
+
+  // Also update the host's subscription_status field for quick access checks
+  const { error: hostUpdateError } = await supabaseAdmin
+    .from('hosts')
+    .update({
+      subscription_status: subscription.status,
+      subscription_id: subscription.id,
+      plan_variant: subscriptionItem?.price.id ?? null,
+    })
+    .eq('id', host.id);
+
+  if (hostUpdateError) {
+    console.error('Failed to update host subscription_status:', hostUpdateError);
   }
 
   console.log(`Subscription ${subscription.id} synced for host ${host.id} (status: ${subscription.status})`);

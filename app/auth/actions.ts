@@ -86,17 +86,19 @@ export async function signUp(prevState: any, formData: FormData) {
       SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY
     );
-    
+
     // 2. USE the Admin Client to bypass RLS for profile creation
+    // Set subscription_status to 'pending' - user must complete checkout to access dashboard
     const { error: hostUpdateError } = await supabaseAdmin
       .from("hosts")
       .update({
         full_name: fullName,
         phone_number: phone,
         company_name: companyName,
+        subscription_status: "pending",
       })
       .eq("id", data.user.id);
-    
+
     if (hostUpdateError) {
       console.error("Failed to update host profile:", hostUpdateError);
       return { error: "Account created, but profile update failed." };
@@ -105,7 +107,8 @@ export async function signUp(prevState: any, formData: FormData) {
     // Check verification status
     if (!session) {
       // Verification is ON - return success message
-      return { success: true };
+      // After email confirmation, user will be redirected to /subscribe via auth callback
+      return { success: true, requiresVerification: true };
     }
 
   } catch (error) {
@@ -113,11 +116,14 @@ export async function signUp(prevState: any, formData: FormData) {
     return { error: "Something went wrong. Please try again." };
   }
 
-  // Redirect happens here, ONLY if we successfully exited the try block with a session
-  redirect("/dashboard");
+  // Redirect to subscribe page to complete checkout
+  // User has an account with status: 'pending' and needs to select a plan
+  redirect("/subscribe");
 }
 
 export async function signIn(prevState: any, formData: FormData) {
+  let redirectPath = "/dashboard";
+
   try {
     const email = formData.get("email")?.toString().trim();
     const password = formData.get("password")?.toString();
@@ -128,18 +134,40 @@ export async function signIn(prevState: any, formData: FormData) {
 
     const supabase = await createSupabaseActionClient();
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       console.error("Sign in failed:", error);
       return { error: "Invalid email or password." };
+    }
+
+    // Check subscription status to determine redirect
+    if (data.user) {
+      const { data: host } = await supabase
+        .from("hosts")
+        .select("subscription_status, is_beta_user")
+        .eq("id", data.user.id)
+        .single();
+
+      // Beta users always go to dashboard
+      if (host?.is_beta_user) {
+        redirectPath = "/dashboard";
+      }
+      // Users with pending or canceled status need to subscribe
+      else if (host?.subscription_status === "pending" || host?.subscription_status === "canceled") {
+        redirectPath = "/subscribe";
+      }
+      // Active/trialing/past_due users go to dashboard
+      else {
+        redirectPath = "/dashboard";
+      }
     }
   } catch (error) {
     console.error("Unexpected sign in error:", error);
     return { error: "Something went wrong. Please try again." };
   }
 
-  redirect("/dashboard");
+  redirect(redirectPath);
 }
 
 export async function forgotPassword(formData: FormData) {
