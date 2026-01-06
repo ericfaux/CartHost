@@ -84,10 +84,9 @@ export default async function SubscribePage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="mx-auto max-w-5xl px-4 py-12">
-        {/* Hero Section */}
-        <div className="mb-12 text-center">
+      {/* Hero Section - narrower for readability */}
+      <div className="mx-auto max-w-3xl px-4 pt-12 pb-8">
+        <div className="text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent-ops/20 bg-accent-ops/5 px-4 py-2 text-sm font-medium text-accent-ops">
             <Sparkles className="h-4 w-4" />
             {isCanceled ? "Reactivate Your Account" : "Start Your 30-Day Free Trial"}
@@ -116,7 +115,7 @@ export default async function SubscribePage() {
         </div>
 
         {/* Trust Badges */}
-        <div className="mb-10 flex flex-wrap items-center justify-center gap-6 text-sm text-ink-subtle">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-ink-subtle">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-accent-ops" />
             <span>30-day free trial</span>
@@ -130,9 +129,11 @@ export default async function SubscribePage() {
             <span>No setup fees</span>
           </div>
         </div>
+      </div>
 
-        {/* Pricing Table */}
-        <div className="rounded-dossier-surface border border-rule bg-surface p-6 shadow-dossier-surface md:p-8">
+      {/* Pricing Table Section - wider to allow horizontal layout */}
+      <div className="w-full max-w-6xl mx-auto px-4 pb-12">
+        <div className="rounded-dossier-surface border border-rule bg-surface p-4 shadow-dossier-surface md:p-6">
           <StripePricingTable
             clientReferenceId={user.id}
             customerEmail={user.email ?? undefined}
@@ -148,19 +149,19 @@ export default async function SubscribePage() {
             />
           </div>
         )}
+      </div>
 
-        {/* FAQ / Help Links */}
-        <div className="mt-10 text-center">
-          <p className="text-sm text-ink-muted">
-            Questions?{" "}
-            <a
-              href="mailto:support@carthost.com"
-              className="font-medium text-accent-ops hover:text-accent-ops-light transition-colors"
-            >
-              Contact our team
-            </a>
-          </p>
-        </div>
+      {/* FAQ / Help Links */}
+      <div className="pb-8 text-center">
+        <p className="text-sm text-ink-muted">
+          Questions?{" "}
+          <a
+            href="mailto:support@carthost.com"
+            className="font-medium text-accent-ops hover:text-accent-ops-light transition-colors"
+          >
+            Contact our team
+          </a>
+        </p>
       </div>
     </main>
   );

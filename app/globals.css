@@ -761,3 +761,48 @@
     display: block;
   }
 }
+
+/* ============================================
+   STRIPE PRICING TABLE LAYOUT
+   Forces horizontal display on desktop
+   ============================================ */
+
+.stripe-pricing-container {
+  width: 100%;
+  min-width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Force the Stripe embed to use full width */
+.stripe-pricing-container stripe-pricing-table {
+  width: 100% !important;
+  min-width: 100% !important;
+  display: block !important;
+}
+
+/*
+ * Stripe's pricing table checks container width to determine layout.
+ * At ~900px+ width, it switches to horizontal layout.
+ * We need to ensure our container is wide enough on desktop.
+ */
+@media (min-width: 1024px) {
+  .stripe-pricing-container {
+    min-width: 920px;
+  }
+}
+
+/* Tablet breakpoint - allow natural flow */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .stripe-pricing-container {
+    min-width: 100%;
+  }
+}
+
+/* Mobile - stack gracefully */
+@media (max-width: 767px) {
+  .stripe-pricing-container {
+    min-width: 100%;
+    padding: 0;
+  }
+}

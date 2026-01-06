@@ -74,7 +74,7 @@ export function StripePricingTable({
   }
 
   return (
-    <div className={`relative min-h-[400px] ${className}`}>
+    <div className={`stripe-pricing-container relative min-h-[400px] ${className}`}>
       {/* Loading skeleton */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -87,6 +87,7 @@ export function StripePricingTable({
 
       {/* Stripe Pricing Table */}
       <div className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        {/* @ts-expect-error - Stripe custom element */}
         <stripe-pricing-table
           pricing-table-id={pricingTableId}
           publishable-key={publishableKey}
