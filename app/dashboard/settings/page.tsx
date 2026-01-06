@@ -5,9 +5,7 @@ import { redirect } from "next/navigation";
 import SettingsForm, {
   type HostProfile,
 } from "@/components/SettingsForm";
-import SubscriptionPricing from "@/components/SubscriptionPricing";
-import SubscriptionStatus from "@/components/SubscriptionStatus";
-import { isActiveSubscription } from "@/lib/subscriptions";
+import SubscriptionManager from "@/components/SubscriptionManager";
 import SubscriptionAlert from "@/components/SubscriptionAlert";
 
 interface Subscription {
@@ -80,8 +78,6 @@ export default async function SettingsPage({
     .limit(1)
     .single();
 
-  const hasActiveSubscription = isActiveSubscription(subscription?.status) || subscription?.status === 'past_due';
-
   // Check for Stripe redirect status
   const showSuccess = params.success === 'true';
   const showCanceled = params.canceled === 'true';
@@ -112,24 +108,29 @@ export default async function SettingsPage({
         />
       )}
 
-      {/* Subscription Section */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-ink">Subscription</h2>
-
-        {hasActiveSubscription && subscription ? (
-          <SubscriptionStatus
-            subscription={subscription as Subscription}
-            isBetaUser={profile.is_beta_user}
-          />
-        ) : (
-          <SubscriptionPricing currentPriceId={subscription?.price_id} />
-        )}
-      </section>
-
       {/* Profile Section */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-ink">Profile</h2>
         <SettingsForm profile={profile as HostProfile} />
+      </section>
+
+      {/* Subscription Section - Now at the bottom */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-ink">Subscription</h2>
+        <p className="text-sm text-ink-subtle">
+          Track plan limits and upgrade when you&apos;re ready to scale.
+        </p>
+        <SubscriptionManager
+          profile={{
+            id: profile.id,
+            stripe_customer_id: profile.stripe_customer_id,
+            subscription_status: profile.subscription_status,
+            subscription_id: profile.subscription_id,
+            plan_variant: profile.plan_variant,
+            is_beta_user: profile.is_beta_user,
+          }}
+          subscription={subscription as Subscription | null}
+        />
       </section>
     </div>
   );

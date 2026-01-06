@@ -204,7 +204,7 @@ export default function SubscriptionPricing({ currentPriceId }: Props) {
                   ? 'Redirecting to checkout...'
                   : isCurrent
                   ? 'Current Plan'
-                  : 'Start 7-Day Free Trial'}
+                  : 'Start 30-Day Free Trial'}
               </button>
             </div>
           );
@@ -213,7 +213,7 @@ export default function SubscriptionPricing({ currentPriceId }: Props) {
 
       {/* Trial Note */}
       <p className="text-center text-sm text-ink-muted">
-        All paid plans include a 7-day free trial. Cancel anytime.
+        All paid plans include a 30-day free trial. Cancel anytime.
       </p>
     </div>
   );
