@@ -7,7 +7,6 @@ import {
   FileX,
   ImageOff,
   ArrowRight,
-  CheckCircle2,
   Smartphone,
   Link2,
   Camera,
@@ -27,6 +26,7 @@ import {
   BetaAccessModal,
   Footer,
   SupportCTA,
+  PricingSection,
 } from "../components/marketing";
 
 export default function LandingPage() {
@@ -329,49 +329,7 @@ export default function LandingPage() {
       {/* Pricing Section */}
       <section id="pricing" className="bg-paper">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-          <div className="max-w-xl mx-auto text-center">
-            <Badge variant="active" style="chip" className="mb-4">
-              Limited Beta
-            </Badge>
-
-            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink mb-4">
-              Founding Host Program
-            </h2>
-
-            <p className="text-ink-subtle mb-8">
-              We&apos;re onboarding a small group of founding hosts with special
-              beta pricing. Get in early and help shape the product.
-            </p>
-
-            <div className="bg-surface rounded-dossier-surface border border-rule p-6 mb-6">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <CheckCircle2 className="h-5 w-5 text-accent-ops" />
-                <span className="font-medium text-ink">
-                  Full platform access during beta
-                </span>
-              </div>
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <CheckCircle2 className="h-5 w-5 text-accent-ops" />
-                <span className="font-medium text-ink">
-                  Locked-in founding member pricing
-                </span>
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-accent-ops" />
-                <span className="font-medium text-ink">
-                  Direct line to the product team
-                </span>
-              </div>
-            </div>
-
-            <Button variant="ops" size="lg" onClick={openBetaModal}>
-              Request Beta Access
-            </Button>
-
-            <p className="text-xs text-ink-muted mt-4">
-              Stripe integration and automated billing coming soon.
-            </p>
-          </div>
+          <PricingSection />
         </div>
       </section>
 

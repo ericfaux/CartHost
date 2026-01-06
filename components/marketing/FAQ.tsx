@@ -47,7 +47,7 @@ const faqs: FAQItem[] = [
   {
     question: "How much does CartHost cost?",
     answer:
-      "We're currently onboarding founding hosts with special beta pricing. Request access to learn more about pricing for your specific fleet size.",
+      "CartHost offers three plans: Safety & Compliance at $14/month for 1 vehicle, Pro Host at $22/month for up to 5 vehicles (most popular), and Fleet Manager at $44/month for 10+ vehicles. All plans include a 30-day free trial and you can cancel anytime. Annual billing saves you 15%.",
   },
 ];
 
