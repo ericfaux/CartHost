@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
 import { TourProvider } from "./tour-context";
 import GlobalTourOverlay from "../../components/GlobalTourOverlay";
-import SubscriptionBanner from "../../components/SubscriptionBanner";
+import TrialBanner from "../../components/TrialBanner";
+import PastDueBanner from "../../components/PastDueBanner";
+import { getTrialDaysRemaining } from "@/lib/subscriptions";
 
 export default async function DashboardLayout({
   children,
@@ -45,7 +47,7 @@ export default async function DashboardLayout({
   // Check subscription status for dashboard access
   const { data: host } = await supabase
     .from("hosts")
-    .select("subscription_status, is_beta_user")
+    .select("subscription_status, subscription_id, is_beta_user")
     .eq("id", user.id)
     .single();
 
@@ -60,8 +62,29 @@ export default async function DashboardLayout({
     redirect("/subscribe");
   }
 
-  // Show warning for past_due status
-  const showPaymentWarning = host?.subscription_status === "past_due";
+  // Fetch subscription details for trial banner
+  let trialDaysRemaining: number | null = null;
+  let trialEndDate: Date | undefined;
+
+  if (host?.subscription_status === "trialing" && host?.subscription_id) {
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("current_period_end, trial_end")
+      .eq("id", host.subscription_id)
+      .single();
+
+    if (subscription) {
+      const endDateStr = subscription.trial_end || subscription.current_period_end;
+      if (endDateStr) {
+        trialDaysRemaining = getTrialDaysRemaining(endDateStr);
+        trialEndDate = new Date(endDateStr);
+      }
+    }
+  }
+
+  // Determine which banner to show
+  const showPastDueBanner = host?.subscription_status === "past_due";
+  const showTrialBanner = host?.subscription_status === "trialing" && trialDaysRemaining !== null;
 
   // Fetch the latest rental ID for the tour's "Evidence Packet" step
   const { data: latestRental } = await supabase
@@ -79,7 +102,13 @@ export default async function DashboardLayout({
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto dossier-paper">
-          {showPaymentWarning && <SubscriptionBanner variant="past_due" />}
+          {showPastDueBanner && <PastDueBanner />}
+          {showTrialBanner && !showPastDueBanner && (
+            <TrialBanner
+              daysRemaining={trialDaysRemaining!}
+              trialEndDate={trialEndDate}
+            />
+          )}
           <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>

@@ -7,6 +7,7 @@ import { LogOut, Sparkles, ShieldCheck, Clock } from "lucide-react";
 import { StripePricingTable } from "@/components/StripePricingTable";
 import { Logo } from "@/components/ui/Logo";
 import { signOut } from "@/app/auth/actions";
+import SubscriptionSyncCheck from "@/components/SubscriptionSyncCheck";
 
 export default async function SubscribePage() {
   const cookieStore = await cookies();
@@ -137,6 +138,16 @@ export default async function SubscribePage() {
             customerEmail={user.email ?? undefined}
           />
         </div>
+
+        {/* Sync Check for eventual consistency */}
+        {profile?.stripe_customer_id && (
+          <div className="mt-6">
+            <SubscriptionSyncCheck
+              currentStatus={profile.subscription_status}
+              hasStripeCustomer={!!profile.stripe_customer_id}
+            />
+          </div>
+        )}
 
         {/* FAQ / Help Links */}
         <div className="mt-10 text-center">
