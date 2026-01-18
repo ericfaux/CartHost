@@ -16,6 +16,7 @@ const navLinks: NavLink[] = [
   { label: "Product", href: "/#product" },
   { label: "How it Works", href: "/#how-it-works" },
   { label: "Evidence Packet", href: "/#evidence-packet" },
+  { label: "Free Tools", href: "/tools/waiver-generator" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
   { label: "Support", href: "/#support" },

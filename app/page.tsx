@@ -351,6 +351,69 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Free Resources Section */}
+      <section className="bg-surface border-y border-rule py-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 md:grid-cols-2 items-center">
+            {/* Left Column - Text */}
+            <div className="space-y-6">
+              <p className="font-mono text-xs uppercase text-accent-ops tracking-wider">
+                Free Resources
+              </p>
+              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink">
+                Not ready to automate yet?
+              </h2>
+              <p className="text-ink-subtle">
+                Use our free tools to generate a liability waiver or calculate your battery costs manually. No account required.
+              </p>
+              <div className="flex flex-wrap gap-6">
+                <a
+                  href="/tools/waiver-generator"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-accent-ops hover:text-accent-ops-dark transition-colors"
+                >
+                  <FileWarning className="h-4 w-4" />
+                  Waiver Generator
+                </a>
+                <a
+                  href="/tools/battery-calculator"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-accent-ops hover:text-accent-ops-dark transition-colors"
+                >
+                  <BrainCircuit className="h-4 w-4" />
+                  Battery Calculator
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column - Visual */}
+            <div className="flex justify-center">
+              <div className="opacity-75 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                <div className="bg-paper rounded-dossier-surface border border-rule shadow-dossier-surface p-6 w-64">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-dossier-control bg-surface flex items-center justify-center">
+                      <FileWarning className="h-5 w-5 text-accent-ops" />
+                    </div>
+                    <div>
+                      <div className="h-3 w-24 bg-surface rounded mb-1.5" />
+                      <div className="h-2 w-16 bg-surface rounded" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 w-full bg-surface rounded" />
+                    <div className="h-2 w-5/6 bg-surface rounded" />
+                    <div className="h-2 w-4/5 bg-surface rounded" />
+                    <div className="h-2 w-full bg-surface rounded" />
+                    <div className="h-2 w-3/4 bg-surface rounded" />
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-rule">
+                    <div className="h-2 w-1/2 bg-surface rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA Section */}
       <section className="bg-paper">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
