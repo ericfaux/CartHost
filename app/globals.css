@@ -391,12 +391,12 @@
   }
 
   .dossier-modal {
-    @apply fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto z-50;
+    @apply fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto z-[51];
     @apply dossier-panel-elevated overflow-hidden;
   }
 
   .dossier-drawer {
-    @apply fixed top-0 right-0 bottom-0 w-full max-w-xl z-50;
+    @apply fixed top-0 right-0 bottom-0 w-full max-w-xl z-[51];
     @apply bg-surface shadow-2xl border-l border-rule;
     @apply overflow-y-auto;
   }
