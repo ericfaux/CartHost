@@ -26,7 +26,18 @@ export async function createCheckoutSession(priceId: string) {
 
   let customerId = profile?.stripe_customer_id;
 
-  // Create Stripe customer if doesn't exist
+  // Verify existing customer exists in Stripe, or create a new one
+  if (customerId) {
+    try {
+      await stripe.customers.retrieve(customerId);
+    } catch (error) {
+      // Customer doesn't exist in Stripe (deleted or wrong environment)
+      console.warn(`Stripe customer ${customerId} not found, creating new one`);
+      customerId = null;
+    }
+  }
+
+  // Create Stripe customer if doesn't exist or was invalid
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: profile?.email || user.email,
@@ -35,7 +46,7 @@ export async function createCheckoutSession(priceId: string) {
     });
     customerId = customer.id;
 
-    // Save customer ID to prevent duplicates
+    // Save customer ID to database
     await supabase
       .from('hosts')
       .update({ stripe_customer_id: customerId })
@@ -96,6 +107,14 @@ export async function createPortalSession() {
   if (!profile?.stripe_customer_id) {
     // No Stripe customer yet, redirect to settings to subscribe
     redirect('/dashboard/settings');
+  }
+
+  // Verify customer exists in Stripe
+  try {
+    await stripe.customers.retrieve(profile.stripe_customer_id);
+  } catch {
+    // Customer doesn't exist, redirect to subscribe
+    redirect('/subscribe');
   }
 
   const headersList = await headers();
