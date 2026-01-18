@@ -16,6 +16,23 @@ export function Footer() {
             </span>
           </div>
 
+          {/* Free Tools */}
+          <nav className="flex flex-col gap-2">
+            <span className="text-sm font-semibold text-ink">Free Tools</span>
+            <Link
+              href="/tools/waiver-generator"
+              className="text-sm text-ink-subtle hover:text-ink transition-colors"
+            >
+              Waiver Generator
+            </Link>
+            <Link
+              href="/tools/battery-calculator"
+              className="text-sm text-ink-subtle hover:text-ink transition-colors"
+            >
+              Battery Calculator
+            </Link>
+          </nav>
+
           {/* Links */}
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link
