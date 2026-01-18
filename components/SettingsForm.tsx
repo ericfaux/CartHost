@@ -429,20 +429,6 @@ export default function SettingsForm({ profile }: SettingsFormProps) {
               </div>
             </label>
 
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                name="enableSmsNotifications"
-                defaultChecked={profile.enable_sms_notifications ?? true}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">Guest SMS Notifications</p>
-                <p className="text-sm text-gray-500">
-                  Send automated text messages to guests (Welcome &amp; Return).
-                </p>
-              </div>
-            </label>
           </div>
         </div>
 
