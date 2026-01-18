@@ -74,7 +74,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
         className={`
-          relative w-full ${sizeClasses[size]}
+          relative z-[51] w-full ${sizeClasses[size]}
           dossier-panel-elevated
           max-h-[90vh] overflow-hidden flex flex-col
         `}
