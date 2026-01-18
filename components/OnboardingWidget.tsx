@@ -2,17 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   CheckCircle,
   Stamp,
   ClipboardCheck,
   ArrowRight,
   QrCode,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { useTour } from "../app/dashboard/tour-context";
+
+const SETUP_COLLAPSED_KEY = "carthost-setup-complete-collapsed";
 
 export type OnboardingWidgetProps = {
   carts: { id: string }[];
@@ -23,6 +27,24 @@ export type OnboardingWidgetProps = {
 export default function OnboardingWidget({ carts, rentals, profile }: OnboardingWidgetProps) {
   const { startTour } = useTour();
   const router = useRouter();
+
+  // Default to collapsed when setup is complete
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(SETUP_COLLAPSED_KEY);
+    if (stored !== null) {
+      setIsCollapsed(stored === "true");
+    }
+  }, []);
+
+  // Persist to localStorage when changed
+  const toggleCollapsed = () => {
+    const newValue = !isCollapsed;
+    setIsCollapsed(newValue);
+    localStorage.setItem(SETUP_COLLAPSED_KEY, String(newValue));
+  };
 
   const { completedSteps, steps, progress } = useMemo(() => {
     const step1Assets = carts.length > 0;
@@ -164,7 +186,35 @@ export default function OnboardingWidget({ carts, rentals, profile }: Onboarding
     );
   }
 
-  // Setup Complete State
+  // Setup Complete State - Collapsed
+  if (isCollapsed) {
+    return (
+      <button
+        onClick={toggleCollapsed}
+        className="w-full dossier-panel overflow-hidden group hover:border-accent-ops/40 transition-colors"
+      >
+        <div className="flex items-center justify-between gap-4 px-6 py-3 bg-accent-ops/5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-dossier-control bg-accent-ops/10">
+              <Stamp className="h-4 w-4 text-accent-ops" />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-heading text-sm font-bold text-ink">Setup Complete</h2>
+              <Badge variant="verified" style="stamp" className="scale-90">
+                SEALED
+              </Badge>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-ink-subtle group-hover:text-accent-ops transition-colors">
+            <span className="text-xs font-medium">Show details</span>
+            <ChevronDown className="h-4 w-4" />
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // Setup Complete State - Expanded
   return (
     <div className="dossier-panel overflow-hidden">
       {/* Complete Header Strip */}
@@ -185,9 +235,18 @@ export default function OnboardingWidget({ carts, rentals, profile }: Onboarding
             </p>
           </div>
         </div>
-        <Button variant="ops" onClick={startTour}>
-          Start Dashboard Tour
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ops" onClick={startTour}>
+            Start Dashboard Tour
+          </Button>
+          <button
+            onClick={toggleCollapsed}
+            className="p-2 rounded-dossier-control hover:bg-ink/5 text-ink-subtle hover:text-ink transition-colors"
+            title="Hide this panel"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
