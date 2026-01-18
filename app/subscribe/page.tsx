@@ -134,7 +134,7 @@ export default async function SubscribePage() {
       {/* Pricing Table Section - wider to allow horizontal layout */}
       <div className="w-full max-w-6xl mx-auto px-4 pb-12">
         <div className="rounded-dossier-surface border border-rule bg-surface p-4 shadow-dossier-surface md:p-6">
-          <SubscriptionPricing />
+          <SubscriptionPricing isAuthenticated={true} />
         </div>
 
         {/* Sync Check for eventual consistency */}
