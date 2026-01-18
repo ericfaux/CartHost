@@ -1,16 +1,8 @@
 import { ImageResponse } from 'next/og';
 
-// Route segment config
 export const runtime = 'edge';
 
-// Image metadata
-export const size = {
-  width: 512,
-  height: 512,
-};
-export const contentType = 'image/png';
-
-// Load the Fraunces font (same as your Logo)
+// Load the Fraunces font
 async function loadGoogleFont(font: string, text: string) {
   const url = `https://fonts.googleapis.com/css2?family=${font}:wght@900&text=${encodeURIComponent(text)}`;
   const css = await fetch(url).then((res) => res.text());
@@ -26,37 +18,33 @@ async function loadGoogleFont(font: string, text: string) {
   throw new Error('Failed to load font data');
 }
 
-export default async function Icon() {
-  // We only need the characters "C" and "H" for the logo
+export async function GET() {
   const frauncesData = await loadGoogleFont('Fraunces', 'CH');
 
-  return new ImageResponse(
+  // Generate a 48x48 favicon (Google's recommended minimum size)
+  const response = new ImageResponse(
     (
-      // ImageResponse JSX element
       <div
         style={{
-          fontSize: 320, // Large size for the 512px canvas
-          background: 'white', // Solid background for Google favicon compatibility
+          fontSize: 30,
+          background: 'white',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'Fraunces',
-          fontWeight: 900, // Matching "font-black" from your component
-          letterSpacing: '-0.05em', // Matching "tracking-tighter"
+          fontWeight: 900,
+          letterSpacing: '-0.05em',
         }}
       >
-        {/* The "C" in Slate-900 (#0F172A) */}
         <div style={{ color: '#0F172A' }}>C</div>
-        
-        {/* The "H" in Teal-600 (#0D9488) */}
         <div style={{ color: '#0D9488' }}>H</div>
       </div>
     ),
-    // ImageResponse options
     {
-      ...size,
+      width: 48,
+      height: 48,
       fonts: [
         {
           name: 'Fraunces',
@@ -67,4 +55,10 @@ export default async function Icon() {
       ],
     }
   );
+
+  // Set proper headers for favicon
+  response.headers.set('Content-Type', 'image/png');
+  response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+
+  return response;
 }

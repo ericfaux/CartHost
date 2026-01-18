@@ -33,6 +33,13 @@ export const metadata: Metadata = {
     default: "CartHost — Golf Cart Liability & Waivers for Airbnb Hosts",
     template: "%s | CartHost",
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48', type: 'image/png' },
+      { url: '/icon', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+  },
   description:
     "The liability operating system for Airbnb, VRBO, and vacation rental hosts. Automate golf cart waivers, inspection photos, and damage evidence.",
   keywords: [
