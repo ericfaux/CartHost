@@ -9,3 +9,4 @@ export { BetaAccessModal } from "./BetaAccessModal";
 export { Footer } from "./Footer";
 export { SupportCTA } from "./SupportCTA";
 export { PricingSection } from "./PricingSection";
+export { ToolUpsell } from "./ToolUpsell";
