@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Zap } from 'lucide-react';
 import { createCheckoutSession } from '@/app/actions/stripe';
 
@@ -73,15 +74,23 @@ const TIERS: Tier[] = [
 
 interface Props {
   currentPriceId?: string | null;
+  isAuthenticated?: boolean;
 }
 
-export default function SubscriptionPricing({ currentPriceId }: Props) {
+export default function SubscriptionPricing({ currentPriceId, isAuthenticated = false }: Props) {
   const [interval, setInterval] = useState<BillingInterval>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubscribe = async (tier: Tier) => {
     const priceId = interval === 'monthly' ? tier.monthlyPriceId : tier.annualPriceId;
     if (!priceId) return;
+
+    // If not authenticated, redirect to signup first
+    if (!isAuthenticated) {
+      router.push('/signup');
+      return;
+    }
 
     setLoading(priceId);
     try {
