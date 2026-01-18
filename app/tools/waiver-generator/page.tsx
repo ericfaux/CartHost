@@ -10,6 +10,12 @@ import {
   ToolUpsell,
   Footer,
 } from "@/components/marketing";
+import {
+  getWaiverContent,
+  getWaiverDisplayName,
+  type AssetType,
+  type WaiverSection,
+} from "@/lib/waiverText";
 
 const US_STATES = [
   { value: "", label: "Select a state" },
@@ -65,13 +71,11 @@ const US_STATES = [
   { value: "Wyoming", label: "Wyoming" },
 ];
 
-const VEHICLE_TYPES = [
-  { value: "", label: "Select a vehicle type" },
-  { value: "Golf Cart", label: "Golf Cart" },
-  { value: "E-Bike", label: "E-Bike" },
-  { value: "Scooter", label: "Scooter" },
-  { value: "ATV", label: "ATV" },
-  { value: "UTV", label: "UTV" },
+const ASSET_TYPES = [
+  { value: "", label: "Select an asset type" },
+  { value: "golf_cart", label: "Golf Cart" },
+  { value: "bike", label: "Bicycle / E-Bike" },
+  { value: "hot_tub", label: "Hot Tub" },
 ];
 
 export default function WaiverGeneratorPage() {
@@ -81,7 +85,7 @@ export default function WaiverGeneratorPage() {
   const [hostName, setHostName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [state, setState] = useState("");
-  const [vehicleType, setVehicleType] = useState("");
+  const [assetType, setAssetType] = useState<AssetType | "">("");
 
   const openBetaModal = () => setIsBetaModalOpen(true);
   const closeBetaModal = () => setIsBetaModalOpen(false);
@@ -94,80 +98,118 @@ export default function WaiverGeneratorPage() {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
     let yPos = 20;
 
+    // Get the waiver content based on asset type
+    const selectedAssetType = assetType || "golf_cart";
+    const waiverContent = getWaiverContent(selectedAssetType as AssetType);
+    const assetDisplayName = getWaiverDisplayName(selectedAssetType as AssetType);
+
+    // Helper function to check page break
+    const checkPageBreak = (neededSpace: number) => {
+      if (yPos + neededSpace > pageHeight - margin) {
+        doc.addPage();
+        yPos = 20;
+      }
+    };
+
     // Helper function to add wrapped text
-    const addWrappedText = (text: string, fontSize: number, isBold = false) => {
+    const addWrappedText = (
+      text: string,
+      fontSize: number,
+      isBold = false,
+      indent = 0
+    ) => {
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", isBold ? "bold" : "normal");
-      const lines = doc.splitTextToSize(text, contentWidth);
-      doc.text(lines, margin, yPos);
-      yPos += lines.length * (fontSize * 0.4) + 4;
+      const lines = doc.splitTextToSize(text, contentWidth - indent);
+      const lineHeight = fontSize * 0.4;
+      checkPageBreak(lines.length * lineHeight + 4);
+      doc.text(lines, margin + indent, yPos);
+      yPos += lines.length * lineHeight + 4;
+    };
+
+    // Helper function to add bullet points
+    const addBulletPoints = (bullets: string[], fontSize: number, indent = 5) => {
+      bullets.forEach((bullet) => {
+        doc.setFontSize(fontSize);
+        doc.setFont("helvetica", "normal");
+        const bulletText = `• ${bullet}`;
+        const lines = doc.splitTextToSize(bulletText, contentWidth - indent);
+        const lineHeight = fontSize * 0.4;
+        checkPageBreak(lines.length * lineHeight + 2);
+        doc.text(lines, margin + indent, yPos);
+        yPos += lines.length * lineHeight + 2;
+      });
+    };
+
+    // Helper function to render a section
+    const renderSection = (section: WaiverSection) => {
+      // Section title
+      addWrappedText(section.title, 11, true);
+
+      // Section content
+      if (section.content) {
+        addWrappedText(section.content, 10, false);
+      }
+
+      // Bullet points
+      if (section.bullets && section.bullets.length > 0) {
+        addBulletPoints(section.bullets, 10);
+      }
+
+      // Subsections (for bike waiver rules of operation)
+      if (section.subsections && section.subsections.length > 0) {
+        section.subsections.forEach((subsection) => {
+          yPos += 2;
+          addWrappedText(subsection.title, 10, true, 5);
+          addBulletPoints(subsection.bullets, 10, 10);
+        });
+      }
+
+      yPos += 4;
     };
 
     // Title
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("RENTAL LIABILITY WAIVER & RELEASE", pageWidth / 2, yPos, {
-      align: "center",
+    const titleLines = doc.splitTextToSize(waiverContent.title, contentWidth);
+    doc.text(titleLines, pageWidth / 2, yPos, { align: "center" });
+    yPos += titleLines.length * 6 + 10;
+
+    // Intro paragraph
+    addWrappedText(waiverContent.intro, 10, false);
+
+    // Additional intro (for bike waiver)
+    if (waiverContent.additionalIntro) {
+      addWrappedText(waiverContent.additionalIntro, 10, false);
+    }
+
+    yPos += 4;
+
+    // Render all sections
+    waiverContent.sections.forEach((section) => {
+      renderSection(section);
     });
-    yPos += 15;
 
-    // Dynamic legal text
-    const hostDisplay = companyName || hostName || "[Host Name/Company]";
-    const vehicleDisplay = vehicleType || "[Vehicle Type]";
+    // Add governing law section with state
     const stateDisplay = state || "[State]";
-
-    addWrappedText(
-      `1. AGREEMENT: This agreement is between ${hostDisplay} ("Owner") and Guest ("Renter") for the rental of a ${vehicleDisplay} in the state of ${stateDisplay}. By signing below, Renter acknowledges that they have read, understood, and agree to be bound by the terms and conditions set forth in this waiver.`,
-      11
-    );
     yPos += 4;
-
-    // Assumption of Risk
-    addWrappedText("2. ASSUMPTION OF RISK", 12, true);
-    addWrappedText(
-      `Renter acknowledges that operating a ${vehicleDisplay} involves inherent risks, including but not limited to: collision with other vehicles, pedestrians, or objects; loss of control; mechanical failure; adverse weather conditions; and uneven or hazardous terrain. Renter voluntarily assumes all risks associated with the operation of the rented vehicle, whether known or unknown, and accepts full responsibility for any injury, death, or property damage that may result.`,
-      11
-    );
-    yPos += 4;
-
-    // Vehicle Condition
-    addWrappedText("3. VEHICLE CONDITION", 12, true);
-    addWrappedText(
-      `Renter acknowledges that they have inspected the ${vehicleDisplay} prior to rental and found it to be in satisfactory and safe operating condition. Renter agrees to report any defects, damage, or mechanical issues immediately to Owner. Renter accepts the vehicle "as-is" and agrees to return it in the same condition, normal wear and tear excepted. Renter shall be responsible for any damage to the vehicle during the rental period, excluding normal wear and tear.`,
-      11
-    );
-    yPos += 4;
-
-    // Release of Liability
-    addWrappedText("4. RELEASE OF LIABILITY", 12, true);
-    addWrappedText(
-      `In consideration of being permitted to rent and operate the ${vehicleDisplay}, Renter hereby releases, waives, discharges, and covenants not to sue ${hostDisplay}, its owners, officers, employees, agents, and affiliates from any and all liability, claims, demands, actions, or causes of action whatsoever arising out of or relating to any loss, damage, or injury, including death, that may be sustained by Renter or any property belonging to Renter, while participating in this rental activity, regardless of whether caused by the negligence of the released parties or otherwise.`,
-      11
-    );
-    yPos += 4;
-
-    // Governing Law
-    addWrappedText("5. GOVERNING LAW", 12, true);
+    addWrappedText("GOVERNING LAW", 11, true);
     addWrappedText(
       `This agreement shall be governed by and construed in accordance with the laws of the state of ${stateDisplay}. Any dispute arising under this agreement shall be resolved in the courts of ${stateDisplay}.`,
-      11
+      10
     );
+
     yPos += 8;
 
-    // Acknowledgment
-    addWrappedText(
-      "By signing below, Renter acknowledges that they have read this waiver in its entirety, understand its contents, and agree to be bound by its terms.",
-      11
-    );
-    yPos += 12;
-
     // Signature lines
+    checkPageBreak(50);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(10);
 
     doc.text("Renter Signature: _______________________________", margin, yPos);
     yPos += 10;
@@ -178,8 +220,8 @@ export default function WaiverGeneratorPage() {
     doc.text("Date: _______________________________", margin, yPos);
 
     // Save the PDF
-    const fileName = vehicleType
-      ? `${vehicleType.replace(/\s+/g, "_")}_Waiver.pdf`
+    const fileName = assetType
+      ? `${assetDisplayName.replace(/[\s\/]+/g, "_")}_Waiver.pdf`
       : "Rental_Waiver.pdf";
     doc.save(fileName);
 
@@ -197,11 +239,12 @@ export default function WaiverGeneratorPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="text-center mb-12">
             <h1 className="text-4xl lg:text-5xl font-bold text-ink mb-4">
-              Free Golf Cart Waiver Generator
+              Free Rental Waiver Generator
             </h1>
             <p className="text-lg text-ink-subtle max-w-2xl mx-auto">
-              Generate a professional liability waiver for your rental business
-              in seconds. Fill in your details below and download your PDF.
+              Generate a professional liability waiver for your golf cart, bike,
+              or hot tub rental in seconds. Fill in your details below and
+              download your PDF.
             </p>
           </div>
 
@@ -237,12 +280,12 @@ export default function WaiverGeneratorPage() {
                 />
 
                 <Select
-                  label="Vehicle Type"
-                  name="vehicleType"
-                  options={VEHICLE_TYPES}
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                  hint="Type of vehicle being rented"
+                  label="Asset Type"
+                  name="assetType"
+                  options={ASSET_TYPES}
+                  value={assetType}
+                  onChange={(e) => setAssetType(e.target.value as AssetType | "")}
+                  hint="Type of rental asset"
                 />
 
                 <div className="pt-4">
