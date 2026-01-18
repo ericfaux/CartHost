@@ -1,14 +1,13 @@
 'use client';
 
 import { Shield, Clock, CreditCard, FileCheck, Zap } from 'lucide-react';
-import { StripePricingTable } from '../StripePricingTable';
+import SubscriptionPricing from '../SubscriptionPricing';
 
 interface PricingSectionProps {
-  clientReferenceId?: string;
-  customerEmail?: string;
+  currentPriceId?: string | null;
 }
 
-export function PricingSection({ clientReferenceId, customerEmail }: PricingSectionProps) {
+export function PricingSection({ currentPriceId }: PricingSectionProps) {
   return (
     <div className="space-y-12">
       {/* Header */}
@@ -59,13 +58,9 @@ export function PricingSection({ clientReferenceId, customerEmail }: PricingSect
         </div>
       </div>
 
-      {/* Stripe Pricing Table */}
-      <div className="relative">
-        <StripePricingTable
-          clientReferenceId={clientReferenceId}
-          customerEmail={customerEmail}
-          className="max-w-4xl mx-auto"
-        />
+      {/* Pricing Cards */}
+      <div className="relative max-w-5xl mx-auto">
+        <SubscriptionPricing currentPriceId={currentPriceId} />
       </div>
 
       {/* Trust Signals */}
