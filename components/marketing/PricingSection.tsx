@@ -35,29 +35,6 @@ export function PricingSection({ currentPriceId }: PricingSectionProps) {
         </div>
       </div>
 
-      {/* Social Proof */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-4 bg-surface border border-rule rounded-dossier-surface px-6 py-3">
-          <div className="flex -space-x-2">
-            {/* Avatar placeholders */}
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-ops to-accent-ops-dark border-2 border-surface flex items-center justify-center"
-              >
-                <span className="text-white text-xs font-bold">
-                  {String.fromCharCode(64 + i)}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="text-sm">
-            <span className="font-semibold text-ink">Join 50+ hosts</span>
-            <span className="text-ink-subtle"> protecting their fleet</span>
-          </div>
-        </div>
-      </div>
-
       {/* Pricing Cards */}
       <div className="relative max-w-5xl mx-auto">
         <SubscriptionPricing currentPriceId={currentPriceId} />
