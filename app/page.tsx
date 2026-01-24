@@ -361,25 +361,25 @@ export default function LandingPage() {
                 Free Resources
               </p>
               <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink">
-                Not ready to automate yet?
+                Free Golf Cart Resources for Hosts
               </h2>
               <p className="text-ink-subtle">
-                Use our free tools to generate a liability waiver or calculate your battery costs manually. No account required.
+                Download our attorney-drafted Golf Cart Liability Waiver for Airbnb & VRBO. Generate a rental agreement or calculate electric fleet costs instantly. No credit card required.
               </p>
               <div className="flex flex-wrap gap-6">
                 <a
-                  href="/tools/waiver-generator"
+                  href="/resources/golf-cart-waiver-template"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-accent-ops hover:text-accent-ops-dark transition-colors"
                 >
                   <FileWarning className="h-4 w-4" />
-                  Waiver Generator
+                  Free Waiver Template
                 </a>
                 <a
-                  href="/tools/battery-calculator"
+                  href="/resources/fleet-calculator"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-accent-ops hover:text-accent-ops-dark transition-colors"
                 >
                   <BrainCircuit className="h-4 w-4" />
-                  Battery Calculator
+                  Fleet Cost Calculator
                 </a>
               </div>
             </div>
