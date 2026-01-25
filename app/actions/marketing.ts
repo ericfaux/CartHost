@@ -55,8 +55,9 @@ export async function captureToolLead(
     }
 
     // Store lead in Supabase
+    // Note: Using type assertion since tool_leads table types aren't generated yet
     const supabase = getSupabaseAdmin();
-    const { error: dbError } = await supabase.from("tool_leads").insert({
+    const { error: dbError } = await (supabase.from("tool_leads") as any).insert({
       email: data.email.toLowerCase().trim(),
       host_name: data.hostName || null,
       company_name: data.companyName || null,
