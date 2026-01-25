@@ -1,8 +1,150 @@
 "use server";
 
 import { Resend } from "resend";
+import { getSupabaseAdmin } from "@/server/supabase-admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+export interface ToolLeadState {
+  success: boolean;
+  message: string;
+  errors?: {
+    email?: string;
+    general?: string;
+  };
+}
+
+export interface ToolLeadData {
+  email: string;
+  hostName?: string;
+  companyName?: string;
+  state?: string;
+  assetType?: string;
+  source: string;
+}
+
+/**
+ * Server Action to capture leads from free tools (waiver generator, etc.)
+ * Stores lead in Supabase and optionally sends notification email
+ */
+export async function captureToolLead(
+  data: ToolLeadData
+): Promise<ToolLeadState> {
+  try {
+    // Validation
+    if (!data.email || data.email.trim() === "") {
+      return {
+        success: false,
+        message: "Email is required",
+        errors: {
+          email: "Email is required",
+        },
+      };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return {
+        success: false,
+        message: "Please enter a valid email address",
+        errors: {
+          email: "Please enter a valid email address",
+        },
+      };
+    }
+
+    // Store lead in Supabase
+    // Note: Using type assertion since tool_leads table types aren't generated yet
+    const supabase = getSupabaseAdmin();
+    const { error: dbError } = await (supabase.from("tool_leads") as any).insert({
+      email: data.email.toLowerCase().trim(),
+      host_name: data.hostName || null,
+      company_name: data.companyName || null,
+      state: data.state || null,
+      asset_type: data.assetType || null,
+      source: data.source,
+    });
+
+    if (dbError) {
+      console.error("Supabase error storing tool lead:", dbError);
+      // Don't fail the user experience if DB write fails
+      // Just log and continue
+    }
+
+    // Send notification email to admin
+    const assetTypeDisplay = data.assetType
+      ? data.assetType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Not specified";
+
+    await resend.emails.send({
+      from: "CartHost Tools <onboarding@resend.dev>",
+      to: ["carthost.app@gmail.com"],
+      subject: `📄 New ${data.source} Lead: ${data.email}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>New Tool Lead</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">📄 New Tool Lead</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${data.source}</p>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e9ecef;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6; font-weight: 600; width: 140px;">Email</td>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6;">
+                    <a href="mailto:${data.email}" style="color: #10b981;">${data.email}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6; font-weight: 600;">Host Name</td>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6;">${data.hostName || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6; font-weight: 600;">Company</td>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6;">${data.companyName || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6; font-weight: 600;">State</td>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6;">${data.state || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6; font-weight: 600;">Asset Type</td>
+                  <td style="padding: 12px; background: white; border: 1px solid #dee2e6;">${assetTypeDisplay}</td>
+                </tr>
+              </table>
+
+              <div style="margin-top: 20px; text-align: center;">
+                <a href="mailto:${data.email}?subject=Your%20Waiver%20from%20CartHost&body=Hi%20${encodeURIComponent(data.hostName || "there")}%2C%0A%0AThanks%20for%20using%20our%20free%20waiver%20generator!"
+                   style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                  Reply to Lead
+                </a>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+
+    return {
+      success: true,
+      message: "Success! Your waiver is downloading.",
+    };
+  } catch (error) {
+    console.error("Error in captureToolLead:", error);
+    // Still return success to not block user experience
+    return {
+      success: true,
+      message: "Success! Your waiver is downloading.",
+    };
+  }
+}
 
 export interface BetaAccessState {
   success: boolean;

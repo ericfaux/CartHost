@@ -16,6 +16,7 @@ import {
   type AssetType,
   type WaiverSection,
 } from "@/lib/waiverText";
+import { captureToolLead } from "@/app/actions/marketing";
 
 const US_STATES = [
   { value: "", label: "Select a state" },
@@ -82,19 +83,35 @@ export default function WaiverGeneratorPage() {
   const [isBetaModalOpen, setIsBetaModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const [email, setEmail] = useState("");
   const [hostName, setHostName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [state, setState] = useState("");
   const [assetType, setAssetType] = useState<AssetType | "">("");
+  const [emailError, setEmailError] = useState("");
 
   const openBetaModal = () => setIsBetaModalOpen(true);
   const closeBetaModal = () => setIsBetaModalOpen(false);
 
   const handleGenerate = async () => {
+    setEmailError("");
     setIsGenerating(true);
 
-    // Fake delay to make it feel like work is happening
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Capture lead before generating PDF
+    const result = await captureToolLead({
+      email,
+      hostName: hostName || undefined,
+      companyName: companyName || undefined,
+      state: state || undefined,
+      assetType: assetType || undefined,
+      source: "waiver-generator",
+    });
+
+    if (!result.success) {
+      setEmailError(result.errors?.email || result.message);
+      setIsGenerating(false);
+      return;
+    }
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -228,7 +245,7 @@ export default function WaiverGeneratorPage() {
     setIsGenerating(false);
   };
 
-  const isFormValid = hostName || companyName;
+  const isFormValid = email && (hostName || companyName);
 
   return (
     <div className="min-h-screen bg-paper">
@@ -252,6 +269,21 @@ export default function WaiverGeneratorPage() {
           <div className="max-w-xl mx-auto">
             <div className="bg-surface rounded-dossier-surface border border-rule shadow-dossier-surface p-6 sm:p-8">
               <div className="space-y-5">
+                <Input
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError("");
+                  }}
+                  hint="We'll send you tips on protecting your rental business"
+                  error={emailError}
+                  required
+                />
+
                 <Input
                   label="Host Name"
                   name="hostName"
@@ -301,8 +333,8 @@ export default function WaiverGeneratorPage() {
                   </Button>
                   {!isFormValid && (
                     <p className="text-sm text-ink-muted mt-2 text-center">
-                      Please enter a host name or company name to generate your
-                      waiver.
+                      Please enter your email and a host name or company name to
+                      generate your waiver.
                     </p>
                   )}
                 </div>
