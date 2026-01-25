@@ -26,7 +26,7 @@ export type AssetType = 'golf_cart' | 'bike' | 'hot_tub';
 
 export const golfCartWaiverText: WaiverContent = {
   title: 'GOLF CART RENTAL AGREEMENT AND WAIVER OF LIABILITY',
-  intro: 'This Golf Cart Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider facilitating this process on behalf of the Host.',
+  intro: 'This Golf Cart Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider providing the form for this Agreement.',
   sections: [
     {
       title: '1. ELIGIBILITY AND DRIVER RESPONSIBILITY',
@@ -68,7 +68,7 @@ export const golfCartWaiverText: WaiverContent = {
     {
       title: '7. CONDITION OF VEHICLE',
       content:
-        'I acknowledge that I have inspected the golf cart (including by reviewing and/or providing photos through the CartHost app) and accept it in its current condition. I agree to promptly report to the Host any damage or mechanical issues that arise during my rental period.',
+        'I acknowledge that I have inspected the golf cart (including by reviewing and/or providing photos, whether digitally or in print) and accept it in its current condition. I agree to promptly report to the Host any damage or mechanical issues that arise during my rental period.',
     },
     {
       title: '8. ACKNOWLEDGMENT AND CONSENT',
@@ -80,7 +80,7 @@ export const golfCartWaiverText: WaiverContent = {
 
 export const bikeWaiverText: WaiverContent = {
   title: 'BICYCLE / E-BIKE RENTAL AGREEMENT AND WAIVER OF LIABILITY',
-  intro: 'This Bicycle / E-Bike Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider facilitating this process on behalf of the Host.',
+  intro: 'This Bicycle / E-Bike Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider providing the form for this Agreement.',
   additionalIntro:
     'For purposes of this Agreement, "Bicycle" includes any bicycle, e-bike, or similar micromobility device provided by the Host, and all included accessories (such as helmets, locks, lights, baskets, or child seats).',
   sections: [
@@ -161,7 +161,7 @@ export const bikeWaiverText: WaiverContent = {
           title: 'Locking and Returning the Bicycle',
           bullets: [
             'I will follow the Host\'s instructions for where to park and how to lock the Bicycle, including securing the frame to a fixed object when required.',
-            'At the end of my stay, I will return the Bicycle in substantially the same condition as at the start of my rental, normal wear and tear excepted, and I will follow any instructions (including taking and uploading required photos) to confirm proper locking and return.',
+            'At the end of my stay, I will return the Bicycle in substantially the same condition as at the start of my rental, normal wear and tear excepted, and I will follow any instructions to confirm proper locking and return.',
           ],
         },
       ],
@@ -169,7 +169,7 @@ export const bikeWaiverText: WaiverContent = {
     {
       title: '7. CONDITION OF BICYCLE AND REPORTING ISSUES',
       content:
-        'I acknowledge that I have inspected the Bicycle (including by reviewing and/or providing photos through the CartHost experience) and accept it in its current condition. Before riding, I will inspect the Bicycle for obvious defects, including brakes, tires, wheels, handlebars, pedals, and lights. If I notice any damage, malfunction, or unsafe condition:',
+        'I acknowledge that I have inspected the Bicycle (including by reviewing and/or providing photos) and accept it in its current condition. Before riding, I will inspect the Bicycle for obvious defects, including brakes, tires, wheels, handlebars, pedals, and lights. If I notice any damage, malfunction, or unsafe condition:',
       bullets: [
         'I will NOT ride the Bicycle until the issue is resolved; and',
         'I will promptly report the issue to the Host.',
@@ -178,7 +178,7 @@ export const bikeWaiverText: WaiverContent = {
     {
       title: '8. ACKNOWLEDGMENT, PHOTOS, AND CONSENT',
       content:
-        'I understand that the Host may require me to upload photos or other information (for example, photos of the Bicycle at the start and end of my ride, and photos confirming the Bicycle was properly locked) through CartHost to document the condition of the Bicycle and my compliance with these rules. By clicking "I Agree" or otherwise electronically signing below, I acknowledge that:',
+        'I understand that the Host may require me to upload photos or other information through a digital platform or provide them directly to document the condition of the Bicycle. By clicking "I Agree" or otherwise electronically signing below, I acknowledge that:',
       bullets: [
         'I have read this Agreement in full;',
         'I understand its terms and the risks involved in riding the Bicycle; and',
@@ -190,7 +190,7 @@ export const bikeWaiverText: WaiverContent = {
 
 export const hotTubWaiverText: WaiverContent = {
   title: 'HOT TUB RENTAL AGREEMENT AND WAIVER OF LIABILITY',
-  intro: 'This Hot Tub Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider facilitating this process on behalf of the Host.',
+  intro: 'This Hot Tub Rental Agreement and Waiver of Liability ("Agreement") is between the undersigned guest ("Renter") and the property owner/host ("Host"). CartHost is a technology provider providing the form for this Agreement.',
   sections: [
     {
       title: '1. ELIGIBILITY AND HEALTH WARNINGS',
