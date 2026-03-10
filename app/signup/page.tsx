@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
@@ -22,7 +23,7 @@ function SubmitButton() {
   );
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const [state, formAction] = useActionState(signUp, null);
   const searchParams = useSearchParams();
   const betaCode = searchParams.get("beta");
@@ -200,5 +201,13 @@ export default function SignupPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }
