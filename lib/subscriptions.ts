@@ -159,6 +159,7 @@ export type SubscriptionStatus =
   | 'incomplete_expired'
   | 'paused'
   | 'pending'
+  | 'beta'
   | 'none';
 
 /**
