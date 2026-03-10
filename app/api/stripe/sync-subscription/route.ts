@@ -81,7 +81,7 @@ export async function POST(req: Request): Promise<NextResponse<SyncResult>> {
     // Get host profile with Stripe customer ID
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('hosts')
-      .select('id, stripe_customer_id, subscription_id, subscription_status, plan_variant')
+      .select('id, stripe_customer_id, subscription_id, subscription_status, plan_variant, is_beta_user')
       .eq('id', syncUserId)
       .single();
 
@@ -90,6 +90,19 @@ export async function POST(req: Request): Promise<NextResponse<SyncResult>> {
         { synced: false, error: 'Host profile not found' },
         { status: 404 }
       );
+    }
+
+    // Beta users don't need Stripe sync — skip entirely to avoid overwriting their status
+    if (profile.is_beta_user) {
+      return NextResponse.json({
+        synced: false,
+        error: 'Beta users do not require subscription sync',
+        host: {
+          subscriptionStatus: profile.subscription_status,
+          planVariant: profile.plan_variant,
+          isBetaUser: true,
+        },
+      });
     }
 
     // If no Stripe customer, nothing to sync
