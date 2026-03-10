@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import { MailCheck } from "lucide-react";
 import { signUp } from "../auth/actions";
 import { Badge } from "../../components/ui/Badge";
@@ -23,6 +24,8 @@ function SubmitButton() {
 
 export default function SignupPage() {
   const [state, formAction] = useActionState(signUp, null);
+  const searchParams = useSearchParams();
+  const betaCode = searchParams.get("beta");
 
   // Show success state when email verification is required
   if (state?.success) {
@@ -75,6 +78,14 @@ export default function SignupPage() {
           </div>
 
           <form action={formAction} className="space-y-5">
+            {betaCode && (
+              <>
+                <input type="hidden" name="betaCode" value={betaCode} />
+                <div className="rounded-dossier-control border border-accent-ops/40 bg-accent-ops/10 px-3 py-2 text-sm text-accent-ops text-center font-medium">
+                  Beta Access Invite
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <label
                 className="dossier-label"

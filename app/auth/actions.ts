@@ -57,6 +57,7 @@ async function createSupabaseActionClient() {
 
 export async function signUp(prevState: any, formData: FormData) {
   let session = null;
+  let isBetaUser = false;
 
   try {
     const email = formData.get("email")?.toString().trim();
@@ -64,9 +65,16 @@ export async function signUp(prevState: any, formData: FormData) {
     const fullName = formData.get("fullName")?.toString().trim() || null;
     const phone = formData.get("phone")?.toString().trim() || null;
     const companyName = formData.get("companyName")?.toString().trim() || null;
+    const betaCode = formData.get("betaCode")?.toString().trim() || null;
 
     if (!email || !password) {
       return { error: "Email and password are required." };
+    }
+
+    // Validate beta access code if provided
+    const validBetaCode = process.env.BETA_ACCESS_CODE;
+    if (betaCode && validBetaCode && betaCode === validBetaCode) {
+      isBetaUser = true;
     }
 
     const supabase = await createSupabaseActionClient();
@@ -88,14 +96,15 @@ export async function signUp(prevState: any, formData: FormData) {
     );
 
     // 2. USE the Admin Client to bypass RLS for profile creation
-    // Set subscription_status to 'pending' - user must complete checkout to access dashboard
+    // Beta users get is_beta_user flag and skip payment; others get 'pending' status
     const { error: hostUpdateError } = await supabaseAdmin
       .from("hosts")
       .update({
         full_name: fullName,
         phone_number: phone,
         company_name: companyName,
-        subscription_status: "pending",
+        subscription_status: isBetaUser ? "beta" : "pending",
+        ...(isBetaUser && { is_beta_user: true }),
       })
       .eq("id", data.user.id);
 
@@ -107,7 +116,7 @@ export async function signUp(prevState: any, formData: FormData) {
     // Check verification status
     if (!session) {
       // Verification is ON - return success message
-      // After email confirmation, user will be redirected to /subscribe via auth callback
+      // After email confirmation, beta users will be redirected to /dashboard, others to /subscribe
       return { success: true, requiresVerification: true };
     }
 
@@ -116,9 +125,8 @@ export async function signUp(prevState: any, formData: FormData) {
     return { error: "Something went wrong. Please try again." };
   }
 
-  // Redirect to subscribe page to complete checkout
-  // User has an account with status: 'pending' and needs to select a plan
-  redirect("/subscribe");
+  // Beta users go straight to dashboard; others go to subscribe
+  redirect(isBetaUser ? "/dashboard" : "/subscribe");
 }
 
 export async function signIn(prevState: any, formData: FormData) {
